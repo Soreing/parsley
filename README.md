@@ -20,7 +20,7 @@ if err != nil {
 ```
 
 ## Code Generation
-To read data into objects, first you need to generate the mapping functions for the structs you want to use. teh explicit flag tells the generator to process the defined struct.
+To read data into objects, first you need to generate the mapping functions for the structs you want to use. The explicit flag tells the generator to process the defined struct.
 ```golang
 //fastjson:explicit
 type Box struct {
@@ -31,7 +31,7 @@ type Box struct {
 //fastjson:explicit
 type BoxList []Box
 ```
-Run the generator with the path to the file or folder to the module. Assuming the above file is in tests/models/box.go, use the following command
+Run the generator with the path to the file or folder to the module. Assuming the above file is in tests/models/box.go, use the following command:
 ```
 fastjson tests/models/box.go
 ```
