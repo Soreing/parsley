@@ -90,7 +90,7 @@ func (r *Reader) GetByteArray() ([]byte, error) {
 		}
 	}
 
-	for pos++; ; pos++ {
+	for pos++; ; {
 		if esc {
 			esc = false
 			switch dat[pos] {
@@ -129,6 +129,7 @@ func (r *Reader) GetByteArray() ([]byte, error) {
 					r.buf = make([]byte, bi+tlen)
 					copy(r.buf, buf[:bi])
 					buf = r.buf
+					continue
 				}
 			} else if dat[pos] == '\\' {
 				esc = true
@@ -137,6 +138,7 @@ func (r *Reader) GetByteArray() ([]byte, error) {
 				bi++
 			}
 		}
+		pos++
 	}
 }
 
