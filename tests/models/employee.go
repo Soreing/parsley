@@ -1,6 +1,6 @@
 package models
 
-import "github.com/Soreing/fastjson/tests/externals"
+import "github.com/Soreing/parsley/tests/externals"
 
 type Employee struct {
 	Id          string             `json:"id"`

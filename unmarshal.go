@@ -1,11 +1,11 @@
-package fastjson
+package parsley
 
-import "github.com/Soreing/fastjson/reader"
+import "github.com/Soreing/parsley/reader"
 
-type FastJSONUnmarshaller interface {
-	UnmarshalFastJSON(*reader.Reader) error
+type ParsleyJSONUnmarshaller interface {
+	UnmarshalParsleyJSON(*reader.Reader) error
 }
 
-func Unmarshal(src []byte, dst FastJSONUnmarshaller) error {
-	return dst.UnmarshalFastJSON(reader.NewReader(src))
+func Unmarshal(src []byte, dst ParsleyJSONUnmarshaller) error {
+	return dst.UnmarshalParsleyJSON(reader.NewReader(src))
 }

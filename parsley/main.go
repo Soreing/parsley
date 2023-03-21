@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Soreing/fastjson"
+	"github.com/Soreing/parsley"
 )
 
 var specifiedName = flag.String("output_filename", "", "specify the filename of the output")
@@ -43,7 +43,7 @@ func generate(fname string) error {
 		return err
 	}
 
-	p := fastjson.Parser{AllTypes: *allTypes}
+	p := parsley.Parser{AllTypes: *allTypes}
 	if err := p.Parse(fname, finf.IsDir()); err != nil {
 		return fmt.Errorf("error parsing %v: %v", fname, err)
 	}
@@ -52,27 +52,27 @@ func generate(fname string) error {
 	if *specifiedName != "" {
 		outName = *specifiedName
 	} else if finf.IsDir() {
-		outName = filepath.Join(fname, p.PkgName+"_fastjson.go")
+		outName = filepath.Join(fname, p.PkgName+"_parsley.go")
 	} else {
-		outName = strings.TrimSuffix(fname, ".go") + "_fastjson.go"
+		outName = strings.TrimSuffix(fname, ".go") + "_parsley.go"
 	}
 
-	g := fastjson.NewGenerator()
+	g := parsley.NewGenerator()
 
 	g.SetPackage(p.PkgName)
 
 	if *lowerCase {
-		g.SetDefaultCase(fastjson.LOWER_CASE)
+		g.SetDefaultCase(parsley.LOWER_CASE)
 	} else if *camelCase {
-		g.SetDefaultCase(fastjson.CAMEL_CASE)
+		g.SetDefaultCase(parsley.CAMEL_CASE)
 	} else if *kebabCase {
-		g.SetDefaultCase(fastjson.KEBAB_CASE)
+		g.SetDefaultCase(parsley.KEBAB_CASE)
 	} else if *snakeCase {
-		g.SetDefaultCase(fastjson.SNAKE_CASE)
+		g.SetDefaultCase(parsley.SNAKE_CASE)
 	} else if *pascalCase {
-		g.SetDefaultCase(fastjson.PASCAL_CASE)
+		g.SetDefaultCase(parsley.PASCAL_CASE)
 	} else {
-		g.SetDefaultCase(fastjson.LOWER_CASE)
+		g.SetDefaultCase(parsley.LOWER_CASE)
 	}
 
 	g.WriteHeader()

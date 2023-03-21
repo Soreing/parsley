@@ -1,4 +1,4 @@
-package fastjson
+package parsley
 
 import (
 	"errors"
@@ -133,8 +133,8 @@ type visitor struct {
 }
 
 const (
-	explicitComment = "fastjson:explicit"
-	skipComment     = "fastjson:skip"
+	explicitComment = "parsley:explicit"
+	skipComment     = "parsley:skip"
 )
 
 func (v *visitor) handleComment(comments *ast.CommentGroup) {
@@ -218,7 +218,7 @@ func (v *visitor) Visit(n ast.Node) (w ast.Visitor) {
 func (p *Parser) Parse(fname string, isDir bool) (err error) {
 	p.Imports = append(p.Imports, Import{
 		"reader",
-		"\"github.com/Soreing/fastjson/reader\"",
+		"\"github.com/Soreing/parsley/reader\"",
 	})
 
 	info, err := os.Stat(fname)

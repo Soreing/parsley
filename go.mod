@@ -1,3 +1,3 @@
-module github.com/Soreing/fastjson
+module github.com/Soreing/parsley
 
 go 1.19

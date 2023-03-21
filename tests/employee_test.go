@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Soreing/fastjson"
-	"github.com/Soreing/fastjson/tests/externals"
-	"github.com/Soreing/fastjson/tests/models"
+	"github.com/Soreing/parsley"
+	"github.com/Soreing/parsley/tests/externals"
+	"github.com/Soreing/parsley/tests/models"
 )
 
 const EmployeeJSON = `{
@@ -41,7 +41,7 @@ func Test_Employee(t *testing.T) {
 	dat := []byte(EmployeeJSON)
 	emp := models.Employee{}
 
-	if err := fastjson.Unmarshal(dat, &emp); err != nil {
+	if err := parsley.Unmarshal(dat, &emp); err != nil {
 		t.Error("unmarshal failed", err)
 	} else {
 		if emp.Id != "8becdcce-e762-40cf-b73c-092209f70a30" {
@@ -127,7 +127,7 @@ func Test_EmployeeList(t *testing.T) {
 	dat := []byte(EmployeeListJSON)
 	emps := models.EmployeeList{}
 
-	if err := fastjson.Unmarshal(dat, &emps); err != nil {
+	if err := parsley.Unmarshal(dat, &emps); err != nil {
 		t.Error("unmarshal failed", err)
 	} else {
 		if len(emps) != 2 {

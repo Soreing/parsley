@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Soreing/fastjson"
-	"github.com/Soreing/fastjson/tests/basics"
+	"github.com/Soreing/parsley"
+	"github.com/Soreing/parsley/tests/basics"
 )
 
 const IntegersJSON = `{
@@ -30,7 +30,7 @@ func Test_Integers(t *testing.T) {
 	dat := []byte(IntegersJSON)
 	ints := basics.IntegersColl{}
 
-	if err := fastjson.Unmarshal(dat, &ints); err != nil {
+	if err := parsley.Unmarshal(dat, &ints); err != nil {
 		t.Error("unmarshal failed", err)
 	} else {
 		if ints.I8Dat != -4 {
@@ -142,7 +142,7 @@ func Test_UnsignedIntegers(t *testing.T) {
 	dat := []byte(UnsignedIntegersJSON)
 	uints := basics.UnsignedIntegersColl{}
 
-	if err := fastjson.Unmarshal(dat, &uints); err != nil {
+	if err := parsley.Unmarshal(dat, &uints); err != nil {
 		t.Error("unmarshal failed", err)
 	} else {
 		if uints.UI8Dat != 4 {
@@ -245,7 +245,7 @@ func Test_FloatingPoints(t *testing.T) {
 	dat := []byte(FloatingPointJSON)
 	floats := basics.FloatingPointColl{}
 
-	if err := fastjson.Unmarshal(dat, &floats); err != nil {
+	if err := parsley.Unmarshal(dat, &floats); err != nil {
 		t.Error("unmarshal failed", err)
 	} else {
 		if floats.F32Dat != 2.56 {
@@ -294,7 +294,7 @@ func Test_Booleans(t *testing.T) {
 	dat := []byte(BoooleansJSON)
 	bools := basics.BooleansColl{}
 
-	if err := fastjson.Unmarshal(dat, &bools); err != nil {
+	if err := parsley.Unmarshal(dat, &bools); err != nil {
 		t.Error("unmarshal failed", err)
 	} else {
 		if bools.BDat != true {
@@ -329,7 +329,7 @@ func Test_Strings(t *testing.T) {
 	dat := []byte(StringsJSON)
 	strings := basics.StringsColl{}
 
-	if err := fastjson.Unmarshal(dat, &strings); err != nil {
+	if err := parsley.Unmarshal(dat, &strings); err != nil {
 		t.Error("unmarshal failed", err)
 	} else {
 		if strings.SDat != "a\"b\\c/d\be\ff\ng\rh\ti" {
