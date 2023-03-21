@@ -1,5 +1,5 @@
 # Parsley JSON
-Parsley JSON is a JSON mapper that parses a JSON string into an object or array. Fast JSON uses the definition of an struct to generate code for reading values efficiently. This library is inspired by [easyjson](https://github.com/mailru/easyjson).
+Parsley JSON is a JSON mapper that parses a JSON string into an object or array. Parsley JSON uses the definition of an struct to generate code for reading values efficiently. This library is inspired by [easyjson](https://github.com/mailru/easyjson).
 
 ## Installation 
 ```
