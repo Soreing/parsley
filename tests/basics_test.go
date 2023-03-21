@@ -317,7 +317,7 @@ func Test_Booleans(t *testing.T) {
 }
 
 const StringsJSON = `{
-	"sdat": "John Smith",
+	"sdat": "a\"b\\c\/d\be\ff\ng\rh\ti",
 	"sslc": ["Hello", "World"],
 	"sptr": "Test",
 	"tdat": "2000-01-01T00:00:00Z",
@@ -332,7 +332,7 @@ func Test_Strings(t *testing.T) {
 	if err := fastjson.Unmarshal(dat, &strings); err != nil {
 		t.Error("unmarshal failed", err)
 	} else {
-		if strings.SDat != "John Smith" {
+		if strings.SDat != "a\"b\\c/d\be\ff\ng\rh\ti" {
 			t.Error("sdat property value mismatch")
 		}
 		if len(strings.SSlc) != 2 {

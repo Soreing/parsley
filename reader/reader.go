@@ -3,6 +3,7 @@ package reader
 type Reader struct {
 	pos int
 	dat []byte
+	buf []byte
 }
 
 func NewReader(dat []byte) *Reader {

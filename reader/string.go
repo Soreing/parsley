@@ -4,6 +4,25 @@ import (
 	"time"
 )
 
+func strTokLen(dat []byte) int {
+	esc, ecnt := false, 0
+	for i, e := range dat {
+		if esc {
+			esc = false
+			continue
+		}
+		if e == '\\' {
+			ecnt++
+			esc = true
+			continue
+		}
+		if e == '"' {
+			return i - ecnt
+		}
+	}
+	return -1
+}
+
 func (r *Reader) skipString() error {
 	esc := false
 	r.pos++
@@ -31,49 +50,105 @@ func (r *Reader) skipString() error {
 }
 
 func (r *Reader) GetByteArray() ([]byte, error) {
-	if r.pos >= len(r.dat) {
+	dat, pos := r.dat[r.pos:], 0
+	buf, bi := r.buf, 0
+	esc := false
+
+	if len(dat) == 0 {
 		return nil, NewEndOfFileError()
-	} else if r.dat[r.pos] != '"' {
-		return nil, NewInvalidCharacterError(r.dat[r.pos], r.pos)
+	} else if dat[0] != '"' {
+		return nil, NewInvalidCharacterError(dat[pos], r.pos+pos)
 	}
 
-	r.pos++
-	beg, end, esc := r.pos, 0, false
-
-	for {
-		if r.pos == len(r.dat) {
+	for pos++; ; pos++ {
+		if pos >= len(dat) {
+			r.pos += pos + 1
 			return nil, NewEndOfFileError()
-		} else {
-			switch r.dat[r.pos] {
-			case '\\':
-				esc = !esc
-			case '"':
-				if !esc {
-					end = r.pos
-					r.pos++
-					r.skipWhiteSpace()
-					return (r.dat)[beg:end], nil
+
+		} else if dat[pos] == '"' {
+			r.pos += pos + 1
+			r.skipWhiteSpace()
+			return dat[1:pos], nil
+
+		} else if dat[pos] == '\\' {
+			if len(buf) < pos {
+				if tlen := strTokLen(dat[pos:]); tlen == -1 {
+					return nil, NewEndOfFileError()
 				} else {
-					esc = false
+					len := pos + tlen - 1
+					if len < 256 {
+						len = 256
+					}
+
+					r.buf = make([]byte, len)
+					buf = r.buf
 				}
-			default:
-				esc = false
+			}
+			copy(buf, dat[1:pos])
+			esc, bi = true, pos-1
+			break
+		}
+	}
+
+	for pos++; ; pos++ {
+		if esc {
+			esc = false
+			switch dat[pos] {
+			case '"':
+				buf[bi] = '"'
+			case '\\':
+				buf[bi] = '\\'
+			case '/':
+				buf[bi] = '/'
+			case 'b':
+				buf[bi] = '\b'
+			case 'f':
+				buf[bi] = '\f'
+			case 'n':
+				buf[bi] = '\n'
+			case 'r':
+				buf[bi] = '\r'
+			case 't':
+				buf[bi] = '\t'
+			case 'u':
+				buf[bi] = ' ' // TODO
+			}
+			bi++
+		} else {
+			if pos >= len(dat) {
+				r.pos += pos + 1
+				return nil, NewEndOfFileError()
+			} else if dat[pos] == '"' {
+				r.pos += pos + 1
+				r.skipWhiteSpace()
+				return buf[:bi], nil
+			} else if bi == len(buf) {
+				if tlen := strTokLen(dat[pos:]); tlen == -1 {
+					return nil, NewEndOfFileError()
+				} else {
+					r.buf = make([]byte, bi+tlen)
+					copy(r.buf, buf[:bi])
+					buf = r.buf
+				}
+			} else if dat[pos] == '\\' {
+				esc = true
+			} else {
+				buf[bi] = dat[pos]
+				bi++
 			}
 		}
-		r.pos++
 	}
 }
 
 func (r *Reader) stringSeq(idx int) (res []string, err error) {
 	var bs []byte
 	if bs, err = r.GetByteArray(); err == nil {
-		if r.Next() {
-			res, err = r.stringSeq(idx + 1)
-		} else {
+		s := string(bs)
+		if !r.Next() {
 			res = make([]string, idx+1)
-		}
-		if err == nil {
-			res[idx] = string(bs)
+			res[idx] = s
+		} else if res, err = r.stringSeq(idx + 1); err == nil {
+			res[idx] = s
 		}
 	}
 	return
