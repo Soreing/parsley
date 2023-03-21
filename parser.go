@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -256,6 +257,18 @@ func (p *Parser) Parse(fname string, isDir bool) (err error) {
 		}
 		ast.Walk(&visitor{Parser: p}, f)
 	}
+
+	// Sort structs for consistent code generation
+	sort.Slice(p.Structs, func(i, j int) bool {
+		return p.Structs[i].name < p.Structs[j].name
+	})
+	sort.Slice(p.Defines, func(i, j int) bool {
+		return p.Defines[i].name < p.Defines[j].name
+	})
+	sort.Slice(p.Imports, func(i, j int) bool {
+		return p.Imports[i].name < p.Imports[j].name
+	})
+
 	return nil
 }
 
