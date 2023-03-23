@@ -73,25 +73,14 @@ func WriteString(dst []byte, s string) (ln int) {
 	return pos + 1
 }
 
-func WriteKey(dst []byte, k string, fst bool) (ln int) {
-	if !fst {
-		dst[0] = ','
-		ln++
-	}
-
-	ln += WriteString(dst[ln:], k)
-	dst[ln+1] = ':'
-	return ln + 1
-}
-
 func WriteStringPtr(dst []byte, s *string) (ln int) {
 	if s != nil {
 		return ln + WriteString(dst[ln:], *s)
 	} else {
-		dst[ln+0] = 'n'
-		dst[ln+1] = 'u'
-		dst[ln+2] = 'l'
-		dst[ln+3] = 'l'
-		return ln + 4
+		dst[0] = 'n'
+		dst[1] = 'u'
+		dst[2] = 'l'
+		dst[3] = 'l'
+		return 4
 	}
 }
