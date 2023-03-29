@@ -88,30 +88,6 @@ func getReaderTypeFormat(typename string) (tmpl string, unknown bool) {
 	return
 }
 
-// Returns the code for reading the next value into a field. For unknown types,
-// it is expected that the type implements the interface for unmarshalling
-// func getReadFieldFunction(fi FieldInfo) (fn string, unknown bool) {
-// 	fn, unknown = getReadTypeFormat(fi.TypeName)
-
-// 	if !unknown {
-// 		if fi.Array {
-// 			fn = fmt.Sprintf(fn, "s")
-// 		} else if fi.Pointer {
-// 			fn = fmt.Sprintf(fn, "Ptr")
-// 		} else {
-// 			fn = fmt.Sprintf(fn, "")
-// 		}
-// 	} else {
-// 		if fi.Array {
-// 			fn = "(*" + fi.TypeName + ")(nil).UnmarshalParsleyJSONSlice(r)"
-// 		} else {
-// 			fn = "o." + fi.Name + ".UnmarshalParsleyJSON(r)"
-// 		}
-// 	}
-
-// 	return
-// }
-
 // Returns the code template for writing defined datatypes.
 func getWriterTypeFormat(typename string) (tmpl string, unknown bool) {
 	switch typename {
@@ -173,8 +149,6 @@ func getWriteFieldFunction(fi FieldInfo) (fn string) {
 	}
 	return
 }
-
-// NEW FUNCTIONS
 
 func createUnmarshalStructBody(fis []FieldInfo) (code string) {
 	subs := make([]string, len(fis))
