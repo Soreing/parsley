@@ -1,6 +1,6 @@
 package reader
 
-func (r *Reader) GetBoolean() (bool, error) {
+func (r *Reader) GetBool() (bool, error) {
 	if r.pos < len(r.dat) {
 		switch r.dat[r.pos] {
 		case 't':
@@ -43,7 +43,7 @@ func (r *Reader) GetBoolean() (bool, error) {
 
 func (r *Reader) boolSeq(idx int) (res []bool, err error) {
 	var tf bool
-	if tf, err = r.GetBoolean(); err == nil {
+	if tf, err = r.GetBool(); err == nil {
 		if r.Next() {
 			res, err = r.boolSeq(idx + 1)
 		} else {
@@ -57,7 +57,7 @@ func (r *Reader) boolSeq(idx int) (res []bool, err error) {
 	return
 }
 
-func (r *Reader) GetBooleans() (res []bool, err error) {
+func (r *Reader) GetBools() (res []bool, err error) {
 	if err = r.OpenArray(); err == nil {
 		if res, err = r.boolSeq(0); err == nil {
 			err = r.CloseArray()
@@ -66,8 +66,8 @@ func (r *Reader) GetBooleans() (res []bool, err error) {
 	return
 }
 
-func (r *Reader) GetBooleanPtr() (res *bool, err error) {
-	if v, err := r.GetBoolean(); err == nil {
+func (r *Reader) GetBoolPtr() (res *bool, err error) {
+	if v, err := r.GetBool(); err == nil {
 		res = &v
 	}
 	return
