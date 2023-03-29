@@ -84,7 +84,7 @@ func (o *BooleansColl) MarshalParsleyJSON(dst []byte) (ln int) {
 }
 
 func (o *BooleansColl) MarshalParsleyJSONSlice(dst []byte, slc []BooleansColl) (ln int) {
-	if o == nil {
+	if slc == nil {
 		return writer.WriteNull(dst)
 	}
 	dst[0] = '['
@@ -188,7 +188,7 @@ func (o *FloatingPointColl) MarshalParsleyJSON(dst []byte) (ln int) {
 }
 
 func (o *FloatingPointColl) MarshalParsleyJSONSlice(dst []byte, slc []FloatingPointColl) (ln int) {
-	if o == nil {
+	if slc == nil {
 		return writer.WriteNull(dst)
 	}
 	dst[0] = '['
@@ -328,7 +328,7 @@ func (o *IntegersColl) MarshalParsleyJSON(dst []byte) (ln int) {
 }
 
 func (o *IntegersColl) MarshalParsleyJSONSlice(dst []byte, slc []IntegersColl) (ln int) {
-	if o == nil {
+	if slc == nil {
 		return writer.WriteNull(dst)
 	}
 	dst[0] = '['
@@ -432,7 +432,7 @@ func (o *StringsColl) MarshalParsleyJSON(dst []byte) (ln int) {
 }
 
 func (o *StringsColl) MarshalParsleyJSONSlice(dst []byte, slc []StringsColl) (ln int) {
-	if o == nil {
+	if slc == nil {
 		return writer.WriteNull(dst)
 	}
 	dst[0] = '['
@@ -572,7 +572,7 @@ func (o *UnsignedIntegersColl) MarshalParsleyJSON(dst []byte) (ln int) {
 }
 
 func (o *UnsignedIntegersColl) MarshalParsleyJSONSlice(dst []byte, slc []UnsignedIntegersColl) (ln int) {
-	if o == nil {
+	if slc == nil {
 		return writer.WriteNull(dst)
 	}
 	dst[0] = '['

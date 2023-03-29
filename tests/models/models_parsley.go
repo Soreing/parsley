@@ -102,7 +102,7 @@ func (o *Employee) MarshalParsleyJSON(dst []byte) (ln int) {
 }
 
 func (o *Employee) MarshalParsleyJSONSlice(dst []byte, slc []Employee) (ln int) {
-	if o == nil {
+	if slc == nil {
 		return writer.WriteNull(dst)
 	}
 	dst[0] = '['
@@ -194,7 +194,7 @@ func (o *Person) MarshalParsleyJSON(dst []byte) (ln int) {
 }
 
 func (o *Person) MarshalParsleyJSONSlice(dst []byte, slc []Person) (ln int) {
-	if o == nil {
+	if slc == nil {
 		return writer.WriteNull(dst)
 	}
 	dst[0] = '['
@@ -240,25 +240,27 @@ func (o *EmployeeList) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []Employ
 }
 
 func (o *EmployeeList) MarshalParsleyJSON(dst []byte) (ln int) {
+	if o == nil {
+		return writer.WriteNull(dst)
+	}
 	return (*Employee)(nil).MarshalParsleyJSONSlice(dst[ln:], *o)
 
 }
 
 func (o *EmployeeList) MarshalParsleyJSONSlice(dst []byte, slc []EmployeeList) (ln int) {
-	if slc != nil {
-		dst[0] = '['
-		ln++
-		if len(slc) > 0 {
-			ln += slc[0].MarshalParsleyJSON(dst[1:])
-			for _, o := range slc[1:] {
-				dst[ln] = ','
-				ln++
-				ln += o.MarshalParsleyJSON(dst[ln:])
-			}
-		}
-		dst[ln] = ']'
-		return ln + 1
-	} else {
+	if slc == nil {
 		return writer.WriteNull(dst)
 	}
+	dst[0] = '['
+	ln++
+	if len(slc) > 0 {
+		ln += slc[0].MarshalParsleyJSON(dst[1:])
+		for _, o := range slc[1:] {
+			dst[ln] = ','
+			ln++
+			ln += o.MarshalParsleyJSON(dst[ln:])
+		}
+	}
+	dst[ln] = ']'
+	return ln + 1
 }

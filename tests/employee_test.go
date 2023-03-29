@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -37,7 +38,30 @@ const EmployeeJSON = `{
 	"tags": ["punctual", "loyal", "cheap"]
 }`
 
-func Test_Employee(t *testing.T) {
+var EmployeeObject = models.Employee{
+	Id: "8becdcce-e762-40cf-b73c-092209f70a30",
+	Person: models.Person{
+		Fname: "John",
+		Lname: "Smith",
+		DOB:   time.Now(),
+	},
+	Devices: []externals.Device{
+		{
+			Name: "Work Computer",
+			Type: 0,
+		},
+		{
+			Name: "Work Mobile",
+			Type: 1,
+		},
+	},
+	IsActive:    true,
+	Rating:      8.65,
+	LineManager: nil,
+	Tags:        []string{"punctual", "loyal", "cheap"},
+}
+
+func Test_UnmarshalEmployee(t *testing.T) {
 	dat := []byte(EmployeeJSON)
 	emp := models.Employee{}
 
@@ -100,6 +124,21 @@ func Test_Employee(t *testing.T) {
 	}
 }
 
+func Test_MarshalEmployee(t *testing.T) {
+	if buf, err := parsley.Marshal(&EmployeeObject); err != nil {
+		t.Error("unmarshal failed", err)
+	} else {
+		if jbuf, err := json.Marshal(EmployeeObject); err != nil {
+			t.Error("standard library unmarshal failed", err)
+		} else if string(buf) != string(jbuf) {
+			t.Errorf(
+				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
+				string(buf), string(jbuf),
+			)
+		}
+	}
+}
+
 const EmployeeListJSON = `[
 	{
 		"id": "8becdcce-e762-40cf-b73c-092209f70a30",
@@ -123,7 +162,30 @@ const EmployeeListJSON = `[
 	}
 ]`
 
-func Test_EmployeeList(t *testing.T) {
+var EmployeeListObject = models.EmployeeList{
+	{
+		Id: "8becdcce-e762-40cf-b73c-092209f70a30",
+		Person: models.Person{
+			Fname: "John",
+			Lname: "Smith",
+			DOB:   time.Now(),
+		},
+		IsActive: true,
+		Rating:   8.65,
+	},
+	{
+		Id: "9d3567d5-f43b-48a3-9d69-7bee5f77776c",
+		Person: models.Person{
+			Fname: "Adam",
+			Lname: "Taylor",
+			DOB:   time.Now(),
+		},
+		IsActive: false,
+		Rating:   3.05,
+	},
+}
+
+func Test_UnmarshalEmployeeList(t *testing.T) {
 	dat := []byte(EmployeeListJSON)
 	emps := models.EmployeeList{}
 
@@ -170,6 +232,21 @@ func Test_EmployeeList(t *testing.T) {
 			if emps[1].Rating != 3.05 {
 				t.Error("employees[1].rating property value mismatch")
 			}
+		}
+	}
+}
+
+func Test_MarshalEmployeeList(t *testing.T) {
+	if buf, err := parsley.Marshal(&EmployeeListObject); err != nil {
+		t.Error("unmarshal failed", err)
+	} else {
+		if jbuf, err := json.Marshal(EmployeeListObject); err != nil {
+			t.Error("standard library unmarshal failed", err)
+		} else if string(buf) != string(jbuf) {
+			t.Errorf(
+				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
+				string(buf), string(jbuf),
+			)
 		}
 	}
 }

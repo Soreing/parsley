@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -26,7 +27,26 @@ const IntegersJSON = `{
 	"iptr": 6
 }`
 
-func Test_Integers(t *testing.T) {
+var I8Val, I16Val, I32Val, I64Val, IVal = int8(2), int16(3), int32(4), int64(5), int(6)
+var IntegersObject = basics.IntegersColl{
+	I8Dat:  -4,
+	I8Slc:  []int8{5, -85},
+	I8Ptr:  &I8Val,
+	I16Dat: -5,
+	I16Slc: []int16{6, -86},
+	I16Ptr: &I16Val,
+	I32Dat: -6,
+	I32Slc: []int32{7, -87},
+	I32Ptr: &I32Val,
+	I64Dat: -7,
+	I64Slc: []int64{8, -88},
+	I64Ptr: &I64Val,
+	IDat:   -8,
+	ISlc:   []int{9, -89},
+	IPtr:   &IVal,
+}
+
+func Test_UnmarshalIntegers(t *testing.T) {
 	dat := []byte(IntegersJSON)
 	ints := basics.IntegersColl{}
 
@@ -120,6 +140,37 @@ func Test_Integers(t *testing.T) {
 	}
 }
 
+func Test_MarshalIntegers(t *testing.T) {
+	if buf, err := parsley.Marshal(&IntegersObject); err != nil {
+		t.Error("unmarshal failed", err)
+	} else {
+		if jbuf, err := json.Marshal(IntegersObject); err != nil {
+			t.Error("standard library unmarshal failed", err)
+		} else if string(buf) != string(jbuf) {
+			t.Errorf(
+				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
+				string(buf), string(jbuf),
+			)
+		}
+	}
+}
+
+func Test_MarshalEmptyIntegers(t *testing.T) {
+	obj := basics.IntegersColl{}
+	if buf, err := parsley.Marshal(&obj); err != nil {
+		t.Error("unmarshal failed", err)
+	} else {
+		if jbuf, err := json.Marshal(obj); err != nil {
+			t.Error("standard library unmarshal failed", err)
+		} else if string(buf) != string(jbuf) {
+			t.Errorf(
+				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
+				string(buf), string(jbuf),
+			)
+		}
+	}
+}
+
 const UnsignedIntegersJSON = `{
 	"ui8dat": 4,
 	"ui8slc": [5, 85],
@@ -138,7 +189,26 @@ const UnsignedIntegersJSON = `{
 	"uiptr": 6
 }`
 
-func Test_UnsignedIntegers(t *testing.T) {
+var UI8Val, UI16Val, UI32Val, UI64Val, UIVal = uint8(2), uint16(3), uint32(4), uint64(5), uint(6)
+var UnsignedIntegersObject = basics.UnsignedIntegersColl{
+	UI8Dat:  4,
+	UI8Slc:  []uint8{5, 85},
+	UI8Ptr:  &UI8Val,
+	UI16Dat: 5,
+	UI16Slc: []uint16{6, 86},
+	UI16Ptr: &UI16Val,
+	UI32Dat: 6,
+	UI32Slc: []uint32{7, 87},
+	UI32Ptr: &UI32Val,
+	UI64Dat: 7,
+	UI64Slc: []uint64{8, 88},
+	UI64Ptr: &UI64Val,
+	UIDat:   8,
+	UISlc:   []uint{9, 89},
+	UIPtr:   &UIVal,
+}
+
+func Test_UnmarshalUnsignedIntegers(t *testing.T) {
 	dat := []byte(UnsignedIntegersJSON)
 	uints := basics.UnsignedIntegersColl{}
 
@@ -232,6 +302,37 @@ func Test_UnsignedIntegers(t *testing.T) {
 	}
 }
 
+func Test_MarshalUnsignedIntegers(t *testing.T) {
+	if buf, err := parsley.Marshal(&UnsignedIntegersObject); err != nil {
+		t.Error("unmarshal failed", err)
+	} else {
+		if jbuf, err := json.Marshal(UnsignedIntegersObject); err != nil {
+			t.Error("standard library unmarshal failed", err)
+		} else if string(buf) != string(jbuf) {
+			t.Errorf(
+				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
+				string(buf), string(jbuf),
+			)
+		}
+	}
+}
+
+func Test_MarshalEmptyUnsignedIntegers(t *testing.T) {
+	obj := basics.UnsignedIntegersColl{}
+	if buf, err := parsley.Marshal(&obj); err != nil {
+		t.Error("unmarshal failed", err)
+	} else {
+		if jbuf, err := json.Marshal(obj); err != nil {
+			t.Error("standard library unmarshal failed", err)
+		} else if string(buf) != string(jbuf) {
+			t.Errorf(
+				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
+				string(buf), string(jbuf),
+			)
+		}
+	}
+}
+
 const FloatingPointJSON = `{
 	"f32dat": 2.56,
 	"f32slc": [0.4, 1.87],
@@ -241,7 +342,17 @@ const FloatingPointJSON = `{
 	"f64ptr": -5
 }`
 
-func Test_FloatingPoints(t *testing.T) {
+var F32Val, F64Val = float32(-1.05), float64(-5)
+var FloatingPointsObject = basics.FloatingPointColl{
+	F32Dat: 2.56,
+	F32Slc: []float32{0.4, 1.87},
+	F32Ptr: &F32Val,
+	F64Dat: 7,
+	F64Slc: []float64{53.7, -5.7},
+	F64Ptr: &F64Val,
+}
+
+func Test_UnmarshalFloatingPoints(t *testing.T) {
 	dat := []byte(FloatingPointJSON)
 	floats := basics.FloatingPointColl{}
 
@@ -284,13 +395,51 @@ func Test_FloatingPoints(t *testing.T) {
 	}
 }
 
+func Test_MarshalFloatingPoints(t *testing.T) {
+	if buf, err := parsley.Marshal(&FloatingPointsObject); err != nil {
+		t.Error("unmarshal failed", err)
+	} else {
+		if jbuf, err := json.Marshal(FloatingPointsObject); err != nil {
+			t.Error("standard library unmarshal failed", err)
+		} else if string(buf) != string(jbuf) {
+			t.Errorf(
+				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
+				string(buf), string(jbuf),
+			)
+		}
+	}
+}
+
+func Test_MarshalEmptyFloatingPoints(t *testing.T) {
+	obj := basics.FloatingPointColl{}
+	if buf, err := parsley.Marshal(&obj); err != nil {
+		t.Error("unmarshal failed", err)
+	} else {
+		if jbuf, err := json.Marshal(obj); err != nil {
+			t.Error("standard library unmarshal failed", err)
+		} else if string(buf) != string(jbuf) {
+			t.Errorf(
+				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
+				string(buf), string(jbuf),
+			)
+		}
+	}
+}
+
 const BoooleansJSON = `{
 	"bdat": true,
 	"bslc": [true, false],
 	"bptr": false
 }`
 
-func Test_Booleans(t *testing.T) {
+var BVal = false
+var BooleansObject = basics.BooleansColl{
+	BDat: true,
+	BSlc: []bool{true, false},
+	BPtr: &BVal,
+}
+
+func Test_UnmarshalBooleans(t *testing.T) {
 	dat := []byte(BoooleansJSON)
 	bools := basics.BooleansColl{}
 
@@ -316,8 +465,39 @@ func Test_Booleans(t *testing.T) {
 	}
 }
 
+func Test_MarshalBooleans(t *testing.T) {
+	if buf, err := parsley.Marshal(&BooleansObject); err != nil {
+		t.Error("unmarshal failed", err)
+	} else {
+		if jbuf, err := json.Marshal(BooleansObject); err != nil {
+			t.Error("standard library unmarshal failed", err)
+		} else if string(buf) != string(jbuf) {
+			t.Errorf(
+				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
+				string(buf), string(jbuf),
+			)
+		}
+	}
+}
+
+func Test_MarshalEmptyBooleans(t *testing.T) {
+	obj := basics.BooleansColl{}
+	if buf, err := parsley.Marshal(&obj); err != nil {
+		t.Error("unmarshal failed", err)
+	} else {
+		if jbuf, err := json.Marshal(obj); err != nil {
+			t.Error("standard library unmarshal failed", err)
+		} else if string(buf) != string(jbuf) {
+			t.Errorf(
+				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
+				string(buf), string(jbuf),
+			)
+		}
+	}
+}
+
 const StringsJSON = `{
-	"sdat": "a\"b\\c\/d\be\ff\ng\rh\ti",
+	"sdat": "John Smith",
 	"sslc": ["Hello", "World"],
 	"sptr": "Test",
 	"tdat": "2000-01-01T00:00:00Z",
@@ -325,14 +505,27 @@ const StringsJSON = `{
 	"tptr": "1999-06-27T20:30:30Z"
 }`
 
-func Test_Strings(t *testing.T) {
+var SVal, TVal = "Test", time.Now().Add(time.Second * 2564325)
+var StringsObject = basics.StringsColl{
+	SDat: "John Smith",
+	SSlc: []string{"Hello", "World"},
+	SPtr: &SVal,
+	TDat: time.Now().Add(time.Second * 8137490),
+	TSlc: []time.Time{
+		time.Now().Add(time.Second * 20348623),
+		time.Now().Add(time.Second * 9175179),
+	},
+	TPtr: &TVal,
+}
+
+func Test_UnmarshalStrings(t *testing.T) {
 	dat := []byte(StringsJSON)
 	strings := basics.StringsColl{}
 
 	if err := parsley.Unmarshal(dat, &strings); err != nil {
 		t.Error("unmarshal failed", err)
 	} else {
-		if strings.SDat != "a\"b\\c/d\be\ff\ng\rh\ti" {
+		if strings.SDat != "John Smith" {
 			t.Error("sdat property value mismatch")
 		}
 		if len(strings.SSlc) != 2 {
@@ -364,6 +557,37 @@ func Test_Strings(t *testing.T) {
 		}
 		if strings.TPtr == nil || (*strings.TPtr).Format(time.RFC3339) != "1999-06-27T20:30:30Z" {
 			t.Error("tptr property value mismatch")
+		}
+	}
+}
+
+func Test_MarshalStrings(t *testing.T) {
+	if buf, err := parsley.Marshal(&StringsObject); err != nil {
+		t.Error("unmarshal failed", err)
+	} else {
+		if jbuf, err := json.Marshal(StringsObject); err != nil {
+			t.Error("standard library unmarshal failed", err)
+		} else if string(buf) != string(jbuf) {
+			t.Errorf(
+				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
+				string(buf), string(jbuf),
+			)
+		}
+	}
+}
+
+func Test_MarshalEmptyStrings(t *testing.T) {
+	obj := basics.StringsColl{}
+	if buf, err := parsley.Marshal(&obj); err != nil {
+		t.Error("unmarshal failed", err)
+	} else {
+		if jbuf, err := json.Marshal(obj); err != nil {
+			t.Error("standard library unmarshal failed", err)
+		} else if string(buf) != string(jbuf) {
+			t.Errorf(
+				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
+				string(buf), string(jbuf),
+			)
 		}
 	}
 }
