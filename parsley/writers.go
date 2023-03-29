@@ -48,13 +48,13 @@ func (g *Generator) WriteDefine(df Define) {
 		"    return\n" +
 		"}\n\n" +
 		"func (o *" + name + ") MarshalParsleyJSON(dst []byte) (ln int) {\n" +
-		"    if src == nil {\n" +
+		"    if o == nil {\n" +
 		"        return writer.WriteNull(dst)\n" +
 		"    }\n" +
 		"    return " + createMarshalDefineBody(di) + "\n" +
 		"}\n\n" +
 		"func (o *" + name + ") MarshalParsleyJSONSlice(dst []byte, slc []" + name + ") (ln int) {\n" +
-		"    if src == nil {\n" +
+		"    if slc == nil {\n" +
 		"        return writer.WriteNull(dst)\n" +
 		"    }\n" +
 		"    dst[0] = '['\n" +
@@ -141,7 +141,7 @@ func (g *Generator) WriteStruct(st Struct) {
 		"    return ln\n" +
 		"}\n\n" +
 		"func (o *" + name + ") MarshalParsleyJSONSlice(dst []byte, slc []" + name + ") (ln int) {\n" +
-		"    if src == nil {\n" +
+		"    if slc == nil {\n" +
 		"        return writer.WriteNull(dst)\n" +
 		"    }\n" +
 		"    dst[0] = '['\n" +
