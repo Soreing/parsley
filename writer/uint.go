@@ -1,6 +1,9 @@
 package writer
 
-import "strconv"
+import (
+	"encoding/base64"
+	"strconv"
+)
 
 func WriteUInt8(dst []byte, n uint8) (ln int) {
 	if n != 0 {
@@ -28,25 +31,17 @@ func WriteUInt8Ptr(dst []byte, n *uint8) (ln int) {
 }
 
 func WriteUInt8s(dst []byte, ns []uint8) (ln int) {
-	tmp, res := make([]byte, 0, 32), ([]byte)(nil)
 	if ns != nil {
-		dst[0] = '['
-		ln++
-
 		if len(ns) > 0 {
-			res = strconv.AppendInt(tmp, int64(ns[0]), 10)
-			ln += copy(dst[1:], res)
-			for _, n := range ns[1:] {
-				dst[ln] = ','
-				ln++
-
-				res = strconv.AppendInt(tmp, int64(n), 10)
-				ln += copy(dst[ln:], res)
-			}
+			base64.StdEncoding.Encode(dst[1:], ns)
+			ln = (len(ns)+2)/3*4 + 2
+			dst[0], dst[ln-1] = '"', '"'
+			return
+		} else {
+			dst[0] = '"'
+			dst[1] = '"'
+			return 2
 		}
-
-		dst[ln] = ']'
-		return ln + 1
 	} else {
 		dst[0] = 'n'
 		dst[1] = 'u'
