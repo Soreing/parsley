@@ -216,11 +216,6 @@ func (v *visitor) Visit(n ast.Node) (w ast.Visitor) {
 }
 
 func (p *Parser) Parse(fname string, isDir bool) (err error) {
-	p.Imports = append(p.Imports, Import{
-		"reader",
-		"\"github.com/Soreing/parsley/reader\"",
-	})
-
 	info, err := os.Stat(fname)
 	if err != nil {
 		log.Fatal(err)

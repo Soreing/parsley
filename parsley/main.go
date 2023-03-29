@@ -76,17 +76,24 @@ func generate(fname string) error {
 	}
 
 	g.WriteHeader()
-	g.WriteImports(p.Imports, p.Defines, p.Structs)
+
+	pkgs := g.GetRequiredPackages(p.Imports, p.Defines, p.Structs)
+	g.WriteImports(pkgs)
 
 	for _, st := range p.Structs {
-		g.ProcessStruct(st)
-	}
-	for _, df := range p.Defines {
-		g.ProcessDefine(df)
+		g.WriteStruct(st)
 	}
 
-	src := g.ReadAll()
-	err = ioutil.WriteFile(outName, src, 0644)
+	for _, df := range p.Defines {
+		g.WriteDefine(df)
+	}
+
+	fmtd, err := g.Format(g.ReadAll())
+	if err != nil {
+		log.Fatalf("formating output: %s", err)
+	}
+
+	err = ioutil.WriteFile(outName, fmtd, 0644)
 	if err != nil {
 		log.Fatalf("writing output: %s", err)
 	}
