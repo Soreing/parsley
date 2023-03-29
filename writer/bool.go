@@ -43,6 +43,7 @@ func WriteBoolPtr(dst []byte, b *bool) (ln int) {
 func WriteBools(dst []byte, bs []bool) (ln int) {
 	if bs != nil {
 		dst[0] = '['
+		dst = dst[1:]
 		ln++
 
 		if len(bs) > 0 {
