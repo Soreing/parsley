@@ -1,4 +1,4 @@
-package parsley
+package main
 
 import (
 	"bytes"

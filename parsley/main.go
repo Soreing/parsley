@@ -8,8 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/Soreing/parsley"
 )
 
 var specifiedName = flag.String("output_filename", "", "specify the filename of the output")
@@ -43,7 +41,7 @@ func generate(fname string) error {
 		return err
 	}
 
-	p := parsley.Parser{AllTypes: *allTypes}
+	p := Parser{AllTypes: *allTypes}
 	if err := p.Parse(fname, finf.IsDir()); err != nil {
 		return fmt.Errorf("error parsing %v: %v", fname, err)
 	}
@@ -57,22 +55,22 @@ func generate(fname string) error {
 		outName = strings.TrimSuffix(fname, ".go") + "_parsley.go"
 	}
 
-	g := parsley.NewGenerator()
+	g := NewGenerator()
 
 	g.SetPackage(p.PkgName)
 
 	if *lowerCase {
-		g.SetDefaultCase(parsley.LOWER_CASE)
+		g.SetDefaultCase(LOWER_CASE)
 	} else if *camelCase {
-		g.SetDefaultCase(parsley.CAMEL_CASE)
+		g.SetDefaultCase(CAMEL_CASE)
 	} else if *kebabCase {
-		g.SetDefaultCase(parsley.KEBAB_CASE)
+		g.SetDefaultCase(KEBAB_CASE)
 	} else if *snakeCase {
-		g.SetDefaultCase(parsley.SNAKE_CASE)
+		g.SetDefaultCase(SNAKE_CASE)
 	} else if *pascalCase {
-		g.SetDefaultCase(parsley.PASCAL_CASE)
+		g.SetDefaultCase(PASCAL_CASE)
 	} else {
-		g.SetDefaultCase(parsley.LOWER_CASE)
+		g.SetDefaultCase(LOWER_CASE)
 	}
 
 	g.WriteHeader()

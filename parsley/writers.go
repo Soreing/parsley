@@ -1,4 +1,4 @@
-package parsley
+package main
 
 // Writes the header for the source file
 func (g *Generator) WriteHeader() {
