@@ -28,7 +28,7 @@ func (r *Reader) SetPosition(pos int) {
 func (r *Reader) Next() bool {
 	if r.pos < len(r.dat) && r.dat[r.pos] == ',' {
 		r.pos++
-		r.skipWhiteSpace()
+		r.SkipWhiteSpace()
 		return true
 	}
 	return false

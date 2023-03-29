@@ -67,7 +67,7 @@ func (r *Reader) GetByteArray() ([]byte, error) {
 
 		} else if dat[pos] == '"' {
 			r.pos += pos + 1
-			r.skipWhiteSpace()
+			r.SkipWhiteSpace()
 			return dat[1:pos], nil
 
 		} else if dat[pos] == '\\' {
@@ -120,7 +120,7 @@ func (r *Reader) GetByteArray() ([]byte, error) {
 				return nil, NewEndOfFileError()
 			} else if dat[pos] == '"' {
 				r.pos += pos + 1
-				r.skipWhiteSpace()
+				r.SkipWhiteSpace()
 				return buf[:bi], nil
 			} else if bi == len(buf) {
 				if tlen := strTokLen(dat[pos:]); tlen == -1 {

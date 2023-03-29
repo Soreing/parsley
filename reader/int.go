@@ -55,7 +55,7 @@ func (r *Reader) getInt() (int64, error) {
 		}
 	}
 
-	r.skipWhiteSpace()
+	r.SkipWhiteSpace()
 	return sig * intg, nil
 }
 

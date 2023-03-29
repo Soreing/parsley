@@ -27,7 +27,7 @@ func (r *Reader) OpenObject() error {
 	}
 
 	r.pos++
-	r.skipWhiteSpace()
+	r.SkipWhiteSpace()
 	return nil
 }
 
@@ -39,7 +39,7 @@ func (r *Reader) CloseObject() error {
 	}
 
 	r.pos++
-	r.skipWhiteSpace()
+	r.SkipWhiteSpace()
 	return nil
 }
 
@@ -52,7 +52,7 @@ func (r *Reader) GetKey() ([]byte, error) {
 		}
 
 		r.pos++
-		r.skipWhiteSpace()
+		r.SkipWhiteSpace()
 		return key, nil
 	}
 }

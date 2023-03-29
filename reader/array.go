@@ -25,7 +25,7 @@ func (r *Reader) OpenArray() error {
 	}
 
 	r.pos++
-	r.skipWhiteSpace()
+	r.SkipWhiteSpace()
 	return nil
 }
 
@@ -38,6 +38,6 @@ func (r *Reader) CloseArray() error {
 	}
 
 	r.pos++
-	r.skipWhiteSpace()
+	r.SkipWhiteSpace()
 	return nil
 }

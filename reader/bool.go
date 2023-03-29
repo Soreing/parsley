@@ -14,7 +14,7 @@ func (r *Reader) GetBool() (bool, error) {
 				return false, NewInvalidCharacterError(r.dat[r.pos+3], r.pos+3)
 			} else {
 				r.pos += 4
-				r.skipWhiteSpace()
+				r.SkipWhiteSpace()
 				return true, nil
 			}
 		case 'f':
@@ -30,7 +30,7 @@ func (r *Reader) GetBool() (bool, error) {
 				return false, NewInvalidCharacterError(r.dat[r.pos+4], r.pos+4)
 			} else {
 				r.pos += 5
-				r.skipWhiteSpace()
+				r.SkipWhiteSpace()
 				return false, nil
 			}
 		default:

@@ -47,7 +47,7 @@ func (r *Reader) getUInt() (uint64, error) {
 		}
 	}
 
-	r.skipWhiteSpace()
+	r.SkipWhiteSpace()
 	return intg, nil
 }
 

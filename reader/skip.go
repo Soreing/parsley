@@ -1,6 +1,6 @@
 package reader
 
-func (r *Reader) skipWhiteSpace() {
+func (r *Reader) SkipWhiteSpace() {
 	for {
 		if r.pos >= len(r.dat) {
 			return
@@ -75,11 +75,11 @@ func (r *Reader) Skip() error {
 		return NewInvalidCharacterError(r.dat[r.pos], r.pos)
 	}
 
-	r.skipWhiteSpace()
+	r.SkipWhiteSpace()
 	return nil
 }
 
 func (r *Reader) SkipNull() {
 	r.pos += 4
-	r.skipWhiteSpace()
+	r.SkipWhiteSpace()
 }

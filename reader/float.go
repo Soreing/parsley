@@ -115,7 +115,7 @@ func (r *Reader) getFloat() (float64, error) {
 		}
 	}
 
-	r.skipWhiteSpace()
+	r.SkipWhiteSpace()
 	return sig * (intg + frc), nil
 }
 

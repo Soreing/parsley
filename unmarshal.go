@@ -7,5 +7,7 @@ type ParsleyJSONUnmarshaller interface {
 }
 
 func Unmarshal(src []byte, dst ParsleyJSONUnmarshaller) error {
-	return dst.UnmarshalParsleyJSON(reader.NewReader(src))
+	r := reader.NewReader(src)
+	r.SkipWhiteSpace()
+	return dst.UnmarshalParsleyJSON(r)
 }
