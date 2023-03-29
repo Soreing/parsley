@@ -43,7 +43,7 @@ func getDefaultValueByteLength(fi FieldInfo) (ln int) {
 	case "string":
 		return 2
 	case "time.Time":
-		return 22
+		return 27
 	default:
 		return 0
 	}
