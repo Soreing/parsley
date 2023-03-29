@@ -2,87 +2,149 @@
 package externals
 
 import (
-    reader "github.com/Soreing/parsley/reader"
+	reader "github.com/Soreing/parsley/reader"
+	writer "github.com/Soreing/parsley/writer"
 )
 
-func (o *Device)UnmarshalParsleyJSON(r *reader.Reader) (err error) {
-    var key []byte
-    err = r.OpenObject()
-    if r.GetType() != reader.TerminatorToken {
-        for err == nil {
-            if key, err = r.GetKey(); err == nil {
-                if r.IsNull() {
-                    r.SkipNull()
-                } else {
-                    switch string(key) {
-                    case "name":
-                        o.Name, err = r.GetString()
-                    case "type":
-                        err = o.Type.UnmarshalParsleyJSON(r)
-                    default:
-                        err = r.Skip()
-                    }
-                }
-                if err == nil && !r.Next() {
-                    break
-                }
-            }
-        }
-    }
-    if err == nil {
-        err = r.CloseObject()
-    }
-    return
+var _ *reader.Reader
+var _ *writer.Writer
+
+func (o *Device) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
+	var key []byte
+	err = r.OpenObject()
+	if r.GetType() != reader.TerminatorToken {
+		for err == nil {
+			if key, err = r.GetKey(); err == nil {
+				if r.IsNull() {
+					r.SkipNull()
+				} else {
+					switch string(key) {
+					case "name":
+						o.Name, err = r.GetString()
+					case "type":
+						err = o.Type.UnmarshalParsleyJSON(r)
+					default:
+						err = r.Skip()
+					}
+				}
+				if err == nil && !r.Next() {
+					break
+				}
+			}
+		}
+	}
+	if err == nil {
+		err = r.CloseObject()
+	}
+	return
 }
 
-func (o *Device)sequenceParsleyJSON(r *reader.Reader, idx int) (res []Device, err error) {
-    var e Device
-    if err = e.UnmarshalParsleyJSON(r); err == nil {
-        if !r.Next() {
-            res = make([]Device, idx+1)
-            res[idx] = e
-            return
-        } else if res, err = o.sequenceParsleyJSON(r, idx + 1); err == nil {
-            res[idx] = e
-        }
-    }
-    return
+func (o *Device) sequenceParsleyJSON(r *reader.Reader, idx int) (res []Device, err error) {
+	var e Device
+	if err = e.UnmarshalParsleyJSON(r); err == nil {
+		if !r.Next() {
+			res = make([]Device, idx+1)
+			res[idx] = e
+			return
+		} else if res, err = o.sequenceParsleyJSON(r, idx+1); err == nil {
+			res[idx] = e
+		}
+	}
+	return
 }
 
 func (o *Device) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []Device, err error) {
-    if err = r.OpenArray(); err == nil {
-        if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
-            err = r.CloseArray()
-        }
-    }
-    return
+	if err = r.OpenArray(); err == nil {
+		if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
+			err = r.CloseArray()
+		}
+	}
+	return
 }
 
-func (o *DeviceType)UnmarshalParsleyJSON(r *reader.Reader) (err error) {
-    *(*int)(o), err = r.GetInt()
-    return
+func (o *Device) MarshalParsleyJSON(dst []byte) (ln int) {
+	if o == nil {
+		return writer.WriteNull(dst)
+	}
+	off := 1
+	dst[0] = '{'
+	ln++
+	ln += copy(dst[ln:], ",\"name\":"[off:])
+	ln += writer.WriteString(dst[ln:], o.Name)
+	off = 0
+	ln += copy(dst[ln:], ",\"type\":")
+	ln += o.Type.MarshalParsleyJSON(dst[ln:])
+	dst[ln] = '}'
+	ln++
+	return ln
 }
 
-func (o *DeviceType)sequenceParsleyJSON(r *reader.Reader, idx int) (res []DeviceType, err error) {
-    var e DeviceType
-    if err = e.UnmarshalParsleyJSON(r); err == nil {
-        if !r.Next() {
-            res = make([]DeviceType, idx+1)
-            res[idx] = e
-            return
-        } else if res, err = o.sequenceParsleyJSON(r, idx + 1); err == nil {
-            res[idx] = e
-        }
-    }
-    return
+func (o *Device) MarshalParsleyJSONSlice(dst []byte, slc []Device) (ln int) {
+	if o == nil {
+		return writer.WriteNull(dst)
+	}
+	dst[0] = '['
+	ln++
+	if len(slc) > 0 {
+		ln += slc[0].MarshalParsleyJSON(dst[1:])
+		for _, o := range slc[1:] {
+			dst[ln] = ','
+			ln++
+			ln += o.MarshalParsleyJSON(dst[ln:])
+		}
+	}
+	dst[ln] = ']'
+	return ln + 1
+}
+
+func (o *DeviceType) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
+	*(*int)(o), err = r.GetInt()
+	return
+}
+
+func (o *DeviceType) sequenceParsleyJSON(r *reader.Reader, idx int) (res []DeviceType, err error) {
+	var e DeviceType
+	if err = e.UnmarshalParsleyJSON(r); err == nil {
+		if !r.Next() {
+			res = make([]DeviceType, idx+1)
+			res[idx] = e
+			return
+		} else if res, err = o.sequenceParsleyJSON(r, idx+1); err == nil {
+			res[idx] = e
+		}
+	}
+	return
 }
 
 func (o *DeviceType) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []DeviceType, err error) {
-    if err = r.OpenArray(); err == nil {
-        if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
-            err = r.CloseArray()
-        }
-    }
-    return
+	if err = r.OpenArray(); err == nil {
+		if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
+			err = r.CloseArray()
+		}
+	}
+	return
 }
 
+func (o *DeviceType) MarshalParsleyJSON(dst []byte) (ln int) {
+	return writer.WriteInt(dst[ln:], int(*o))
+
+}
+
+func (o *DeviceType) MarshalParsleyJSONSlice(dst []byte, slc []DeviceType) (ln int) {
+	if slc != nil {
+		dst[0] = '['
+		ln++
+		if len(slc) > 0 {
+			ln += slc[0].MarshalParsleyJSON(dst[1:])
+			for _, o := range slc[1:] {
+				dst[ln] = ','
+				ln++
+				ln += o.MarshalParsleyJSON(dst[ln:])
+			}
+		}
+		dst[ln] = ']'
+		return ln + 1
+	} else {
+		return writer.WriteNull(dst)
+	}
+}
