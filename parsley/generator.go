@@ -188,29 +188,61 @@ func parseTag(str string) (alias string, omit bool) {
 	return
 }
 
-// TODO: Implement unicode escape logic
 // Escapes a string to be a valid JSON string
+// Unescapes UTF-8 escape codes to runes
 func escapeJSONString(s string) (res string) {
-	for i := 0; i < len(s); i++ {
-		switch s[i] {
-		case '"':
-			res += "\\\""
-		case '\\':
-			res += "\\\\"
-		case '/':
-			res += "\\/"
-		case '\b':
-			res += "\\b"
-		case '\f':
-			res += "\\f"
-		case '\n':
-			res += "\\n"
-		case '\r':
-			res += "\\r"
-		case '\t':
-			res += "\\t"
-		default:
-			res += string(s[i])
+	esc, utf, hex, acc := false, false, 0, 0
+	for _, c := range s {
+		if utf {
+			// Add the next hex digit to the accumulator
+			if c >= 'A' && c <= 'F' {
+				acc = acc<<4 | int(c-'A')
+			} else if c >= 'a' && c <= 'a' {
+				acc = acc<<4 | int(c-'a')
+			} else if c >= '0' && c <= '9' {
+				acc = acc<<4 | int(c-'0')
+			} else {
+				panic("invalid UTF-8 hexadecimal digit")
+			}
+
+			// At the end of the 4 digit sequence, add the rune
+			if hex == 3 {
+				res += string(rune(acc))
+				esc, utf, hex, acc = false, false, 0, 0
+			} else {
+				hex++
+			}
+		} else if esc {
+			// Check if escape is a UTF-8 escape sequence
+			if c == 'u' {
+				utf = true
+			} else {
+				esc = false
+				res += "\\\\"
+			}
+		} else if c == '\\' {
+			// Enter and escape sequence on "\"
+			esc = true
+		} else {
+			// Handle the rune regularly
+			switch c {
+			case '"':
+				res += "\\\""
+			case '/':
+				res += "\\/"
+			case '\b':
+				res += "\\b"
+			case '\f':
+				res += "\\f"
+			case '\n':
+				res += "\\n"
+			case '\r':
+				res += "\\r"
+			case '\t':
+				res += "\\t"
+			default:
+				res += string(c)
+			}
 		}
 	}
 	return

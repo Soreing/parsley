@@ -133,6 +133,7 @@ func (g *Generator) WriteStruct(st Struct) {
 		"        return writer.WriteNull(dst)\n" +
 		"    }\n" +
 		"    off := 1\n" +
+		"    _ = off\n" +
 		"    dst[0] = '{'\n" +
 		"    ln++\n" +
 		createMarshalStructBody(fis) +

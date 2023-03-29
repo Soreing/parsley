@@ -153,7 +153,7 @@ func getWriteFieldFunction(fi FieldInfo) (fn string) {
 func createUnmarshalStructBody(fis []FieldInfo) (code string) {
 	subs := make([]string, len(fis))
 	for i, fi := range fis {
-		subs[i] = "case \"" + fi.Alias + "\":\n"
+		subs[i] = "case `" + fi.Alias + "`:\n"
 
 		if fn, unknown := getReaderTypeFormat(fi.TypeName); !unknown {
 			subs[i] += "o." + fi.Name + ", err = "
@@ -184,7 +184,7 @@ func createMarshalStructBody(fis []FieldInfo) (code string) {
 	skipComma, resetOffset, offsetSuffix := false, "off = 0\n", "[off:]"
 
 	for i, fi := range fis {
-		value := "ln += copy(dst[ln:], \",\\\"" + fi.AliasEsc + "\\\":\"" + offsetSuffix + ")\n"
+		value := "ln += copy(dst[ln:], `,\"" + fi.AliasEsc + "\":`" + offsetSuffix + ")\n"
 		if fn, unknown := getWriterTypeFormat(fi.TypeName); !unknown {
 			if fi.Array {
 				value += "ln += " + fmt.Sprintf(fn, "s", "o."+fi.Name) + "\n"
