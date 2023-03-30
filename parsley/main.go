@@ -17,6 +17,7 @@ var camelCase = flag.Bool("camel_case", false, "use camel case names by default"
 var kebabCase = flag.Bool("kebab_case", false, "use kebab case names by default")
 var snakeCase = flag.Bool("snake_case", false, "use snake case names by default")
 var pascalCase = flag.Bool("pascal_case", false, "use pascal case names by default")
+var allPublic = flag.Bool("public", false, "include private fields in encoding/decoding")
 
 func main() {
 	flag.Parse()
@@ -41,7 +42,10 @@ func generate(fname string) error {
 		return err
 	}
 
-	p := Parser{AllTypes: *allTypes}
+	p := Parser{
+		AllTypes:  *allTypes,
+		AllPublic: *allPublic,
+	}
 	if err := p.Parse(fname, finf.IsDir()); err != nil {
 		return fmt.Errorf("error parsing %v: %v", fname, err)
 	}

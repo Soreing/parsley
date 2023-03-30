@@ -173,3 +173,168 @@ func (o *EscapedField) MarshalParsleyJSONSlice(dst []byte, slc []EscapedField) (
 	dst[ln] = ']'
 	return ln + 1
 }
+
+func (o *PrivateField) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
+	var key []byte
+	err = r.OpenObject()
+	if r.GetType() != reader.TerminatorToken {
+		for err == nil {
+			if key, err = r.GetKey(); err == nil {
+				if r.IsNull() {
+					r.SkipNull()
+				} else {
+					switch string(key) {
+					default:
+						err = r.Skip()
+					}
+				}
+				if err == nil && !r.Next() {
+					break
+				}
+			}
+		}
+	}
+	if err == nil {
+		err = r.CloseObject()
+	}
+	return
+}
+
+func (o *PrivateField) sequenceParsleyJSON(r *reader.Reader, idx int) (res []PrivateField, err error) {
+	var e PrivateField
+	if err = e.UnmarshalParsleyJSON(r); err == nil {
+		if !r.Next() {
+			res = make([]PrivateField, idx+1)
+			res[idx] = e
+			return
+		} else if res, err = o.sequenceParsleyJSON(r, idx+1); err == nil {
+			res[idx] = e
+		}
+	}
+	return
+}
+
+func (o *PrivateField) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []PrivateField, err error) {
+	if err = r.OpenArray(); err == nil {
+		if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
+			err = r.CloseArray()
+		}
+	}
+	return
+}
+
+func (o *PrivateField) MarshalParsleyJSON(dst []byte) (ln int) {
+	if o == nil {
+		return writer.WriteNull(dst)
+	}
+	off := 1
+	_ = off
+	dst[0] = '{'
+	ln++
+	dst[ln] = '}'
+	ln++
+	return ln
+}
+
+func (o *PrivateField) MarshalParsleyJSONSlice(dst []byte, slc []PrivateField) (ln int) {
+	if slc == nil {
+		return writer.WriteNull(dst)
+	}
+	dst[0] = '['
+	ln++
+	if len(slc) > 0 {
+		ln += slc[0].MarshalParsleyJSON(dst[1:])
+		for _, o := range slc[1:] {
+			dst[ln] = ','
+			ln++
+			ln += o.MarshalParsleyJSON(dst[ln:])
+		}
+	}
+	dst[ln] = ']'
+	return ln + 1
+}
+
+func (o *PublicField) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
+	var key []byte
+	err = r.OpenObject()
+	if r.GetType() != reader.TerminatorToken {
+		for err == nil {
+			if key, err = r.GetKey(); err == nil {
+				if r.IsNull() {
+					r.SkipNull()
+				} else {
+					switch string(key) {
+					case "field":
+						o.field, err = r.GetString()
+					default:
+						err = r.Skip()
+					}
+				}
+				if err == nil && !r.Next() {
+					break
+				}
+			}
+		}
+	}
+	if err == nil {
+		err = r.CloseObject()
+	}
+	return
+}
+
+func (o *PublicField) sequenceParsleyJSON(r *reader.Reader, idx int) (res []PublicField, err error) {
+	var e PublicField
+	if err = e.UnmarshalParsleyJSON(r); err == nil {
+		if !r.Next() {
+			res = make([]PublicField, idx+1)
+			res[idx] = e
+			return
+		} else if res, err = o.sequenceParsleyJSON(r, idx+1); err == nil {
+			res[idx] = e
+		}
+	}
+	return
+}
+
+func (o *PublicField) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []PublicField, err error) {
+	if err = r.OpenArray(); err == nil {
+		if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
+			err = r.CloseArray()
+		}
+	}
+	return
+}
+
+func (o *PublicField) MarshalParsleyJSON(dst []byte) (ln int) {
+	if o == nil {
+		return writer.WriteNull(dst)
+	}
+	off := 1
+	_ = off
+	dst[0] = '{'
+	ln++
+	ln += copy(dst[ln:], ",\"field\":"[off:])
+	ln += writer.WriteString(dst[ln:], o.field)
+	off = 0
+	dst[ln] = '}'
+	ln++
+	return ln
+}
+
+func (o *PublicField) MarshalParsleyJSONSlice(dst []byte, slc []PublicField) (ln int) {
+	if slc == nil {
+		return writer.WriteNull(dst)
+	}
+	dst[0] = '['
+	ln++
+	if len(slc) > 0 {
+		ln += slc[0].MarshalParsleyJSON(dst[1:])
+		for _, o := range slc[1:] {
+			dst[ln] = ','
+			ln++
+			ln += o.MarshalParsleyJSON(dst[ln:])
+		}
+	}
+	dst[ln] = ']'
+	return ln + 1
+}

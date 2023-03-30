@@ -64,3 +64,49 @@ func Test_Whitespaces(t *testing.T) {
 		t.Error("unmarshal failed", err)
 	}
 }
+
+const PublicFieldJSON = `{"field":"value"}`
+const PrivateFieldJSON = `{}`
+
+func Test_FieldVisibilityDecoding(t *testing.T) {
+	dat := []byte(PublicFieldJSON)
+	pub := controls.PublicField{}
+	prv := controls.PrivateField{}
+
+	if err := parsley.Unmarshal(dat, &pub); err != nil {
+		t.Error("unmarshal failed", err)
+	} else {
+		if pub.GetFieldValue() != "value" {
+			t.Errorf("value property value mismatch")
+		}
+	}
+	if err := parsley.Unmarshal(dat, &prv); err != nil {
+		t.Error("unmarshal failed", err)
+	} else {
+		if pub.GetFieldValue() != "value" {
+			t.Errorf("value property value mismatch")
+		}
+	}
+}
+
+func Test_FieldVisibilityEncoding(t *testing.T) {
+	pub := controls.PublicField{}
+	pub.SetFieldValue("value")
+	prv := controls.PrivateField{}
+	prv.SetFieldValue("value")
+
+	if res, err := parsley.Marshal(&pub); err != nil {
+		t.Error("marshal failed", err)
+	} else {
+		if string(res) != PublicFieldJSON {
+			t.Errorf("public result mismatch")
+		}
+	}
+	if res, err := parsley.Marshal(&prv); err != nil {
+		t.Error("marshal failed", err)
+	} else {
+		if string(res) != PrivateFieldJSON {
+			t.Errorf("private result mismatch")
+		}
+	}
+}

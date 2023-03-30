@@ -101,11 +101,13 @@ func newField(f *ast.Field) (Field, error) {
 	}, nil
 }
 
-func newStruct(name string, st *ast.StructType) Struct {
+func newStruct(name string, public bool, st *ast.StructType) Struct {
 	flds := []Field{}
 	for _, f := range st.Fields.List {
 		if fl, err := newField(f); err == nil {
-			flds = append(flds, fl)
+			if ast.IsExported(fl.name) || public {
+				flds = append(flds, fl)
+			}
 		} else {
 			fmt.Println(err.Error())
 		}
@@ -117,24 +119,28 @@ func newStruct(name string, st *ast.StructType) Struct {
 }
 
 type Parser struct {
-	PkgDir   string
-	PkgName  string
-	Structs  []Struct
-	Defines  []Define
-	Imports  []Import
-	AllTypes bool
+	PkgDir    string
+	PkgName   string
+	Structs   []Struct
+	Defines   []Define
+	Imports   []Import
+	AllTypes  bool
+	AllPublic bool
 }
 
 type visitor struct {
 	*Parser
 
 	skip bool
-	expl bool
+	json bool
+	publ bool
 }
 
 const (
-	explicitComment = "parsley:explicit"
-	skipComment     = "parsley:skip"
+	optionTag = "parsley:"
+	jsonTag   = "json"
+	skipTag   = "skip"
+	publicTag = "public"
 )
 
 func (v *visitor) handleComment(comments *ast.CommentGroup) {
@@ -157,8 +163,20 @@ func (v *visitor) handleComment(comments *ast.CommentGroup) {
 
 		for _, comment := range strings.Split(comment, "\n") {
 			comment = strings.TrimSpace(comment)
-			v.skip = v.skip || strings.HasPrefix(comment, skipComment)
-			v.expl = v.expl || strings.HasPrefix(comment, explicitComment)
+			if strings.HasPrefix(comment, optionTag) {
+				opts := strings.TrimPrefix(comment, optionTag)
+				toks := strings.Split(opts, ",")
+				for _, e := range toks {
+					switch e {
+					case jsonTag:
+						v.json = true
+					case skipTag:
+						v.skip = true
+					case publicTag:
+						v.publ = true
+					}
+				}
+			}
 		}
 	}
 }
@@ -193,11 +211,11 @@ func (v *visitor) Visit(n ast.Node) (w ast.Visitor) {
 		return v
 
 	case *ast.TypeSpec:
-		if !v.skip && (v.expl || v.AllTypes) {
+		if !v.skip && (v.json || v.AllTypes) {
 			name := n.Name.String()
 			switch t := n.Type.(type) {
 			case *ast.StructType:
-				st := newStruct(name, t)
+				st := newStruct(name, v.publ || v.AllPublic, t)
 				v.Structs = append(v.Structs, st)
 			case *ast.Ident, *ast.SelectorExpr, *ast.ArrayType:
 				if ts, err := getType(n.Type); err == nil {
@@ -209,7 +227,7 @@ func (v *visitor) Visit(n ast.Node) (w ast.Visitor) {
 			}
 		}
 
-		v.skip, v.expl = false, false
+		v.skip, v.json, v.publ = false, false, false
 	}
 
 	return nil
