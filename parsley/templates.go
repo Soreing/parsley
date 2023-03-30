@@ -5,6 +5,13 @@ import (
 	"strings"
 )
 
+var control = []string{
+	"u0000", "u0001", "u0002", "u0003", "u0004", "u0005", "u0006", "u0007",
+	"u0008", "t", "n", "u000B", "u000C", "r", "u000E", "u000F",
+	"u0010", "u0011", "u0012", "u0013", "u0014", "u0015", "u0016", "u0017",
+	"u0018", "u0019", "u001A", "u001B", "u001C", "u001D", "u001E", "u001F",
+}
+
 // Returns the code/value used to compare types against their default values.
 // If the type is unknown, empty string is returned.
 func getZeroValue(fi FieldInfo) (zv string) {
@@ -153,7 +160,7 @@ func getWriteFieldFunction(fi FieldInfo) (fn string) {
 func createUnmarshalStructBody(fis []FieldInfo) (code string) {
 	subs := make([]string, len(fis))
 	for i, fi := range fis {
-		subs[i] = "case `" + fi.Alias + "`:\n"
+		subs[i] = "case \"" + fi.AliasEsc + "\":\n"
 
 		if fn, unknown := getReaderTypeFormat(fi.TypeName); !unknown {
 			subs[i] += "o." + fi.Name + ", err = "
@@ -184,7 +191,7 @@ func createMarshalStructBody(fis []FieldInfo) (code string) {
 	skipComma, resetOffset, offsetSuffix := false, "off = 0\n", "[off:]"
 
 	for i, fi := range fis {
-		value := "ln += copy(dst[ln:], `,\"" + fi.AliasEsc + "\":`" + offsetSuffix + ")\n"
+		value := "ln += copy(dst[ln:], \",\\\"" + fi.AliasEscEsc + "\\\":\"" + offsetSuffix + ")\n"
 		if fn, unknown := getWriterTypeFormat(fi.TypeName); !unknown {
 			if fi.Array {
 				value += "ln += " + fmt.Sprintf(fn, "s", "o."+fi.Name) + "\n"

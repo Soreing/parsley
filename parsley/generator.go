@@ -96,13 +96,14 @@ func (g *Generator) GetRequiredPackages(
 }
 
 type FieldInfo struct {
-	TypeName  string
-	OmitEmpty bool
-	Name      string
-	Alias     string
-	AliasEsc  string
-	Array     bool
-	Pointer   bool
+	TypeName    string
+	OmitEmpty   bool
+	Name        string
+	Alias       string
+	AliasEsc    string
+	AliasEscEsc string
+	Array       bool
+	Pointer     bool
 }
 
 func NewFieldInfo(f Field, dcs Case) (fi FieldInfo) {
@@ -111,7 +112,8 @@ func NewFieldInfo(f Field, dcs Case) (fi FieldInfo) {
 	if fi.Alias == "" {
 		fi.Alias = caseString(f.name, dcs)
 	}
-	fi.AliasEsc = escapeJSONString(fi.Alias)
+	fi.AliasEsc = escapeJSONString(fi.Alias, "\\")
+	fi.AliasEscEsc = escapeJSONString(fi.Alias, "\\\\\\")
 	fi.Name, fi.TypeName = f.name, f.typ.typ
 	if f.typ.pkg != "" {
 		fi.TypeName = f.typ.pkg + "." + fi.TypeName
@@ -189,8 +191,8 @@ func parseTag(str string) (alias string, omit bool) {
 }
 
 // Escapes a string to be a valid JSON string
-// Unescapes UTF-8 escape codes to runes
-func escapeJSONString(s string) (res string) {
+// Unescapes unicode escape sequence to runes
+func escapeJSONString(s string, escape string) (res string) {
 	esc, utf, hex, acc := false, false, 0, 0
 	for _, c := range s {
 		if utf {
@@ -207,42 +209,29 @@ func escapeJSONString(s string) (res string) {
 
 			// At the end of the 4 digit sequence, add the rune
 			if hex == 3 {
-				res += string(rune(acc))
+				res += escape + string(rune(acc))
 				esc, utf, hex, acc = false, false, 0, 0
 			} else {
 				hex++
 			}
 		} else if esc {
-			// Check if escape is a UTF-8 escape sequence
+			// Check if escape is a unicode escape sequence
 			if c == 'u' {
 				utf = true
 			} else {
 				esc = false
-				res += "\\\\"
+				res += escape + "\\"
 			}
 		} else if c == '\\' {
 			// Enter and escape sequence on "\"
 			esc = true
+		} else if c < 0x1F {
+			// Escape control characters
+			res += escape + control[c]
+		} else if c == '"' {
+			res += escape + "\""
 		} else {
-			// Handle the rune regularly
-			switch c {
-			case '"':
-				res += "\\\""
-			case '/':
-				res += "\\/"
-			case '\b':
-				res += "\\b"
-			case '\f':
-				res += "\\f"
-			case '\n':
-				res += "\\n"
-			case '\r':
-				res += "\\r"
-			case '\t':
-				res += "\\t"
-			default:
-				res += string(c)
-			}
+			res += string(c)
 		}
 	}
 	return
