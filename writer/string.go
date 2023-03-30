@@ -1,10 +1,18 @@
 package writer
 
+const hexDigits = "0123456789ABCDEF"
+
+var controlLength = [32]int{
+	5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 1, 5, 5, 1, 5, 5,
+	5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+}
+
 func StringSpace(str string) (ln int) {
 	ln = len(str)
-	for _, e := range str {
-		switch e {
-		case '"', '\\', '/', '\b', '\f', '\n', '\r', '\t':
+	for _, c := range str {
+		if c <= 0x1F {
+			ln += controlLength[c]
+		} else if c == '"' || c == '\\' {
 			ln++
 		}
 	}
@@ -12,14 +20,13 @@ func StringSpace(str string) (ln int) {
 }
 
 func StringsSpace(strs []string) (ln int) {
-	ln = 1
 	for _, s := range strs {
 		ln += StringSpace(s) + 3
 	}
-	if ln == 1 {
+	if ln == 0 {
 		return 2
 	} else {
-		return ln
+		return ln + 1
 	}
 }
 
@@ -42,44 +49,42 @@ func StringPtrFieldSpace(f string, s *string) (ln int) {
 func WriteString(dst []byte, s string) (ln int) {
 	dst[0] = '"'
 	pos := 1
-	for i := range s {
-		switch s[i] {
+	for i := 0; i < len(s); i++ {
+		switch c := s[i]; c {
 		case '"':
 			dst[pos] = '\\'
 			dst[pos+1] = '"'
-			pos++
+			pos += 2
 		case '\\':
 			dst[pos] = '\\'
 			dst[pos+1] = '\\'
-			pos++
-		case '/':
-			dst[pos] = '\\'
-			dst[pos+1] = '/'
-			pos++
-		case '\b':
-			dst[pos] = '\\'
-			dst[pos+1] = 'b'
-			pos++
-		case '\f':
-			dst[pos] = '\\'
-			dst[pos+1] = 'f'
-			pos++
+			pos += 2
 		case '\n':
 			dst[pos] = '\\'
 			dst[pos+1] = 'n'
-			pos++
+			pos += 2
 		case '\r':
 			dst[pos] = '\\'
 			dst[pos+1] = 'r'
-			pos++
+			pos += 2
 		case '\t':
 			dst[pos] = '\\'
 			dst[pos+1] = 't'
-			pos++
+			pos += 2
 		default:
-			dst[pos] = s[i]
+			if c <= 0x1F {
+				dst[pos+0] = '\\'
+				dst[pos+1] = 'u'
+				dst[pos+2] = '0'
+				dst[pos+3] = '0'
+				dst[pos+4] = c>>4 + '0'
+				dst[pos+5] = hexDigits[c&0xF]
+				pos += 6
+			} else {
+				dst[pos] = c
+				pos++
+			}
 		}
-		pos++
 	}
 	dst[pos] = '"'
 	return pos + 1
