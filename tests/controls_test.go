@@ -34,7 +34,7 @@ func Test_UnmarshalEscapedField(t *testing.T) {
 
 func Test_MarshalEscapedField(t *testing.T) {
 	if buf, err := parsley.Marshal(&EscapedFieldObject); err != nil {
-		t.Error("unmarshal failed", err)
+		t.Error("marshal failed", err)
 	} else {
 		if string(buf) != EscapedFieldResult {
 			t.Errorf(

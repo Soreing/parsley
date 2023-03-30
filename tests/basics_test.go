@@ -142,10 +142,10 @@ func Test_UnmarshalIntegers(t *testing.T) {
 
 func Test_MarshalIntegers(t *testing.T) {
 	if buf, err := parsley.Marshal(&IntegersObject); err != nil {
-		t.Error("unmarshal failed", err)
+		t.Error("marshal failed", err)
 	} else {
 		if jbuf, err := json.Marshal(IntegersObject); err != nil {
-			t.Error("standard library unmarshal failed", err)
+			t.Error("standard library marshal failed", err)
 		} else if string(buf) != string(jbuf) {
 			t.Errorf(
 				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
@@ -158,10 +158,10 @@ func Test_MarshalIntegers(t *testing.T) {
 func Test_MarshalEmptyIntegers(t *testing.T) {
 	obj := basics.IntegersColl{}
 	if buf, err := parsley.Marshal(&obj); err != nil {
-		t.Error("unmarshal failed", err)
+		t.Error("marshal failed", err)
 	} else {
 		if jbuf, err := json.Marshal(obj); err != nil {
-			t.Error("standard library unmarshal failed", err)
+			t.Error("standard library marshal failed", err)
 		} else if string(buf) != string(jbuf) {
 			t.Errorf(
 				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
@@ -304,10 +304,10 @@ func Test_UnmarshalUnsignedIntegers(t *testing.T) {
 
 func Test_MarshalUnsignedIntegers(t *testing.T) {
 	if buf, err := parsley.Marshal(&UnsignedIntegersObject); err != nil {
-		t.Error("unmarshal failed", err)
+		t.Error("marshal failed", err)
 	} else {
 		if jbuf, err := json.Marshal(UnsignedIntegersObject); err != nil {
-			t.Error("standard library unmarshal failed", err)
+			t.Error("standard library marshal failed", err)
 		} else if string(buf) != string(jbuf) {
 			t.Errorf(
 				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
@@ -320,10 +320,10 @@ func Test_MarshalUnsignedIntegers(t *testing.T) {
 func Test_MarshalEmptyUnsignedIntegers(t *testing.T) {
 	obj := basics.UnsignedIntegersColl{}
 	if buf, err := parsley.Marshal(&obj); err != nil {
-		t.Error("unmarshal failed", err)
+		t.Error("marshal failed", err)
 	} else {
 		if jbuf, err := json.Marshal(obj); err != nil {
-			t.Error("standard library unmarshal failed", err)
+			t.Error("standard library marshal failed", err)
 		} else if string(buf) != string(jbuf) {
 			t.Errorf(
 				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
@@ -397,10 +397,10 @@ func Test_UnmarshalFloatingPoints(t *testing.T) {
 
 func Test_MarshalFloatingPoints(t *testing.T) {
 	if buf, err := parsley.Marshal(&FloatingPointsObject); err != nil {
-		t.Error("unmarshal failed", err)
+		t.Error("marshal failed", err)
 	} else {
 		if jbuf, err := json.Marshal(FloatingPointsObject); err != nil {
-			t.Error("standard library unmarshal failed", err)
+			t.Error("standard library marshal failed", err)
 		} else if string(buf) != string(jbuf) {
 			t.Errorf(
 				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
@@ -413,10 +413,10 @@ func Test_MarshalFloatingPoints(t *testing.T) {
 func Test_MarshalEmptyFloatingPoints(t *testing.T) {
 	obj := basics.FloatingPointColl{}
 	if buf, err := parsley.Marshal(&obj); err != nil {
-		t.Error("unmarshal failed", err)
+		t.Error("marshal failed", err)
 	} else {
 		if jbuf, err := json.Marshal(obj); err != nil {
-			t.Error("standard library unmarshal failed", err)
+			t.Error("standard library marshal failed", err)
 		} else if string(buf) != string(jbuf) {
 			t.Errorf(
 				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
@@ -467,10 +467,10 @@ func Test_UnmarshalBooleans(t *testing.T) {
 
 func Test_MarshalBooleans(t *testing.T) {
 	if buf, err := parsley.Marshal(&BooleansObject); err != nil {
-		t.Error("unmarshal failed", err)
+		t.Error("marshal failed", err)
 	} else {
 		if jbuf, err := json.Marshal(BooleansObject); err != nil {
-			t.Error("standard library unmarshal failed", err)
+			t.Error("standard library marshal failed", err)
 		} else if string(buf) != string(jbuf) {
 			t.Errorf(
 				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
@@ -483,10 +483,10 @@ func Test_MarshalBooleans(t *testing.T) {
 func Test_MarshalEmptyBooleans(t *testing.T) {
 	obj := basics.BooleansColl{}
 	if buf, err := parsley.Marshal(&obj); err != nil {
-		t.Error("unmarshal failed", err)
+		t.Error("marshal failed", err)
 	} else {
 		if jbuf, err := json.Marshal(obj); err != nil {
-			t.Error("standard library unmarshal failed", err)
+			t.Error("standard library marshal failed", err)
 		} else if string(buf) != string(jbuf) {
 			t.Errorf(
 				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
@@ -563,10 +563,10 @@ func Test_UnmarshalStrings(t *testing.T) {
 
 func Test_MarshalStrings(t *testing.T) {
 	if buf, err := parsley.Marshal(&StringsObject); err != nil {
-		t.Error("unmarshal failed", err)
+		t.Error("marshal failed", err)
 	} else {
 		if jbuf, err := json.Marshal(StringsObject); err != nil {
-			t.Error("standard library unmarshal failed", err)
+			t.Error("standard library marshal failed", err)
 		} else if string(buf) != string(jbuf) {
 			t.Errorf(
 				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
@@ -579,10 +579,10 @@ func Test_MarshalStrings(t *testing.T) {
 func Test_MarshalEmptyStrings(t *testing.T) {
 	obj := basics.StringsColl{}
 	if buf, err := parsley.Marshal(&obj); err != nil {
-		t.Error("unmarshal failed", err)
+		t.Error("marshal failed", err)
 	} else {
 		if jbuf, err := json.Marshal(obj); err != nil {
-			t.Error("standard library unmarshal failed", err)
+			t.Error("standard library marshal failed", err)
 		} else if string(buf) != string(jbuf) {
 			t.Errorf(
 				"marshal result mismatch \n\tHave: %s\n\tWant: %s",

@@ -126,10 +126,10 @@ func Test_UnmarshalEmployee(t *testing.T) {
 
 func Test_MarshalEmployee(t *testing.T) {
 	if buf, err := parsley.Marshal(&EmployeeObject); err != nil {
-		t.Error("unmarshal failed", err)
+		t.Error("marshal failed", err)
 	} else {
 		if jbuf, err := json.Marshal(EmployeeObject); err != nil {
-			t.Error("standard library unmarshal failed", err)
+			t.Error("standard library marshal failed", err)
 		} else if string(buf) != string(jbuf) {
 			t.Errorf(
 				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
@@ -238,10 +238,10 @@ func Test_UnmarshalEmployeeList(t *testing.T) {
 
 func Test_MarshalEmployeeList(t *testing.T) {
 	if buf, err := parsley.Marshal(&EmployeeListObject); err != nil {
-		t.Error("unmarshal failed", err)
+		t.Error("marshal failed", err)
 	} else {
 		if jbuf, err := json.Marshal(EmployeeListObject); err != nil {
-			t.Error("standard library unmarshal failed", err)
+			t.Error("standard library marshal failed", err)
 		} else if string(buf) != string(jbuf) {
 			t.Errorf(
 				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
