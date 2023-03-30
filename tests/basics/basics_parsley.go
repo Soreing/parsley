@@ -69,6 +69,7 @@ func (o *BooleansColl) MarshalParsleyJSON(dst []byte) (ln int) {
 		return writer.WriteNull(dst)
 	}
 	off := 1
+	_ = off
 	dst[0] = '{'
 	ln++
 	ln += copy(dst[ln:], ",\"bdat\":"[off:])
@@ -167,6 +168,7 @@ func (o *FloatingPointColl) MarshalParsleyJSON(dst []byte) (ln int) {
 		return writer.WriteNull(dst)
 	}
 	off := 1
+	_ = off
 	dst[0] = '{'
 	ln++
 	ln += copy(dst[ln:], ",\"f32dat\":"[off:])
@@ -289,6 +291,7 @@ func (o *IntegersColl) MarshalParsleyJSON(dst []byte) (ln int) {
 		return writer.WriteNull(dst)
 	}
 	off := 1
+	_ = off
 	dst[0] = '{'
 	ln++
 	ln += copy(dst[ln:], ",\"i8dat\":"[off:])
@@ -411,6 +414,7 @@ func (o *StringsColl) MarshalParsleyJSON(dst []byte) (ln int) {
 		return writer.WriteNull(dst)
 	}
 	off := 1
+	_ = off
 	dst[0] = '{'
 	ln++
 	ln += copy(dst[ln:], ",\"sdat\":"[off:])
@@ -533,6 +537,7 @@ func (o *UnsignedIntegersColl) MarshalParsleyJSON(dst []byte) (ln int) {
 		return writer.WriteNull(dst)
 	}
 	off := 1
+	_ = off
 	dst[0] = '{'
 	ln++
 	ln += copy(dst[ln:], ",\"ui8dat\":"[off:])

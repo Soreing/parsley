@@ -79,6 +79,7 @@ func (o *Employee) MarshalParsleyJSON(dst []byte) (ln int) {
 		return writer.WriteNull(dst)
 	}
 	off := 1
+	_ = off
 	dst[0] = '{'
 	ln++
 	ln += copy(dst[ln:], ",\"id\":"[off:])
@@ -179,6 +180,7 @@ func (o *Person) MarshalParsleyJSON(dst []byte) (ln int) {
 		return writer.WriteNull(dst)
 	}
 	off := 1
+	_ = off
 	dst[0] = '{'
 	ln++
 	ln += copy(dst[ln:], ",\"fname\":"[off:])

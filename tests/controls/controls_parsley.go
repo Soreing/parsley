@@ -99,7 +99,7 @@ func (o *EscapedField) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 					r.SkipNull()
 				} else {
 					switch string(key) {
-					case `soɯə "value"`:
+					case "soɯə \"value\"":
 						o.Value, err = r.GetString()
 					default:
 						err = r.Skip()
@@ -148,7 +148,7 @@ func (o *EscapedField) MarshalParsleyJSON(dst []byte) (ln int) {
 	_ = off
 	dst[0] = '{'
 	ln++
-	ln += copy(dst[ln:], `,"soɯə \"value\"":`[off:])
+	ln += copy(dst[ln:], ",\"soɯə \\\"value\\\"\":"[off:])
 	ln += writer.WriteString(dst[ln:], o.Value)
 	off = 0
 	dst[ln] = '}'

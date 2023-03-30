@@ -67,6 +67,7 @@ func (o *Device) MarshalParsleyJSON(dst []byte) (ln int) {
 		return writer.WriteNull(dst)
 	}
 	off := 1
+	_ = off
 	dst[0] = '{'
 	ln++
 	ln += copy(dst[ln:], ",\"name\":"[off:])
