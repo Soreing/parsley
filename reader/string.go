@@ -5,19 +5,25 @@ import (
 )
 
 func strTokLen(dat []byte) int {
-	esc, ecnt := false, 0
-	for i, e := range dat {
-		if esc {
+	esc, cnt, e := false, 0, byte(0)
+	for i := 0; i < len(dat); i++ {
+		if e = dat[i]; esc {
+			if e != 'u' {
+				cnt++
+			} else if i+4 >= len(dat) {
+				return -1
+			} else if dat[i+2] >= '8' {
+				cnt += 3
+			} else if dat[i+3] >= '8' {
+				cnt += 4
+			} else {
+				cnt += 5
+			}
 			esc = false
-			continue
-		}
-		if e == '\\' {
-			ecnt++
+		} else if e == '\\' {
 			esc = true
-			continue
-		}
-		if e == '"' {
-			return i - ecnt
+		} else if e == '"' {
+			return i - cnt
 		}
 	}
 	return -1
@@ -46,6 +52,39 @@ func (r *Reader) skipString() error {
 			}
 		}
 		r.pos++
+	}
+}
+
+func Utf8(dst, src []byte) (ln int) {
+	if len(src) == 4 {
+		n := uint(0)
+		for i, e := range src {
+			if e >= 'A' && e <= 'F' {
+				n = n<<4 | uint(e-'7')
+			} else if e >= 'a' && e <= 'f' {
+				n = n<<4 | uint(e-'W')
+			} else if e >= '0' && e <= '9' {
+				n = n<<4 | uint(e-'0')
+			} else {
+				return -i
+			}
+		}
+
+		if n < 0x80 {
+			dst[0] = byte(n)
+			return 1
+		} else if n < 0x800 {
+			dst[1] = 0x80 | (byte(n) & 0x3F)
+			dst[0] = 0xC0 | (byte(n>>6) & 0x3F)
+			return 2
+		} else {
+			dst[2] = 0x80 | (byte(n) & 0x3F)
+			dst[1] = 0x80 | (byte(n>>6) & 0x3F)
+			dst[0] = 0xE0 | (byte(n>>12) & 0x3F)
+			return 3
+		}
+	} else {
+		return 0
 	}
 }
 
