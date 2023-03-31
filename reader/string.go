@@ -244,10 +244,39 @@ func (r *Reader) GetTimes() (res []time.Time, err error) {
 }
 
 func (r *Reader) GetTime() (time.Time, error) {
+	rpos := r.pos
 	if bs, err := r.GetByteArray(); err != nil {
 		return time.Time{}, err
+	} else if len(bs) == 0 {
+		return time.Time{}, NewUnknownTimeFormatError(string(bs), rpos)
+	} else if bs[0] >= '0' && bs[0] <= '9' {
+		if tm, err := time.Parse(time.RFC3339Nano, string(bs)); err == nil {
+			return tm, nil
+		} else if tm, err := time.Parse(time.RFC822, string(bs)); err == nil {
+			return tm, nil
+		} else if tm, err := time.Parse(time.RFC822Z, string(bs)); err == nil {
+			return tm, nil
+		} else if tm, err := time.Parse(time.Kitchen, string(bs)); err == nil {
+			return tm, nil
+		} else {
+			return tm, NewUnknownTimeFormatError(string(bs), rpos)
+		}
 	} else {
-		return time.Parse(time.RFC3339, string(bs))
+		if tm, err := time.Parse(time.ANSIC, string(bs)); err == nil {
+			return tm, nil
+		} else if tm, err := time.Parse(time.UnixDate, string(bs)); err == nil {
+			return tm, nil
+		} else if tm, err := time.Parse(time.RubyDate, string(bs)); err == nil {
+			return tm, nil
+		} else if tm, err := time.Parse(time.RFC850, string(bs)); err == nil {
+			return tm, nil
+		} else if tm, err := time.Parse(time.RFC1123, string(bs)); err == nil {
+			return tm, nil
+		} else if tm, err := time.Parse(time.RFC1123Z, string(bs)); err == nil {
+			return tm, nil
+		} else {
+			return tm, NewUnknownTimeFormatError(string(bs), rpos)
+		}
 	}
 }
 
