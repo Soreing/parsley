@@ -94,35 +94,24 @@ func WriteStringPtr(dst []byte, s *string) (ln int) {
 	if s != nil {
 		return ln + WriteString(dst[ln:], *s)
 	} else {
-		dst[0] = 'n'
-		dst[1] = 'u'
-		dst[2] = 'l'
-		dst[3] = 'l'
-		return 4
+		return copy(dst, "null")
 	}
 }
 
 func WriteStrings(dst []byte, ss []string) (ln int) {
-	if ss != nil {
-		dst[0] = '['
-		ln++
-
-		if len(ss) > 0 {
-			ln += WriteString(dst[1:], ss[0])
-			for _, s := range ss[1:] {
-				dst[ln] = ','
-				ln++
-				ln += WriteString(dst[ln:], s)
-			}
+	if len(ss) > 0 {
+		ln = 1
+		for _, s := range ss {
+			ln += WriteString(dst[ln:], s)
+			dst[ln] = ','
+			ln++
 		}
 
-		dst[ln] = ']'
-		return ln + 1
+		dst[0], dst[ln-1] = '[', ']'
+		return ln
+	} else if ss != nil {
+		return copy(dst, "[]")
 	} else {
-		dst[0] = 'n'
-		dst[1] = 'u'
-		dst[2] = 'l'
-		dst[3] = 'l'
-		return 4
+		return copy(dst, "null")
 	}
 }

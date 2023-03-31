@@ -103,46 +103,35 @@ func WriteFastRFC3339Nano(dst []byte, t time.Time) (ln int) {
 }
 
 func WriteTime(dst []byte, t time.Time) (ln int) {
-	ln = WriteFastRFC3339Nano(dst, t) + 1
+	ln += WriteFastRFC3339Nano(dst[1:], t) + 1
 	dst[0], dst[ln] = '"', '"'
 	return ln + 1
 }
 
 func WriteTimePtr(dst []byte, t *time.Time) (ln int) {
 	if t != nil {
-		ln = WriteFastRFC3339Nano(dst, *t) + 1
+		ln = WriteFastRFC3339Nano(dst[1:], *t) + 1
 		dst[0], dst[ln] = '"', '"'
 		return ln + 1
 	} else {
-		dst[0] = 'n'
-		dst[1] = 'u'
-		dst[2] = 'l'
-		dst[3] = 'l'
-		return 4
+		return copy(dst, "null")
 	}
 }
 
 func WriteTimes(dst []byte, ts []time.Time) (ln int) {
-	if ts != nil {
-		dst[0] = '['
-		ln++
-
-		if len(ts) > 0 {
-			ln += WriteTime(dst[ln:], ts[0])
-			for _, t := range ts[1:] {
-				dst[ln] = ','
-				ln++
-				ln += WriteTime(dst[ln:], t)
-			}
+	if len(ts) > 0 {
+		ln = 1
+		for _, t := range ts {
+			ln += WriteTime(dst[ln:], t)
+			dst[ln] = ','
+			ln++
 		}
 
-		dst[ln] = ']'
-		return ln + 1
+		dst[0], dst[ln-1] = '[', ']'
+		return ln
+	} else if ts != nil {
+		return copy(dst, "[]")
 	} else {
-		dst[0] = 'n'
-		dst[1] = 'u'
-		dst[2] = 'l'
-		dst[3] = 'l'
-		return 4
+		return copy(dst, "null")
 	}
 }

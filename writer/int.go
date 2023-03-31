@@ -20,40 +20,27 @@ func WriteInt8Ptr(dst []byte, n *int8) (ln int) {
 		copy(dst, tmp)
 		return len(tmp)
 	} else {
-		dst[0] = 'n'
-		dst[1] = 'u'
-		dst[2] = 'l'
-		dst[3] = 'l'
-		return 4
+		return copy(dst, "null")
 	}
 }
 
 func WriteInt8s(dst []byte, ns []int8) (ln int) {
 	tmp, res := make([]byte, 0, 32), ([]byte)(nil)
-	if ns != nil {
-		dst[0] = '['
-		ln++
-
-		if len(ns) > 0 {
-			res = strconv.AppendInt(tmp, int64(ns[0]), 10)
-			ln += copy(dst[1:], res)
-			for _, n := range ns[1:] {
-				dst[ln] = ','
-				ln++
-
-				res = strconv.AppendInt(tmp, int64(n), 10)
-				ln += copy(dst[ln:], res)
-			}
+	if len(ns) > 0 {
+		ln = 1
+		for _, n := range ns {
+			res = strconv.AppendInt(tmp, int64(n), 10)
+			ln += copy(dst[ln:], res)
+			dst[ln] = ','
+			ln++
 		}
 
-		dst[ln] = ']'
-		return ln + 1
+		dst[0], dst[ln-1] = '[', ']'
+		return ln
+	} else if ns != nil {
+		return copy(dst, "[]")
 	} else {
-		dst[0] = 'n'
-		dst[1] = 'u'
-		dst[2] = 'l'
-		dst[3] = 'l'
-		return 4
+		return copy(dst, "null")
 	}
 }
 
@@ -76,40 +63,27 @@ func WriteInt16Ptr(dst []byte, n *int16) (ln int) {
 		copy(dst, tmp)
 		return len(tmp)
 	} else {
-		dst[0] = 'n'
-		dst[1] = 'u'
-		dst[2] = 'l'
-		dst[3] = 'l'
-		return 4
+		return copy(dst, "null")
 	}
 }
 
 func WriteInt16s(dst []byte, ns []int16) (ln int) {
 	tmp, res := make([]byte, 0, 32), ([]byte)(nil)
-	if ns != nil {
-		dst[0] = '['
-		ln++
-
-		if len(ns) > 0 {
-			res = strconv.AppendInt(tmp, int64(ns[0]), 10)
-			ln += copy(dst[1:], res)
-			for _, n := range ns[1:] {
-				dst[ln] = ','
-				ln++
-
-				res = strconv.AppendInt(tmp, int64(n), 10)
-				ln += copy(dst[ln:], res)
-			}
+	if len(ns) > 0 {
+		ln = 1
+		for _, n := range ns {
+			res = strconv.AppendInt(tmp, int64(n), 10)
+			ln += copy(dst[ln:], res)
+			dst[ln] = ','
+			ln++
 		}
 
-		dst[ln] = ']'
-		return ln + 1
+		dst[0], dst[ln-1] = '[', ']'
+		return ln
+	} else if ns != nil {
+		return copy(dst, "[]")
 	} else {
-		dst[0] = 'n'
-		dst[1] = 'u'
-		dst[2] = 'l'
-		dst[3] = 'l'
-		return 4
+		return copy(dst, "null")
 	}
 }
 
@@ -132,40 +106,27 @@ func WriteInt32Ptr(dst []byte, n *int32) (ln int) {
 		copy(dst, tmp)
 		return len(tmp)
 	} else {
-		dst[0] = 'n'
-		dst[1] = 'u'
-		dst[2] = 'l'
-		dst[3] = 'l'
-		return 4
+		return copy(dst, "null")
 	}
 }
 
 func WriteInt32s(dst []byte, ns []int32) (ln int) {
 	tmp, res := make([]byte, 0, 32), ([]byte)(nil)
-	if ns != nil {
-		dst[0] = '['
-		ln++
-
-		if len(ns) > 0 {
-			res = strconv.AppendInt(tmp, int64(ns[0]), 10)
-			ln += copy(dst[1:], res)
-			for _, n := range ns[1:] {
-				dst[ln] = ','
-				ln++
-
-				res = strconv.AppendInt(tmp, int64(n), 10)
-				ln += copy(dst[ln:], res)
-			}
+	if len(ns) > 0 {
+		ln = 1
+		for _, n := range ns {
+			res = strconv.AppendInt(tmp, int64(n), 10)
+			ln += copy(dst[ln:], res)
+			dst[ln] = ','
+			ln++
 		}
 
-		dst[ln] = ']'
-		return ln + 1
+		dst[0], dst[ln-1] = '[', ']'
+		return ln
+	} else if ns != nil {
+		return copy(dst, "[]")
 	} else {
-		dst[0] = 'n'
-		dst[1] = 'u'
-		dst[2] = 'l'
-		dst[3] = 'l'
-		return 4
+		return copy(dst, "null")
 	}
 }
 
@@ -188,40 +149,27 @@ func WriteInt64Ptr(dst []byte, n *int64) (ln int) {
 		copy(dst, tmp)
 		return len(tmp)
 	} else {
-		dst[0] = 'n'
-		dst[1] = 'u'
-		dst[2] = 'l'
-		dst[3] = 'l'
-		return 4
+		return copy(dst, "null")
 	}
 }
 
 func WriteInt64s(dst []byte, ns []int64) (ln int) {
 	tmp, res := make([]byte, 0, 32), ([]byte)(nil)
-	if ns != nil {
-		dst[0] = '['
-		ln++
-
-		if len(ns) > 0 {
-			res = strconv.AppendInt(tmp, int64(ns[0]), 10)
-			ln += copy(dst[1:], res)
-			for _, n := range ns[1:] {
-				dst[ln] = ','
-				ln++
-
-				res = strconv.AppendInt(tmp, int64(n), 10)
-				ln += copy(dst[ln:], res)
-			}
+	if len(ns) > 0 {
+		ln = 1
+		for _, n := range ns {
+			res = strconv.AppendInt(tmp, int64(n), 10)
+			ln += copy(dst[ln:], res)
+			dst[ln] = ','
+			ln++
 		}
 
-		dst[ln] = ']'
-		return ln + 1
+		dst[0], dst[ln-1] = '[', ']'
+		return ln
+	} else if ns != nil {
+		return copy(dst, "[]")
 	} else {
-		dst[0] = 'n'
-		dst[1] = 'u'
-		dst[2] = 'l'
-		dst[3] = 'l'
-		return 4
+		return copy(dst, "null")
 	}
 }
 
@@ -244,39 +192,26 @@ func WriteIntPtr(dst []byte, n *int) (ln int) {
 		copy(dst, tmp)
 		return len(tmp)
 	} else {
-		dst[0] = 'n'
-		dst[1] = 'u'
-		dst[2] = 'l'
-		dst[3] = 'l'
-		return 4
+		return copy(dst, "null")
 	}
 }
 
 func WriteInts(dst []byte, ns []int) (ln int) {
 	tmp, res := make([]byte, 0, 32), ([]byte)(nil)
-	if ns != nil {
-		dst[0] = '['
-		ln++
-
-		if len(ns) > 0 {
-			res = strconv.AppendInt(tmp, int64(ns[0]), 10)
-			ln += copy(dst[1:], res)
-			for _, n := range ns[1:] {
-				dst[ln] = ','
-				ln++
-
-				res = strconv.AppendInt(tmp, int64(n), 10)
-				ln += copy(dst[ln:], res)
-			}
+	if len(ns) > 0 {
+		ln = 1
+		for _, n := range ns {
+			res = strconv.AppendInt(tmp, int64(n), 10)
+			ln += copy(dst[ln:], res)
+			dst[ln] = ','
+			ln++
 		}
 
-		dst[ln] = ']'
-		return ln + 1
+		dst[0], dst[ln-1] = '[', ']'
+		return ln
+	} else if ns != nil {
+		return copy(dst, "[]")
 	} else {
-		dst[0] = 'n'
-		dst[1] = 'u'
-		dst[2] = 'l'
-		dst[3] = 'l'
-		return 4
+		return copy(dst, "null")
 	}
 }
