@@ -1,5 +1,16 @@
 package reader
 
+var hexValue = [128]int{
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	0., 1., 2., 3., 4., 5., 6., 7., 8., 9., -1, -1, -1, -1, -1, -1,
+	-1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+}
+
 func strTokLen(dat []byte) int {
 	esc, cnt, e := false, 0, byte(0)
 	for i := 0; i < len(dat); i++ {
@@ -26,28 +37,37 @@ func strTokLen(dat []byte) int {
 }
 
 func (r *Reader) skipString() error {
-	esc := false
-	r.pos++
+	pos, dat := r.pos+1, r.dat
+	esc, unc, dgt := false, false, 0
 
 	for {
-		if r.pos >= len(r.dat) {
+		if pos >= len(dat) {
 			return NewEndOfFileError()
-		} else {
-			switch r.dat[r.pos] {
-			case '\\':
-				esc = !esc
-			case '"':
-				if !esc {
-					r.pos++
-					return nil
-				} else {
-					esc = false
-				}
-			default:
-				esc = false
+		} else if c := dat[pos]; unc {
+			if !(c-'0' < 10) && !(c-'7' < 16) && !(c-'W' < 16) {
+				NewInvalidCharacterError(c, pos)
+			} else if dgt == 3 {
+				esc, unc, dgt = false, false, 0
+			} else {
+				dgt++
 			}
+		} else if esc {
+			switch c {
+			case '"', '\\', '/', 'b',
+				'f', 'n', 'r', 't':
+				esc = false
+			case 'u':
+				unc = true
+			default:
+				NewInvalidCharacterError(c, pos)
+			}
+		} else if c == '\\' {
+			esc = !esc
+		} else if c == '"' {
+			r.pos = pos + 1
+			return nil
 		}
-		r.pos++
+		pos++
 	}
 }
 
