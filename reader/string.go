@@ -1,41 +1,5 @@
 package reader
 
-var hexValue = [128]int{
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	0., 1., 2., 3., 4., 5., 6., 7., 8., 9., -1, -1, -1, -1, -1, -1,
-	-1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-}
-
-func strTokLen(dat []byte) int {
-	esc, cnt, e := false, 0, byte(0)
-	for i := 0; i < len(dat); i++ {
-		if e = dat[i]; esc {
-			if e != 'u' {
-				cnt++
-			} else if i+4 >= len(dat) {
-				return -1
-			} else if dat[i+2] >= '8' {
-				cnt += 3
-			} else if dat[i+3] >= '8' {
-				cnt += 4
-			} else {
-				cnt += 5
-			}
-			esc = false
-		} else if e == '\\' {
-			esc = true
-		} else if e == '"' {
-			return i - cnt
-		}
-	}
-	return -1
-}
-
 func (r *Reader) skipString() error {
 	pos, dat := r.pos+1, r.dat
 	esc, unc, dgt := false, false, 0
@@ -74,13 +38,13 @@ func (r *Reader) skipString() error {
 func Utf8(dst, src []byte) (ln int) {
 	if len(src) == 4 {
 		n := uint(0)
-		for i, e := range src {
-			if e >= 'A' && e <= 'F' {
-				n = n<<4 | uint(e-'7')
-			} else if e >= 'a' && e <= 'f' {
-				n = n<<4 | uint(e-'W')
-			} else if e >= '0' && e <= '9' {
-				n = n<<4 | uint(e-'0')
+		for i, c := range src {
+			if c-'0' < 10 {
+				n = n<<4 | uint(c-'0')
+			} else if c-'7' < 16 {
+				n = n<<4 | uint(c-'7')
+			} else if c-'W' < 16 {
+				n = n<<4 | uint(c-'W')
 			} else {
 				return -i
 			}
@@ -104,20 +68,68 @@ func Utf8(dst, src []byte) (ln int) {
 	}
 }
 
+// Converts 4 hexadecimal digits of a unicode sequence. Returns the integer
+// and the byte length of the unicode character.
+func useq(src []byte) (n int, ln int) {
+	for i, c := range src {
+		if c-'0' < 10 {
+			n = n<<4 | int(c-'0')
+		} else if c-'7' < 16 {
+			n = n<<4 | int(c-'7')
+		} else if c-'W' < 16 {
+			n = n<<4 | int(c-'W')
+		} else {
+			return int(c), -i
+		}
+	}
+
+	if n < 0x80 {
+		return n, 1
+	} else if n < 0x800 {
+		return n, 2
+	} else {
+		return n, 3
+	}
+}
+
+func bytesTillEnd(dat []byte) int {
+	esc, cnt, e := false, 0, byte(0)
+	for i := 0; i < len(dat); i++ {
+		if e = dat[i]; esc {
+			if e != 'u' {
+				cnt++
+			} else if i+4 >= len(dat) {
+				return -1
+			} else if dat[i+1] > '0' || dat[i+2] >= '8' {
+				cnt += 3
+			} else if dat[i+2] > '0' || dat[i+3] >= '8' {
+				cnt += 4
+			} else {
+				cnt += 5
+			}
+			esc = false
+		} else if e == '\\' {
+			esc = true
+		} else if e == '"' {
+			return i - cnt
+		}
+	}
+	return -1
+}
+
 func (r *Reader) GetByteArray() ([]byte, error) {
-	dat, pos := r.dat[r.pos:], 0
+	dat, pos := r.dat[r.pos:], 1
 	buf, bi := r.buf, 0
 	esc := false
 
 	if len(dat) == 0 {
 		return nil, NewEndOfFileError()
 	} else if dat[0] != '"' {
-		return nil, NewInvalidCharacterError(dat[pos], r.pos+pos)
+		return nil, NewInvalidCharacterError(dat[0], r.pos+pos)
 	}
 
-	for pos++; ; pos++ {
+	for ; ; pos++ {
 		if pos >= len(dat) {
-			r.pos += pos + 1
 			return nil, NewEndOfFileError()
 
 		} else if dat[pos] == '"' {
@@ -127,26 +139,26 @@ func (r *Reader) GetByteArray() ([]byte, error) {
 
 		} else if dat[pos] == '\\' {
 			if len(buf) < pos {
-				if tlen := strTokLen(dat[pos:]); tlen == -1 {
+				if rb := bytesTillEnd(dat[pos:]); rb == -1 {
 					return nil, NewEndOfFileError()
 				} else {
-					len := pos + tlen - 1
-					if len < 256 {
-						len = 256
-					}
-
-					r.buf = make([]byte, len)
+					// Total length is pos-1 + rb
+					// Buffer size should be the next multiple of 256
+					r.buf = make([]byte, ((pos+rb+255)>>8)<<8)
 					buf = r.buf
 				}
 			}
 			copy(buf, dat[1:pos])
-			esc, bi = true, pos-1
+			bi = pos - 1
 			break
 		}
 	}
 
-	for pos++; ; {
-		if esc {
+	for {
+		if pos >= len(dat) {
+			return nil, NewEndOfFileError()
+
+		} else if esc {
 			esc = false
 			switch dat[pos] {
 			case '"':
@@ -166,32 +178,60 @@ func (r *Reader) GetByteArray() ([]byte, error) {
 			case 't':
 				buf[bi] = '\t'
 			case 'u':
-				buf[bi] = ' ' // TODO
+				if pos+4 >= len(dat) {
+					return nil, NewEndOfFileError()
+				} else if rn, rl := useq(dat[pos+1 : pos+5]); rl < 0 {
+					return nil, NewInvalidCharacterError(byte(rn), r.pos+pos-rl)
+				} else {
+					if len(buf) < bi+rl {
+						if rb := bytesTillEnd(dat[pos+5:]); rb == -1 {
+							return nil, NewEndOfFileError()
+						} else {
+							r.buf = make([]byte, ((bi+rl+rb+256)>>8)<<8)
+							copy(r.buf, buf[:bi])
+							buf = r.buf
+
+						}
+					}
+
+					switch rl {
+					case 1:
+						buf[bi] = byte(rn)
+					case 2:
+						buf[bi+1] = 0x80 | (byte(rn) & 0x3F)
+						buf[bi+0] = 0xC0 | (byte(rn>>6) & 0x3F)
+					case 3:
+						buf[bi+2] = 0x80 | (byte(rn) & 0x3F)
+						buf[bi+1] = 0x80 | (byte(rn>>6) & 0x3F)
+						buf[bi+0] = 0xE0 | (byte(rn>>12) & 0x3F)
+					}
+					bi += rl - 1
+					pos += 4
+				}
 			}
 			bi++
-		} else {
-			if pos >= len(dat) {
-				r.pos += pos + 1
+
+		} else if dat[pos] == '"' {
+			r.pos += pos + 1
+			r.SkipWhiteSpace()
+			return buf[:bi], nil
+
+		} else if bi == len(buf) {
+			if tlen := bytesTillEnd(dat[pos:]); tlen == -1 {
 				return nil, NewEndOfFileError()
-			} else if dat[pos] == '"' {
-				r.pos += pos + 1
-				r.SkipWhiteSpace()
-				return buf[:bi], nil
-			} else if bi == len(buf) {
-				if tlen := strTokLen(dat[pos:]); tlen == -1 {
-					return nil, NewEndOfFileError()
-				} else {
-					r.buf = make([]byte, bi+tlen)
-					copy(r.buf, buf[:bi])
-					buf = r.buf
-					continue
-				}
-			} else if dat[pos] == '\\' {
-				esc = true
 			} else {
-				buf[bi] = dat[pos]
-				bi++
+				r.buf = make([]byte, bi+tlen)
+				copy(r.buf, buf[:bi])
+				buf = r.buf
+				continue
 			}
+
+		} else if dat[pos] == '\\' {
+			esc = true
+
+		} else {
+			buf[bi] = dat[pos]
+			bi++
 		}
 		pos++
 	}
