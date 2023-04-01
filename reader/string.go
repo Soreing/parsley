@@ -45,7 +45,7 @@ func (r *Reader) skipString() error {
 			return NewEndOfFileError()
 		} else if c := dat[pos]; unc {
 			if !(c-'0' < 10) && !(c-'7' < 16) && !(c-'W' < 16) {
-				NewInvalidCharacterError(c, pos)
+				return NewInvalidCharacterError(c, pos)
 			} else if dgt == 3 {
 				esc, unc, dgt = false, false, 0
 			} else {
@@ -59,7 +59,7 @@ func (r *Reader) skipString() error {
 			case 'u':
 				unc = true
 			default:
-				NewInvalidCharacterError(c, pos)
+				return NewInvalidCharacterError(c, pos)
 			}
 		} else if c == '\\' {
 			esc = true
