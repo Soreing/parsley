@@ -62,7 +62,7 @@ func (r *Reader) skipString() error {
 				NewInvalidCharacterError(c, pos)
 			}
 		} else if c == '\\' {
-			esc = !esc
+			esc = true
 		} else if c == '"' {
 			r.pos = pos + 1
 			return nil
