@@ -2,11 +2,11 @@ package parsley
 
 type ParsleyJSONMarshaller interface {
 	MarshalParsleyJSON(dst []byte) int
+	LengthParsleyJSON() int
 }
 
 func Marshal(o ParsleyJSONMarshaller) ([]byte, error) {
-	// TODO: Calculate required size
-	dst := make([]byte, 2000)
+	dst := make([]byte, o.LengthParsleyJSON())
 	ln := o.MarshalParsleyJSON(dst)
 	return dst[:ln], nil
 }
