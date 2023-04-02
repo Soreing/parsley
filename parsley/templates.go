@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -14,21 +15,21 @@ var control = []string{
 
 // Returns the code/value used to compare types against their default values.
 // If the type is unknown, empty string is returned.
-func getZeroValue(fi FieldInfo) (zv string) {
+func getValueCheck(fi FieldInfo) (zv string) {
 	if fi.Array || fi.Pointer {
-		return "nil"
+		return " != nil"
 	}
 	switch fi.TypeName {
 	case "int", "int8", "int16", "int32", "int64",
 		"uint", "uint8", "uint16", "uint32", "uint64",
 		"float32", "float64":
-		return "0"
+		return " != 0"
 	case "bool":
-		return "false"
+		return " != false"
 	case "string":
-		return "\"\""
+		return " != \"\""
 	case "time.Time":
-		return "time.Time{}"
+		return ".IsZero() != true"
 	default:
 		return ""
 	}
@@ -50,10 +51,49 @@ func getDefaultValueByteLength(fi FieldInfo) (ln int) {
 	case "string":
 		return 2
 	case "time.Time":
-		return 27
+		return 22
 	default:
 		return 0
 	}
+}
+
+// Returns the code template for reading defined datatypes.
+func getLengthTypeFormat(typename string) (tmpl string, unknown bool) {
+	switch typename {
+	case "int":
+		tmpl = "writer.Int%sLength(%s)"
+	case "int8":
+		tmpl = "writer.Int8%sLength(%s)"
+	case "int16":
+		tmpl = "writer.Int16%sLength(%s)"
+	case "int32":
+		tmpl = "writer.Int32%sLength(%s)"
+	case "int64":
+		tmpl = "writer.Int64%sLength(%s)"
+	case "uint":
+		tmpl = "writer.UInt%sLength(%s)"
+	case "uint8":
+		tmpl = "writer.UInt8%sLength(%s)"
+	case "uint16":
+		tmpl = "writer.UInt16%sLength(%s)"
+	case "uint32":
+		tmpl = "writer.UInt32%sLength(%s)"
+	case "uint64":
+		tmpl = "writer.UInt64%sLength(%s)"
+	case "float32":
+		tmpl = "writer.Float32%sLength(%s)"
+	case "float64":
+		tmpl = "writer.Float64%sLength(%s)"
+	case "bool":
+		tmpl = "writer.Bool%sLength(%s)"
+	case "string":
+		tmpl = "writer.String%sLength(%s)"
+	case "time.Time":
+		tmpl = "writer.Time%sLength(%s)"
+	default:
+		unknown = true
+	}
+	return
 }
 
 // Returns the code template for reading defined datatypes.
@@ -134,27 +174,55 @@ func getWriterTypeFormat(typename string) (tmpl string, unknown bool) {
 	return
 }
 
-// Returns the code for writing a field to a byte array. For unknown types,
-// it is expected that the type implements the interface for marshalling
-func getWriteFieldFunction(fi FieldInfo) (fn string) {
-	fn, unknown := getWriterTypeFormat(fi.TypeName)
-
-	if !unknown {
-		if fi.Array {
-			fn = fmt.Sprintf(fn, "s", "o."+fi.Name)
-		} else if fi.Pointer {
-			fn = fmt.Sprintf(fn, "Ptr", "o."+fi.Name)
-		} else {
-			fn = fmt.Sprintf(fn, "", "o."+fi.Name)
-		}
-	} else {
-		if fi.Array {
-			fn = "(*" + fi.TypeName + ")(nil).MarshalParsleyJSONSlice(dst[ln:], o." + fi.Name + ")"
-		} else {
-			fn = "o." + fi.Name + ".MarshalParsleyJSON(dst[ln:])"
+func calculateDefaultLength(fis []FieldInfo) (ln int) {
+	for _, fi := range fis {
+		ln += getDefaultValueByteLength(fi)
+		if !fi.OmitEmpty {
+			ln += len(fi.AliasEsc) + len(`"":,`)
 		}
 	}
 	return
+}
+
+func createStructLengthBody(fis []FieldInfo) (code string) {
+	subs := make([]string, len(fis))
+	for i, fi := range fis {
+		valCheck := getValueCheck(fi)
+		modBytes := -getDefaultValueByteLength(fi)
+		format, value, mod := "ln+=%s\n", "", ""
+
+		if fn, unknown := getLengthTypeFormat(fi.TypeName); !unknown {
+			if fi.Array {
+				value = fmt.Sprintf(fn, "s", "o."+fi.Name)
+			} else if fi.Pointer {
+				value = fmt.Sprintf(fn, "", "*o."+fi.Name)
+			} else {
+				value = fmt.Sprintf(fn, "", "o."+fi.Name)
+			}
+		} else {
+			if fi.Array {
+				value = "(*" + fi.TypeName + ")(nil).LengthParsleyJSONSlice(o." + fi.Name + ")"
+			} else {
+				value = "o." + fi.Name + ".LengthParsleyJSON()"
+			}
+		}
+
+		if valCheck != "" {
+			format = "if o." + fi.Name + valCheck + "{\nln+=%s\n}\n"
+		}
+		if fi.OmitEmpty {
+			modBytes += len(fi.AliasEsc) + len(`"":,`)
+		}
+		if modBytes > 0 {
+			mod = "+" + strconv.Itoa(modBytes)
+		} else if modBytes < 0 {
+			mod = "-" + strconv.Itoa(-modBytes)
+		}
+
+		subs[i] = fmt.Sprintf(format, value+mod)
+	}
+
+	return strings.Join(subs, "")
 }
 
 func createUnmarshalStructBody(fis []FieldInfo) (code string) {
@@ -212,9 +280,9 @@ func createMarshalStructBody(fis []FieldInfo) (code string) {
 		}
 
 		format := "%s"
-		zeroVal := getZeroValue(fi)
-		if fi.OmitEmpty && zeroVal != "" {
-			format = "if o." + fi.Name + " != " + zeroVal + "{\n%s}\n"
+		valCheck := getValueCheck(fi)
+		if fi.OmitEmpty && valCheck != "" {
+			format = "if o." + fi.Name + valCheck + "{\n%s}\n"
 		} else {
 			skipComma = true
 			offsetSuffix = ""
@@ -224,6 +292,22 @@ func createMarshalStructBody(fis []FieldInfo) (code string) {
 	}
 
 	return strings.Join(subs, "")
+}
+
+func createDefineLengthBody(di DefineInfo) (code string) {
+	if fn, unknown := getLengthTypeFormat(di.TypeName); !unknown {
+		if di.Array {
+			return fmt.Sprintf(fn, "s", "*o")
+		} else {
+			return fmt.Sprintf(fn, "", di.TypeName+"(*o)") + "\n"
+		}
+	} else {
+		if di.Array {
+			return "(*" + di.TypeName + ")(nil).LengthParsleyJSONSlice(*o)"
+		} else {
+			return "o.LengthParsleyJSON()"
+		}
+	}
 }
 
 func createUnmarshalDefineBody(di DefineInfo) (code string) {
