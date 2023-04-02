@@ -1,5 +1,27 @@
 package writer
 
+func BoolLength(b bool) (ln int) {
+	if b {
+		return 4
+	} else {
+		return 5
+	}
+}
+
+func BoolsLength(bs []bool) (ln int) {
+	ln = 6 * len(bs)
+	for _, b := range bs {
+		if b {
+			ln--
+		}
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
+}
+
 func WriteBool(dst []byte, b bool) (ln int) {
 	if b {
 		return copy(dst, "true")

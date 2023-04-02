@@ -5,6 +5,21 @@ import (
 	"strconv"
 )
 
+func UInt8Length(n uint8) (ln int) {
+	return ui8dc(uint8(n))
+}
+
+func UInt8sLength(ns []uint8) (ln int) {
+	for _, n := range ns {
+		ln += ui8dc(n) + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
+}
+
 func WriteUInt8(dst []byte, n uint8) (ln int) {
 	if n != 0 {
 		tmp := make([]byte, 0, 32)
@@ -40,6 +55,21 @@ func WriteUInt8s(dst []byte, ns []uint8) (ln int) {
 		}
 	} else {
 		return copy(dst, "null")
+	}
+}
+
+func UInt16Length(n uint16) (ln int) {
+	return ui16dc(uint16(n))
+}
+
+func UInt16sLength(ns []uint16) (ln int) {
+	for _, n := range ns {
+		ln += ui16dc(n) + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
 	}
 }
 
@@ -84,6 +114,21 @@ func WriteUInt16s(dst []byte, ns []uint16) (ln int) {
 	}
 }
 
+func UInt32Length(n uint32) (ln int) {
+	return ui32dc(uint32(n))
+}
+
+func UInt32sLength(ns []uint32) (ln int) {
+	for _, n := range ns {
+		ln += ui32dc(n) + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
+}
+
 func WriteUInt32(dst []byte, n uint32) (ln int) {
 	if n != 0 {
 		tmp := make([]byte, 0, 32)
@@ -125,6 +170,21 @@ func WriteUInt32s(dst []byte, ns []uint32) (ln int) {
 	}
 }
 
+func UInt64Length(n uint64) (ln int) {
+	return ui64dc(uint64(n))
+}
+
+func UInt64sLength(ns []uint64) (ln int) {
+	for _, n := range ns {
+		ln += ui64dc(n) + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
+}
+
 func WriteUInt64(dst []byte, n uint64) (ln int) {
 	if n != 0 {
 		tmp := make([]byte, 0, 32)
@@ -163,6 +223,21 @@ func WriteUInt64s(dst []byte, ns []uint64) (ln int) {
 		return copy(dst, "[]")
 	} else {
 		return copy(dst, "null")
+	}
+}
+
+func UIntLength(n uint) (ln int) {
+	return ui32dc(uint32(n))
+}
+
+func UIntsLength(ns []uint) (ln int) {
+	for _, n := range ns {
+		ln += ui32dc(uint32(n)) + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
 	}
 }
 

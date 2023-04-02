@@ -2,47 +2,26 @@ package writer
 
 const hexDigits = "0123456789ABCDEF"
 
-var controlLength = [32]int{
-	5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 1, 5, 5, 1, 5, 5,
-	5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-}
-
-func StringSpace(str string) (ln int) {
-	ln = len(str)
+func StringLength(str string) (ln int) {
+	ln = len(str) + 2
 	for _, c := range str {
-		if c <= 0x1F {
-			ln += controlLength[c]
-		} else if c == '"' || c == '\\' {
+		if c == '"' || c == '\\' || c == '\t' || c == '\n' || c == '\r' {
 			ln++
+		} else if c <= 0x1F {
+			ln += 5
 		}
 	}
 	return
 }
 
-func StringsSpace(strs []string) (ln int) {
+func StringsLength(strs []string) (ln int) {
 	for _, s := range strs {
-		ln += StringSpace(s) + 3
+		ln += StringLength(s) + 1
 	}
 	if ln == 0 {
 		return 2
 	} else {
 		return ln + 1
-	}
-}
-
-func StringFieldSpace(f string, s string) (ln int) {
-	if s == "" {
-		return StringSpace(f) + 6
-	} else {
-		return StringSpace(f) + 6 + StringSpace(s)
-	}
-}
-
-func StringPtrFieldSpace(f string, s *string) (ln int) {
-	if s == nil {
-		return StringSpace(f) + 8
-	} else {
-		return StringSpace(f) + 6 + StringSpace(*s)
 	}
 }
 

@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-func FastRFC3339NanoLength(t time.Time) (ln int) {
+func fastRFC3339NanoLength(t time.Time) (ln int) {
 	nano, nanol := t.Nanosecond(), 10
 
 	if nano > 0 {
@@ -24,7 +24,7 @@ func FastRFC3339NanoLength(t time.Time) (ln int) {
 	}
 }
 
-func WriteFastRFC3339Nano(dst []byte, t time.Time) (ln int) {
+func writeFastRFC3339Nano(dst []byte, t time.Time) (ln int) {
 	year, month, day := t.Date()
 	hour, minute, second := t.Clock()
 	nano, nanol := t.Nanosecond(), 10
@@ -102,15 +102,30 @@ func WriteFastRFC3339Nano(dst []byte, t time.Time) (ln int) {
 	return 19 + nanol + zonel
 }
 
+func TimeLength(t time.Time) (ln int) {
+	return fastRFC3339NanoLength(t) + 2
+}
+
+func TimesLength(ts []time.Time) (ln int) {
+	for _, t := range ts {
+		ln += TimeLength(t) + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
+}
+
 func WriteTime(dst []byte, t time.Time) (ln int) {
-	ln += WriteFastRFC3339Nano(dst[1:], t) + 1
+	ln += writeFastRFC3339Nano(dst[1:], t) + 1
 	dst[0], dst[ln] = '"', '"'
 	return ln + 1
 }
 
 func WriteTimePtr(dst []byte, t *time.Time) (ln int) {
 	if t != nil {
-		ln = WriteFastRFC3339Nano(dst[1:], *t) + 1
+		ln = writeFastRFC3339Nano(dst[1:], *t) + 1
 		dst[0], dst[ln] = '"', '"'
 		return ln + 1
 	} else {

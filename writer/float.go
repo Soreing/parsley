@@ -2,6 +2,21 @@ package writer
 
 import "strconv"
 
+func Float32Length(n float32) (ln int) {
+	return 24
+}
+
+func Float32sLength(ns []float32) (ln int) {
+	for range ns {
+		ln += 24 + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
+}
+
 func WriteFloat32(dst []byte, n float32) (ln int) {
 	if n != 0 {
 		tmp := make([]byte, 0, 32)
@@ -41,6 +56,21 @@ func WriteFloat32s(dst []byte, ns []float32) (ln int) {
 		return copy(dst, "[]")
 	} else {
 		return copy(dst, "null")
+	}
+}
+
+func Float64Length(n float64) (ln int) {
+	return 24
+}
+
+func Float64sLength(ns []float64) (ln int) {
+	for range ns {
+		ln += 24 + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
 	}
 }
 
