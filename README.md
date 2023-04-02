@@ -1,5 +1,5 @@
 # Parsley JSON
-Parsley JSON is a JSON mapper that parses a JSON string into an object or array. Parsley JSON uses the definition of an struct to generate code for reading values efficiently. This library is inspired by [easyjson](https://github.com/mailru/easyjson).
+Parsley JSON is a JSON encoder/decoder that parses a JSON string into objects or prints objects into byte arrays. Parsley JSON uses the definition of a struct to generate code that is efficient and fast. This library is inspired by [easyjson](https://github.com/mailru/easyjson).
 
 ## Installation 
 ```
@@ -8,7 +8,7 @@ go get github.com/Soreing/parsley
 ```
 
 ## Usage
-Objects that implement the ParsleyJSONUnmarshaller interface can be used in the Unmarshal function with a byte array to parse. The interface can be implemented with the generator (or custom written for rare use cases).
+Objects that implement the ParsleyJSON interfaces can be used in the Marshal/Unmarshal functions to encode or decode data. The interface can be implemented with the generator (or custom written for rare use cases).
 ```golang
 dat := []byte (`{"name": "A Box", "weight": 10.5}`)
 box := Box{}
@@ -17,28 +17,41 @@ err := parsley.Unmarshal(dat, &box)
 if err != nil {
 	panic(err)
 }
+
+dst, err := parsley.Marshal(&box)
+if err != nil {
+	panic(err)
+}
 ```
 
 ## Code Generation
-To read data into objects, first you need to generate the mapping functions for the structs you want to use. The explicit flag tells the generator to process the defined struct.
+To encode/decode data, first you need to generate the mapping functions for the structs you want to use. The json flag tells the generator to process the defined struct. You can add more flags separated by commas.
 ```golang
-//parsley:explicit
+//parsley:json
 type Box struct {
 	Name   string  `json:"name"`
 	Weight float64 `json:"weight"`
 }
 
-//parsley:explicit
+//parsley:json
 type BoxList []Box
 ```
 Run the generator with the path to the file or folder to the module. Assuming the above file is in tests/models/box.go, use the following command:
 ```
 parsley tests/models/box.go
 ```
-You can alter the generator's behavior using command line argument flags. When `-all` is used, you can add `//parsley:skip` above definitions to force the generator to skip them.
+### Sctuct Flags
 | Flag | Description |
 |------|-------------|
+| json   | Process the struct or type define in the generator |
+| skip   | Skip the struct or type define during generation |
+| public | Include private fields in encoding/decoding |
+
+### Command Line Arguments
+| Arg | Description |
+|------|-------------|
 | -all | Processes all structs in a file or directory |
+| -public | Include private fields in encoding/decoding for all types |
 | -output_filename | Sets the filename of the generated code |
 | -camel_case | Uses camel case naming for fields unless explicitly defined |
 | -lower_case | Uses lower case naming for fields unless explicitly defined |
@@ -49,4 +62,3 @@ You can alter the generator's behavior using command line argument flags. When `
 ## Todo List
 - Implement reading of scientific (exponential) notation for number fields
 - Improve speed of floating point number creation
-- Implement marshalling functions
