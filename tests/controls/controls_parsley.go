@@ -89,6 +89,28 @@ func (o *EmptyObject) MarshalParsleyJSONSlice(dst []byte, slc []EmptyObject) (ln
 	return ln + 1
 }
 
+func (o *EmptyObject) LengthParsleyJSON() (ln int) {
+	if o == nil {
+		return 4
+	}
+	ln = 0
+	if ln == 0 {
+		return 2
+	}
+	return ln + 1
+}
+
+func (o *EmptyObject) LengthParsleyJSONSlice(slc []EmptyObject) (ln int) {
+	for _, obj := range slc {
+		ln += obj.LengthParsleyJSON() + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
+}
+
 func (o *EscapedField) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	var key []byte
 	err = r.OpenObject()
@@ -174,6 +196,31 @@ func (o *EscapedField) MarshalParsleyJSONSlice(dst []byte, slc []EscapedField) (
 	return ln + 1
 }
 
+func (o *EscapedField) LengthParsleyJSON() (ln int) {
+	if o == nil {
+		return 4
+	}
+	ln = 22
+	if o.Value != "" {
+		ln += writer.StringLength(o.Value) - 2
+	}
+	if ln == 0 {
+		return 2
+	}
+	return ln + 1
+}
+
+func (o *EscapedField) LengthParsleyJSONSlice(slc []EscapedField) (ln int) {
+	for _, obj := range slc {
+		ln += obj.LengthParsleyJSON() + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
+}
+
 func (o *PrivateField) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	var key []byte
 	err = r.OpenObject()
@@ -252,6 +299,28 @@ func (o *PrivateField) MarshalParsleyJSONSlice(dst []byte, slc []PrivateField) (
 	}
 	dst[ln] = ']'
 	return ln + 1
+}
+
+func (o *PrivateField) LengthParsleyJSON() (ln int) {
+	if o == nil {
+		return 4
+	}
+	ln = 0
+	if ln == 0 {
+		return 2
+	}
+	return ln + 1
+}
+
+func (o *PrivateField) LengthParsleyJSONSlice(slc []PrivateField) (ln int) {
+	for _, obj := range slc {
+		ln += obj.LengthParsleyJSON() + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
 }
 
 func (o *PublicField) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
@@ -337,4 +406,29 @@ func (o *PublicField) MarshalParsleyJSONSlice(dst []byte, slc []PublicField) (ln
 	}
 	dst[ln] = ']'
 	return ln + 1
+}
+
+func (o *PublicField) LengthParsleyJSON() (ln int) {
+	if o == nil {
+		return 4
+	}
+	ln = 11
+	if o.field != "" {
+		ln += writer.StringLength(o.field) - 2
+	}
+	if ln == 0 {
+		return 2
+	}
+	return ln + 1
+}
+
+func (o *PublicField) LengthParsleyJSONSlice(slc []PublicField) (ln int) {
+	for _, obj := range slc {
+		ln += obj.LengthParsleyJSON() + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
 }

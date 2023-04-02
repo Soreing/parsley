@@ -120,6 +120,47 @@ func (o *Employee) MarshalParsleyJSONSlice(dst []byte, slc []Employee) (ln int) 
 	return ln + 1
 }
 
+func (o *Employee) LengthParsleyJSON() (ln int) {
+	if o == nil {
+		return 4
+	}
+	ln = 92
+	if o.Id != "" {
+		ln += writer.StringLength(o.Id) - 2
+	}
+	ln += o.Person.LengthParsleyJSON()
+	if o.Devices != nil {
+		ln += (*externals.Device)(nil).LengthParsleyJSONSlice(o.Devices) - 4
+	}
+	if o.IsActive != false {
+		ln += writer.BoolLength(o.IsActive) - 5
+	}
+	if o.Rating != 0 {
+		ln += writer.Float64Length(o.Rating) - 1
+	}
+	if o.LineManager != nil {
+		ln += o.LineManager.LengthParsleyJSON() - 4
+	}
+	if o.Tags != nil {
+		ln += writer.StringsLength(o.Tags) - 4
+	}
+	if ln == 0 {
+		return 2
+	}
+	return ln + 1
+}
+
+func (o *Employee) LengthParsleyJSONSlice(slc []Employee) (ln int) {
+	for _, obj := range slc {
+		ln += obj.LengthParsleyJSON() + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
+}
+
 func (o *Person) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	var key []byte
 	err = r.OpenObject()
@@ -213,6 +254,37 @@ func (o *Person) MarshalParsleyJSONSlice(dst []byte, slc []Person) (ln int) {
 	return ln + 1
 }
 
+func (o *Person) LengthParsleyJSON() (ln int) {
+	if o == nil {
+		return 4
+	}
+	ln = 51
+	if o.Fname != "" {
+		ln += writer.StringLength(o.Fname) - 2
+	}
+	if o.Lname != "" {
+		ln += writer.StringLength(o.Lname) - 2
+	}
+	if o.DOB.IsZero() != true {
+		ln += writer.TimeLength(o.DOB) - 22
+	}
+	if ln == 0 {
+		return 2
+	}
+	return ln + 1
+}
+
+func (o *Person) LengthParsleyJSONSlice(slc []Person) (ln int) {
+	for _, obj := range slc {
+		ln += obj.LengthParsleyJSON() + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
+}
+
 func (o *EmployeeList) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	*o, err = (*Employee)(nil).UnmarshalParsleyJSONSlice(r)
 	return
@@ -265,4 +337,22 @@ func (o *EmployeeList) MarshalParsleyJSONSlice(dst []byte, slc []EmployeeList) (
 	}
 	dst[ln] = ']'
 	return ln + 1
+}
+
+func (o *EmployeeList) LengthParsleyJSON() (ln int) {
+	if o == nil {
+		return 4
+	}
+	return (*Employee)(nil).LengthParsleyJSONSlice(*o)
+}
+
+func (o *EmployeeList) LengthParsleyJSONSlice(slc []EmployeeList) (ln int) {
+	for _, obj := range slc {
+		ln += obj.LengthParsleyJSON() + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
 }

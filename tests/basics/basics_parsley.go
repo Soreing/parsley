@@ -102,6 +102,37 @@ func (o *BooleansColl) MarshalParsleyJSONSlice(dst []byte, slc []BooleansColl) (
 	return ln + 1
 }
 
+func (o *BooleansColl) LengthParsleyJSON() (ln int) {
+	if o == nil {
+		return 4
+	}
+	ln = 37
+	if o.BDat != false {
+		ln += writer.BoolLength(o.BDat) - 5
+	}
+	if o.BSlc != nil {
+		ln += writer.BoolsLength(o.BSlc) - 4
+	}
+	if o.BPtr != nil {
+		ln += writer.BoolLength(*o.BPtr) - 4
+	}
+	if ln == 0 {
+		return 2
+	}
+	return ln + 1
+}
+
+func (o *BooleansColl) LengthParsleyJSONSlice(slc []BooleansColl) (ln int) {
+	for _, obj := range slc {
+		ln += obj.LengthParsleyJSON() + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
+}
+
 func (o *FloatingPointColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	var key []byte
 	err = r.OpenObject()
@@ -205,6 +236,46 @@ func (o *FloatingPointColl) MarshalParsleyJSONSlice(dst []byte, slc []FloatingPo
 	}
 	dst[ln] = ']'
 	return ln + 1
+}
+
+func (o *FloatingPointColl) LengthParsleyJSON() (ln int) {
+	if o == nil {
+		return 4
+	}
+	ln = 78
+	if o.F32Dat != 0 {
+		ln += writer.Float32Length(o.F32Dat) - 1
+	}
+	if o.F32Slc != nil {
+		ln += writer.Float32sLength(o.F32Slc) - 4
+	}
+	if o.F32Ptr != nil {
+		ln += writer.Float32Length(*o.F32Ptr) - 4
+	}
+	if o.F64Dat != 0 {
+		ln += writer.Float64Length(o.F64Dat) - 1
+	}
+	if o.F64Slc != nil {
+		ln += writer.Float64sLength(o.F64Slc) - 4
+	}
+	if o.F64Ptr != nil {
+		ln += writer.Float64Length(*o.F64Ptr) - 4
+	}
+	if ln == 0 {
+		return 2
+	}
+	return ln + 1
+}
+
+func (o *FloatingPointColl) LengthParsleyJSONSlice(slc []FloatingPointColl) (ln int) {
+	for _, obj := range slc {
+		ln += obj.LengthParsleyJSON() + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
 }
 
 func (o *IntegersColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
@@ -348,6 +419,73 @@ func (o *IntegersColl) MarshalParsleyJSONSlice(dst []byte, slc []IntegersColl) (
 	return ln + 1
 }
 
+func (o *IntegersColl) LengthParsleyJSON() (ln int) {
+	if o == nil {
+		return 4
+	}
+	ln = 186
+	if o.I8Dat != 0 {
+		ln += writer.Int8Length(o.I8Dat) - 1
+	}
+	if o.I8Slc != nil {
+		ln += writer.Int8sLength(o.I8Slc) - 4
+	}
+	if o.I8Ptr != nil {
+		ln += writer.Int8Length(*o.I8Ptr) - 4
+	}
+	if o.I16Dat != 0 {
+		ln += writer.Int16Length(o.I16Dat) - 1
+	}
+	if o.I16Slc != nil {
+		ln += writer.Int16sLength(o.I16Slc) - 4
+	}
+	if o.I16Ptr != nil {
+		ln += writer.Int16Length(*o.I16Ptr) - 4
+	}
+	if o.I32Dat != 0 {
+		ln += writer.Int32Length(o.I32Dat) - 1
+	}
+	if o.I32Slc != nil {
+		ln += writer.Int32sLength(o.I32Slc) - 4
+	}
+	if o.I32Ptr != nil {
+		ln += writer.Int32Length(*o.I32Ptr) - 4
+	}
+	if o.I64Dat != 0 {
+		ln += writer.Int64Length(o.I64Dat) - 1
+	}
+	if o.I64Slc != nil {
+		ln += writer.Int64sLength(o.I64Slc) - 4
+	}
+	if o.I64Ptr != nil {
+		ln += writer.Int64Length(*o.I64Ptr) - 4
+	}
+	if o.IDat != 0 {
+		ln += writer.IntLength(o.IDat) - 1
+	}
+	if o.ISlc != nil {
+		ln += writer.IntsLength(o.ISlc) - 4
+	}
+	if o.IPtr != nil {
+		ln += writer.IntLength(*o.IPtr) - 4
+	}
+	if ln == 0 {
+		return 2
+	}
+	return ln + 1
+}
+
+func (o *IntegersColl) LengthParsleyJSONSlice(slc []IntegersColl) (ln int) {
+	for _, obj := range slc {
+		ln += obj.LengthParsleyJSON() + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
+}
+
 func (o *StringsColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	var key []byte
 	err = r.OpenObject()
@@ -451,6 +589,46 @@ func (o *StringsColl) MarshalParsleyJSONSlice(dst []byte, slc []StringsColl) (ln
 	}
 	dst[ln] = ']'
 	return ln + 1
+}
+
+func (o *StringsColl) LengthParsleyJSON() (ln int) {
+	if o == nil {
+		return 4
+	}
+	ln = 88
+	if o.SDat != "" {
+		ln += writer.StringLength(o.SDat) - 2
+	}
+	if o.SSlc != nil {
+		ln += writer.StringsLength(o.SSlc) - 4
+	}
+	if o.SPtr != nil {
+		ln += writer.StringLength(*o.SPtr) - 4
+	}
+	if o.TDat.IsZero() != true {
+		ln += writer.TimeLength(o.TDat) - 22
+	}
+	if o.TSlc != nil {
+		ln += writer.TimesLength(o.TSlc) - 4
+	}
+	if o.TPtr != nil {
+		ln += writer.TimeLength(*o.TPtr) - 4
+	}
+	if ln == 0 {
+		return 2
+	}
+	return ln + 1
+}
+
+func (o *StringsColl) LengthParsleyJSONSlice(slc []StringsColl) (ln int) {
+	for _, obj := range slc {
+		ln += obj.LengthParsleyJSON() + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
 }
 
 func (o *UnsignedIntegersColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
@@ -592,4 +770,71 @@ func (o *UnsignedIntegersColl) MarshalParsleyJSONSlice(dst []byte, slc []Unsigne
 	}
 	dst[ln] = ']'
 	return ln + 1
+}
+
+func (o *UnsignedIntegersColl) LengthParsleyJSON() (ln int) {
+	if o == nil {
+		return 4
+	}
+	ln = 201
+	if o.UI8Dat != 0 {
+		ln += writer.UInt8Length(o.UI8Dat) - 1
+	}
+	if o.UI8Slc != nil {
+		ln += writer.UInt8sLength(o.UI8Slc) - 4
+	}
+	if o.UI8Ptr != nil {
+		ln += writer.UInt8Length(*o.UI8Ptr) - 4
+	}
+	if o.UI16Dat != 0 {
+		ln += writer.UInt16Length(o.UI16Dat) - 1
+	}
+	if o.UI16Slc != nil {
+		ln += writer.UInt16sLength(o.UI16Slc) - 4
+	}
+	if o.UI16Ptr != nil {
+		ln += writer.UInt16Length(*o.UI16Ptr) - 4
+	}
+	if o.UI32Dat != 0 {
+		ln += writer.UInt32Length(o.UI32Dat) - 1
+	}
+	if o.UI32Slc != nil {
+		ln += writer.UInt32sLength(o.UI32Slc) - 4
+	}
+	if o.UI32Ptr != nil {
+		ln += writer.UInt32Length(*o.UI32Ptr) - 4
+	}
+	if o.UI64Dat != 0 {
+		ln += writer.UInt64Length(o.UI64Dat) - 1
+	}
+	if o.UI64Slc != nil {
+		ln += writer.UInt64sLength(o.UI64Slc) - 4
+	}
+	if o.UI64Ptr != nil {
+		ln += writer.UInt64Length(*o.UI64Ptr) - 4
+	}
+	if o.UIDat != 0 {
+		ln += writer.UIntLength(o.UIDat) - 1
+	}
+	if o.UISlc != nil {
+		ln += writer.UIntsLength(o.UISlc) - 4
+	}
+	if o.UIPtr != nil {
+		ln += writer.UIntLength(*o.UIPtr) - 4
+	}
+	if ln == 0 {
+		return 2
+	}
+	return ln + 1
+}
+
+func (o *UnsignedIntegersColl) LengthParsleyJSONSlice(slc []UnsignedIntegersColl) (ln int) {
+	for _, obj := range slc {
+		ln += obj.LengthParsleyJSON() + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
 }

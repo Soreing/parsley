@@ -98,6 +98,32 @@ func (o *Device) MarshalParsleyJSONSlice(dst []byte, slc []Device) (ln int) {
 	return ln + 1
 }
 
+func (o *Device) LengthParsleyJSON() (ln int) {
+	if o == nil {
+		return 4
+	}
+	ln = 18
+	if o.Name != "" {
+		ln += writer.StringLength(o.Name) - 2
+	}
+	ln += o.Type.LengthParsleyJSON()
+	if ln == 0 {
+		return 2
+	}
+	return ln + 1
+}
+
+func (o *Device) LengthParsleyJSONSlice(slc []Device) (ln int) {
+	for _, obj := range slc {
+		ln += obj.LengthParsleyJSON() + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
+}
+
 func (o *DeviceType) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	*(*int)(o), err = r.GetInt()
 	return
@@ -150,4 +176,23 @@ func (o *DeviceType) MarshalParsleyJSONSlice(dst []byte, slc []DeviceType) (ln i
 	}
 	dst[ln] = ']'
 	return ln + 1
+}
+
+func (o *DeviceType) LengthParsleyJSON() (ln int) {
+	if o == nil {
+		return 4
+	}
+	return writer.IntLength(int(*o))
+
+}
+
+func (o *DeviceType) LengthParsleyJSONSlice(slc []DeviceType) (ln int) {
+	for _, obj := range slc {
+		ln += obj.LengthParsleyJSON() + 1
+	}
+	if ln == 0 {
+		return 2
+	} else {
+		return ln + 1
+	}
 }
