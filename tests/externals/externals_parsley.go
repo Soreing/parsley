@@ -64,7 +64,7 @@ func (o *Device) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []Device, err 
 
 func (o *Device) MarshalParsleyJSON(dst []byte) (ln int) {
 	if o == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	off := 1
 	_ = off
@@ -82,7 +82,7 @@ func (o *Device) MarshalParsleyJSON(dst []byte) (ln int) {
 
 func (o *Device) MarshalParsleyJSONSlice(dst []byte, slc []Device) (ln int) {
 	if slc == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	dst[0] = '['
 	ln++
@@ -154,7 +154,7 @@ func (o *DeviceType) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []DeviceTy
 
 func (o *DeviceType) MarshalParsleyJSON(dst []byte) (ln int) {
 	if o == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	return writer.WriteInt(dst[ln:], int(*o))
 
@@ -162,7 +162,7 @@ func (o *DeviceType) MarshalParsleyJSON(dst []byte) (ln int) {
 
 func (o *DeviceType) MarshalParsleyJSONSlice(dst []byte, slc []DeviceType) (ln int) {
 	if slc == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	dst[0] = '['
 	ln++

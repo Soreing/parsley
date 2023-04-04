@@ -76,7 +76,7 @@ func (o *Employee) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []Employee, 
 
 func (o *Employee) MarshalParsleyJSON(dst []byte) (ln int) {
 	if o == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	off := 1
 	_ = off
@@ -104,7 +104,7 @@ func (o *Employee) MarshalParsleyJSON(dst []byte) (ln int) {
 
 func (o *Employee) MarshalParsleyJSONSlice(dst []byte, slc []Employee) (ln int) {
 	if slc == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	dst[0] = '['
 	ln++
@@ -218,7 +218,7 @@ func (o *Person) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []Person, err 
 
 func (o *Person) MarshalParsleyJSON(dst []byte) (ln int) {
 	if o == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	off := 1
 	_ = off
@@ -238,7 +238,7 @@ func (o *Person) MarshalParsleyJSON(dst []byte) (ln int) {
 
 func (o *Person) MarshalParsleyJSONSlice(dst []byte, slc []Person) (ln int) {
 	if slc == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	dst[0] = '['
 	ln++
@@ -315,7 +315,7 @@ func (o *EmployeeList) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []Employ
 
 func (o *EmployeeList) MarshalParsleyJSON(dst []byte) (ln int) {
 	if o == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	return (*Employee)(nil).MarshalParsleyJSONSlice(dst[ln:], *o)
 
@@ -323,7 +323,7 @@ func (o *EmployeeList) MarshalParsleyJSON(dst []byte) (ln int) {
 
 func (o *EmployeeList) MarshalParsleyJSONSlice(dst []byte, slc []EmployeeList) (ln int) {
 	if slc == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	dst[0] = '['
 	ln++

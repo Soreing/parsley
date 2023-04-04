@@ -51,13 +51,13 @@ func (g *Generator) WriteDefine(df Define) {
 		"}\n\n" +
 		"func (o *" + name + ") MarshalParsleyJSON(dst []byte) (ln int) {\n" +
 		"    if o == nil {\n" +
-		"        return writer.WriteNull(dst)\n" +
+		"        return copy(dst, \"null\")\n" +
 		"    }\n" +
 		"    return " + createMarshalDefineBody(di) + "\n" +
 		"}\n\n" +
 		"func (o *" + name + ") MarshalParsleyJSONSlice(dst []byte, slc []" + name + ") (ln int) {\n" +
 		"    if slc == nil {\n" +
-		"        return writer.WriteNull(dst)\n" +
+		"        return copy(dst, \"null\")\n" +
 		"    }\n" +
 		"    dst[0] = '['\n" +
 		"    ln++\n" +
@@ -148,7 +148,7 @@ func (g *Generator) WriteStruct(st Struct) {
 		"}\n\n" +
 		"func (o *" + name + ") MarshalParsleyJSON(dst []byte) (ln int) {\n" +
 		"    if o == nil {\n" +
-		"        return writer.WriteNull(dst)\n" +
+		"        return copy(dst, \"null\")\n" +
 		"    }\n" +
 		"    off := 1\n" +
 		"    _ = off\n" +
@@ -161,7 +161,7 @@ func (g *Generator) WriteStruct(st Struct) {
 		"}\n\n" +
 		"func (o *" + name + ") MarshalParsleyJSONSlice(dst []byte, slc []" + name + ") (ln int) {\n" +
 		"    if slc == nil {\n" +
-		"        return writer.WriteNull(dst)\n" +
+		"        return copy(dst, \"null\")\n" +
 		"    }\n" +
 		"    dst[0] = '['\n" +
 		"    ln++\n" +

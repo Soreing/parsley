@@ -60,7 +60,7 @@ func (o *EmptyObject) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []EmptyOb
 
 func (o *EmptyObject) MarshalParsleyJSON(dst []byte) (ln int) {
 	if o == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	off := 1
 	_ = off
@@ -73,7 +73,7 @@ func (o *EmptyObject) MarshalParsleyJSON(dst []byte) (ln int) {
 
 func (o *EmptyObject) MarshalParsleyJSONSlice(dst []byte, slc []EmptyObject) (ln int) {
 	if slc == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	dst[0] = '['
 	ln++
@@ -164,7 +164,7 @@ func (o *EscapedField) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []Escape
 
 func (o *EscapedField) MarshalParsleyJSON(dst []byte) (ln int) {
 	if o == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	off := 1
 	_ = off
@@ -180,7 +180,7 @@ func (o *EscapedField) MarshalParsleyJSON(dst []byte) (ln int) {
 
 func (o *EscapedField) MarshalParsleyJSONSlice(dst []byte, slc []EscapedField) (ln int) {
 	if slc == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	dst[0] = '['
 	ln++
@@ -272,7 +272,7 @@ func (o *PrivateField) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []Privat
 
 func (o *PrivateField) MarshalParsleyJSON(dst []byte) (ln int) {
 	if o == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	off := 1
 	_ = off
@@ -285,7 +285,7 @@ func (o *PrivateField) MarshalParsleyJSON(dst []byte) (ln int) {
 
 func (o *PrivateField) MarshalParsleyJSONSlice(dst []byte, slc []PrivateField) (ln int) {
 	if slc == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	dst[0] = '['
 	ln++
@@ -376,7 +376,7 @@ func (o *PublicField) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []PublicF
 
 func (o *PublicField) MarshalParsleyJSON(dst []byte) (ln int) {
 	if o == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	off := 1
 	_ = off
@@ -392,7 +392,7 @@ func (o *PublicField) MarshalParsleyJSON(dst []byte) (ln int) {
 
 func (o *PublicField) MarshalParsleyJSONSlice(dst []byte, slc []PublicField) (ln int) {
 	if slc == nil {
-		return writer.WriteNull(dst)
+		return copy(dst, "null")
 	}
 	dst[0] = '['
 	ln++
