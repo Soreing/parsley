@@ -1,17 +1,18 @@
 package parsley
 
+import "fmt"
+
 type ParsleyJSONMarshaller interface {
 	MarshalParsleyJSON(dst []byte) int
 	LengthParsleyJSON() int
 }
 
-func Marshal(o ParsleyJSONMarshaller) ([]byte, error) {
-	dst := make([]byte, o.LengthParsleyJSON())
-	ln := o.MarshalParsleyJSON(dst)
-	return dst[:ln], nil
-}
+func Marshal(obj ParsleyJSONMarshaller) ([]byte, error) {
+	if obj == nil {
+		return nil, fmt.Errorf("object is nil")
+	}
 
-func MarshalInto(dst []byte, o ParsleyJSONMarshaller) error {
-	o.MarshalParsleyJSON(dst)
-	return nil
+	dst := make([]byte, obj.LengthParsleyJSON())
+	ln := obj.MarshalParsleyJSON(dst)
+	return dst[:ln], nil
 }

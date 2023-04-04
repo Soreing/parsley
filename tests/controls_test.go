@@ -110,3 +110,37 @@ func Test_FieldVisibilityEncoding(t *testing.T) {
 		}
 	}
 }
+
+func Test_DecodeEmpty(t *testing.T) {
+	dat := []byte(WhitespaceJSON)
+	emp := controls.EmptyObject{}
+
+	if err := parsley.Unmarshal(dat, &emp); err != nil {
+		t.Error("unmarshal failed", err)
+	}
+}
+
+func Test_EncodeEmpty(t *testing.T) {
+	emp := controls.EmptyObject{}
+
+	if res, err := parsley.Marshal(&emp); err != nil {
+		t.Error("marshal failed", err)
+	} else {
+		if string(res) != "{}" {
+			t.Errorf("result mismatch")
+		}
+	}
+}
+
+func Test_DecodeNil(t *testing.T) {
+	dat := []byte(WhitespaceJSON)
+	if err := parsley.Unmarshal(dat, nil); err == nil {
+		t.Error("unmarshal expected to fail")
+	}
+}
+
+func Test_EncodeNil(t *testing.T) {
+	if _, err := parsley.Marshal(nil); err == nil {
+		t.Error("marshal epected to fail")
+	}
+}
