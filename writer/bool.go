@@ -1,6 +1,7 @@
 package writer
 
-func BoolLength(b bool) (ln int) {
+// Gets the encoded byte length of a boolean.
+func BoolLen(b bool) (ln int) {
 	if b {
 		return 4
 	} else {
@@ -8,7 +9,8 @@ func BoolLength(b bool) (ln int) {
 	}
 }
 
-func BoolsLength(bs []bool) (ln int) {
+// Gets the encoded byte length of a boolean slice with brackets and commas.
+func BoolsLen(bs []bool) (ln int) {
 	ln = 6 * len(bs)
 	for _, b := range bs {
 		if b {
@@ -22,41 +24,128 @@ func BoolsLength(bs []bool) (ln int) {
 	}
 }
 
-func WriteBool(dst []byte, b bool) (ln int) {
-	if b {
-		return copy(dst, "true")
-	} else {
-		return copy(dst, "false")
-	}
-}
-
-func WriteBoolPtr(dst []byte, b *bool) (ln int) {
+// Writes "null" to the buffer when nil, otherwise writes a boolean.
+func (w *Writer) Boolp(b *bool) {
 	if b == nil {
-		return copy(dst, "null")
-	} else if *b {
-		return copy(dst, "true")
+		w.Raw("null")
 	} else {
-		return copy(dst, "false")
+		w.Bool(*b)
 	}
 }
 
-func WriteBools(dst []byte, bs []bool) (ln int) {
-	if len(bs) > 0 {
-		ldst := dst[1:]
+// Writes  "true" or "false" to the buffer.
+func (w *Writer) Bool(b bool) {
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	v, vln, cap := "false", 5, ln-cr
+
+	if b {
+		v, vln = "true", 4
+	}
+
+	if vln <= cap {
+		w.Cursor += copy(bf[cr:], v)
+	} else {
+		copy(bf[cr:], v[:cap])
+		w.Storage = append(w.Storage, bf)
+		bf = make([]byte, vln-cap+CHUNK_SIZE)
+		w.Cursor = copy(bf, v[cap:])
+		w.Buffer = bf
+	}
+}
+
+// Writes an array of true / false values separated by commas and enclosed by
+// square brackets to the buffer. When the slice is nil, writes "null".
+func (w *Writer) Bools(bs []bool) {
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	v, vln, cap := "", 0, ln-cr
+
+	if bs == nil {
+		if 4 <= cap {
+			copy(bf[cr:], "null")
+			w.Cursor += 4
+		} else {
+			copy(bf[cr:], "null"[:cap])
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, 4-cap+CHUNK_SIZE)
+			w.Cursor = copy(bf, "null"[cap:])
+			w.Buffer = bf
+		}
+		return
+	} else if len(bs) == 0 {
+		if 2 <= cap {
+			bf[cr], bf[cr+1] = '[', ']'
+			w.Cursor += 2
+		} else if cap == 1 {
+			bf[cr] = '['
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			w.Cursor, bf[0] = 1, ']'
+			w.Buffer = bf
+		} else {
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			w.Cursor, bf[0], bf[1] = 2, '[', ']'
+			w.Buffer = bf
+		}
+		return
+	} else if 1+len(bs)*6 <= ln-cr {
+		bf[cr] = '['
+		for _, b := range bs {
+			cr++
+			if b {
+				v, vln = "true", 4
+			} else {
+				v, vln = "false", 5
+			}
+			cr += copy(bf[cr:], v)
+			bf[cr] = ','
+		}
+		bf[cr] = ']'
+		w.Cursor = cr + 1
+		return
+	} else {
+		if ln != cr {
+			bf[cr] = '['
+			cr++
+		} else {
+			w.Storage = append(w.Storage, bf)
+			cr, ln = 1, CHUNK_SIZE
+			bf = make([]byte, CHUNK_SIZE)
+			bf[0] = '['
+		}
+
 		for _, b := range bs {
 			if b {
-				ln += copy(ldst, "true,")
-				ldst = ldst[5:]
+				v, vln = "true", 4
 			} else {
-				ln += copy(ldst, "false,")
-				ldst = ldst[6:]
+				v, vln = "false", 5
+			}
+
+			if cap = ln - cr; vln <= cap {
+				copy(bf[cr:], v)
+				cr += vln
+			} else {
+				copy(bf[cr:], v[:cap])
+				w.Storage = append(w.Storage, bf)
+				ln = vln - cap + CHUNK_SIZE
+				bf = make([]byte, ln)
+				cr = copy(bf, v[cap:])
+			}
+
+			if ln != cr {
+				bf[cr] = ','
+				cr++
+			} else {
+				w.Storage = append(w.Storage, bf)
+				cr, ln = 1, CHUNK_SIZE
+				bf = make([]byte, CHUNK_SIZE)
+				bf[0] = ','
 			}
 		}
-		dst[0], dst[ln] = '[', ']'
-		return ln + 1
-	} else if bs != nil {
-		return copy(dst, "[]")
-	} else {
-		return copy(dst, "null")
+		bf[cr-1] = ']'
+		w.Cursor, w.Buffer = cr, bf
+		return
 	}
 }

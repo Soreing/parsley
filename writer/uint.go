@@ -5,11 +5,11 @@ import (
 	"strconv"
 )
 
-func UInt8Length(n uint8) (ln int) {
+func UInt8Len(n uint8) (ln int) {
 	return ui8dc(uint8(n))
 }
 
-func UInt8sLength(ns []uint8) (ln int) {
+func UInt8sLen(ns []uint8) (ln int) {
 	for _, n := range ns {
 		ln += ui8dc(n) + 1
 	}
@@ -20,49 +20,84 @@ func UInt8sLength(ns []uint8) (ln int) {
 	}
 }
 
-func WriteUInt8(dst []byte, n uint8) (ln int) {
-	if n != 0 {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendInt(tmp, int64(n), 10)
-		return copy(dst, tmp)
+// Writes "null" to the buffer when nil, otherwise writes an 8 bit unsigned integer.
+func (w *Writer) UInt8p(n *uint8) {
+	if n == nil {
+		w.Raw("null")
 	} else {
-		dst[0] = '0'
-		return 1
+		w.UInt8(*n)
 	}
 }
 
-func WriteUInt8Ptr(dst []byte, n *uint8) (ln int) {
-	if n != nil {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendInt(tmp, int64(*n), 10)
-		return copy(dst, tmp)
+// Writes an 8 bit unsigned integer to the buffer.
+func (w *Writer) UInt8(n uint8) {
+	var vln int
+	var dst []byte
+
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	vln = ui8dc(uint8(n))
+	if vln <= ln-cr {
+		dst = bf[cr:]
+		w.Cursor += vln
 	} else {
-		return copy(dst, "null")
+		w.Storage = append(w.Storage, bf[:cr])
+		dst = make([]byte, vln+CHUNK_SIZE)
+		w.Cursor, w.Buffer = vln, dst
 	}
+	strconv.AppendInt(dst[:0], int64(n), 10)
 }
 
-func WriteUInt8s(dst []byte, ns []uint8) (ln int) {
-	if ns != nil {
-		if len(ns) > 0 {
-			base64.StdEncoding.Encode(dst[1:], ns)
-			ln = (len(ns)+2)/3*4 + 2
-			dst[0], dst[ln-1] = '"', '"'
-			return
+func (w *Writer) UInt8s(ns []uint8) {
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	vln, cap := (len(ns)+2)/3*4+2, ln-cr
+
+	if ns == nil {
+		if 4 <= cap {
+			copy(bf[cr:], "null")
+			w.Cursor += 4
 		} else {
-			dst[0] = '"'
-			dst[1] = '"'
-			return 2
+			copy(bf[cr:], "null"[:cap])
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, 4-cap+CHUNK_SIZE)
+			w.Cursor = copy(bf, "null"[cap:])
+			w.Buffer = bf
 		}
+		return
+	} else if len(ns) == 0 {
+		if 2 <= cap {
+			bf[cr], bf[cr+1] = '"', '"'
+			w.Cursor += 2
+		} else if cap == 1 {
+			bf[cr] = '"'
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			bf[0] = '"'
+			w.Cursor, w.Buffer = 1, bf
+		} else {
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			bf[0], bf[1] = '"', '"'
+			w.Cursor, w.Buffer = 2, bf
+		}
+		return
+	} else if vln <= ln-cr {
+		dst := bf[cr+1:]
+		base64.StdEncoding.Encode(dst, ns)
+		bf[cr], bf[cr+vln-1] = '"', '"'
+		w.Cursor += vln
+		return
 	} else {
-		return copy(dst, "null")
+		return
 	}
 }
 
-func UInt16Length(n uint16) (ln int) {
+func UInt16Len(n uint16) (ln int) {
 	return ui16dc(uint16(n))
 }
 
-func UInt16sLength(ns []uint16) (ln int) {
+func UInt16sLen(ns []uint16) (ln int) {
 	for _, n := range ns {
 		ln += ui16dc(n) + 1
 	}
@@ -73,52 +108,127 @@ func UInt16sLength(ns []uint16) (ln int) {
 	}
 }
 
-func WriteUInt16(dst []byte, n uint16) (ln int) {
-	if n != 0 {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendInt(tmp, int64(n), 10)
-		return copy(dst, tmp)
+// Writes "null" to the buffer when nil, otherwise writes an 16 bit unsigned integer.
+func (w *Writer) UInt16p(n *uint16) {
+	if n == nil {
+		w.Raw("null")
 	} else {
-		dst[0] = '0'
-		return 1
+		w.UInt16(*n)
 	}
 }
 
-func WriteUInt16Ptr(dst []byte, n *uint16) (ln int) {
-	if n != nil {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendInt(tmp, int64(*n), 10)
-		return copy(dst, tmp)
+// Writes an 16 bit unsigned integer to the buffer.
+func (w *Writer) UInt16(n uint16) {
+	var vln int
+	var dst []byte
+
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	vln = ui16dc(uint16(n))
+	if vln <= ln-cr {
+		dst = bf[cr:]
+		w.Cursor += vln
 	} else {
-		return copy(dst, "null")
+		w.Storage = append(w.Storage, bf[:cr])
+		dst = make([]byte, vln+CHUNK_SIZE)
+		w.Cursor, w.Buffer = vln, dst
 	}
+	strconv.AppendInt(dst[:0], int64(n), 10)
 }
 
-func WriteUInt16s(dst []byte, ns []uint16) (ln int) {
-	tmp, res := make([]byte, 0, 32), ([]byte)(nil)
-	if len(ns) > 0 {
-		ln = 1
+// Writes an array of 16 bit unsigned integer values separated by commas and enclosed
+// by square brackets to the buffer. When the slice is nil, writes "null".
+func (w *Writer) UInt16s(ns []uint16) {
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	vln, cap := 0, ln-cr
+
+	if ns == nil {
+		if 4 <= cap {
+			copy(bf[cr:], "null")
+			w.Cursor += 4
+		} else {
+			copy(bf[cr:], "null"[:cap])
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, 4-cap+CHUNK_SIZE)
+			w.Cursor = copy(bf, "null"[cap:])
+			w.Buffer = bf
+		}
+		return
+	} else if len(ns) == 0 {
+		if 2 <= cap {
+			bf[cr], bf[cr+1] = '[', ']'
+			w.Cursor += 2
+		} else if cap == 1 {
+			bf[cr] = '['
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			w.Cursor, bf[0] = 1, ']'
+			w.Buffer = bf
+		} else {
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			w.Cursor, bf[0], bf[1] = 2, '[', ']'
+			w.Buffer = bf
+		}
+		return
+	} else if 1+len(ns)*6 <= ln-cr {
+		bf[cr] = '['
 		for _, n := range ns {
-			res = strconv.AppendInt(tmp, int64(n), 10)
-			ln += copy(dst[ln:], res)
-			dst[ln] = ','
-			ln++
+			cr++
+			tb := strconv.AppendInt(bf[:cr], int64(n), 10)
+			cr = len(tb)
+			bf[cr] = ','
 		}
 
-		dst[0], dst[ln-1] = '[', ']'
-		return ln
-	} else if ns != nil {
-		return copy(dst, "[]")
+		bf[cr] = ']'
+		w.Cursor = cr + 1
+		return
 	} else {
-		return copy(dst, "null")
+		if ln != cr {
+			bf[cr] = '['
+			cr++
+		} else {
+			w.Storage = append(w.Storage, bf)
+			cr, ln = 1, CHUNK_SIZE
+			bf = make([]byte, CHUNK_SIZE)
+			bf[0] = '['
+		}
+
+		for _, n := range ns {
+			vln = UInt16Len(n)
+			if cap = ln - cr; vln <= cap {
+				strconv.AppendInt(bf[:cr], int64(n), 10)
+				cr += vln
+			} else {
+				w.Storage = append(w.Storage, bf[:cr])
+				cr, ln = vln-cap, vln-cap+CHUNK_SIZE
+				bf = make([]byte, ln)
+				strconv.AppendInt(bf, int64(n), 10)
+			}
+
+			if ln != cr {
+				bf[cr] = ','
+				cr++
+			} else {
+				w.Storage = append(w.Storage, bf)
+				cr, ln = 1, CHUNK_SIZE
+				bf = make([]byte, CHUNK_SIZE)
+				bf[0] = ','
+			}
+		}
+
+		bf[cr-1] = ']'
+		w.Cursor, w.Buffer = cr, bf
+		return
 	}
 }
 
-func UInt32Length(n uint32) (ln int) {
+func UInt32Len(n uint32) (ln int) {
 	return ui32dc(uint32(n))
 }
 
-func UInt32sLength(ns []uint32) (ln int) {
+func UInt32sLen(ns []uint32) (ln int) {
 	for _, n := range ns {
 		ln += ui32dc(n) + 1
 	}
@@ -129,52 +239,127 @@ func UInt32sLength(ns []uint32) (ln int) {
 	}
 }
 
-func WriteUInt32(dst []byte, n uint32) (ln int) {
-	if n != 0 {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendInt(tmp, int64(n), 10)
-		return copy(dst, tmp)
+// Writes "null" to the buffer when nil, otherwise writes an 32 bit unsigned integer.
+func (w *Writer) UInt32p(n *uint32) {
+	if n == nil {
+		w.Raw("null")
 	} else {
-		dst[0] = '0'
-		return 1
+		w.UInt32(*n)
 	}
 }
 
-func WriteUInt32Ptr(dst []byte, n *uint32) (ln int) {
-	if n != nil {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendInt(tmp, int64(*n), 10)
-		return copy(dst, tmp)
+// Writes an 32 bit unsigned integer to the buffer.
+func (w *Writer) UInt32(n uint32) {
+	var vln int
+	var dst []byte
+
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	vln = ui32dc(uint32(n))
+	if vln <= ln-cr {
+		dst = bf[cr:]
+		w.Cursor += vln
 	} else {
-		return copy(dst, "null")
+		w.Storage = append(w.Storage, bf[:cr])
+		dst = make([]byte, vln+CHUNK_SIZE)
+		w.Cursor, w.Buffer = vln, dst
 	}
+	strconv.AppendInt(dst[:0], int64(n), 10)
 }
 
-func WriteUInt32s(dst []byte, ns []uint32) (ln int) {
-	tmp, res := make([]byte, 0, 32), ([]byte)(nil)
-	if len(ns) > 0 {
-		ln = 1
+// Writes an array of 32 bit unsigned integer values separated by commas and enclosed
+// by square brackets to the buffer. When the slice is nil, writes "null".
+func (w *Writer) UInt32s(ns []uint32) {
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	vln, cap := 0, ln-cr
+
+	if ns == nil {
+		if 4 <= cap {
+			copy(bf[cr:], "null")
+			w.Cursor += 4
+		} else {
+			copy(bf[cr:], "null"[:cap])
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, 4-cap+CHUNK_SIZE)
+			w.Cursor = copy(bf, "null"[cap:])
+			w.Buffer = bf
+		}
+		return
+	} else if len(ns) == 0 {
+		if 2 <= cap {
+			bf[cr], bf[cr+1] = '[', ']'
+			w.Cursor += 2
+		} else if cap == 1 {
+			bf[cr] = '['
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			w.Cursor, bf[0] = 1, ']'
+			w.Buffer = bf
+		} else {
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			w.Cursor, bf[0], bf[1] = 2, '[', ']'
+			w.Buffer = bf
+		}
+		return
+	} else if 1+len(ns)*4 <= ln-cr {
+		bf[cr] = '['
 		for _, n := range ns {
-			res = strconv.AppendInt(tmp, int64(n), 10)
-			ln += copy(dst[ln:], res)
-			dst[ln] = ','
-			ln++
+			cr++
+			tb := strconv.AppendInt(bf[:cr], int64(n), 10)
+			cr = len(tb)
+			bf[cr] = ','
 		}
 
-		dst[0], dst[ln-1] = '[', ']'
-		return ln
-	} else if ns != nil {
-		return copy(dst, "[]")
+		bf[cr] = ']'
+		w.Cursor = cr + 1
+		return
 	} else {
-		return copy(dst, "null")
+		if ln != cr {
+			bf[cr] = '['
+			cr++
+		} else {
+			w.Storage = append(w.Storage, bf)
+			cr, ln = 1, CHUNK_SIZE
+			bf = make([]byte, CHUNK_SIZE)
+			bf[0] = '['
+		}
+
+		for _, n := range ns {
+			vln = UInt32Len(n)
+			if cap = ln - cr; vln <= cap {
+				strconv.AppendInt(bf[:cr], int64(n), 10)
+				cr += vln
+			} else {
+				w.Storage = append(w.Storage, bf[:cr])
+				cr, ln = vln-cap, vln-cap+CHUNK_SIZE
+				bf = make([]byte, ln)
+				strconv.AppendInt(bf, int64(n), 10)
+			}
+
+			if ln != cr {
+				bf[cr] = ','
+				cr++
+			} else {
+				w.Storage = append(w.Storage, bf)
+				cr, ln = 1, CHUNK_SIZE
+				bf = make([]byte, CHUNK_SIZE)
+				bf[0] = ','
+			}
+		}
+
+		bf[cr-1] = ']'
+		w.Cursor, w.Buffer = cr, bf
+		return
 	}
 }
 
-func UInt64Length(n uint64) (ln int) {
+func UInt64Len(n uint64) (ln int) {
 	return ui64dc(uint64(n))
 }
 
-func UInt64sLength(ns []uint64) (ln int) {
+func UInt64sLen(ns []uint64) (ln int) {
 	for _, n := range ns {
 		ln += ui64dc(n) + 1
 	}
@@ -185,52 +370,127 @@ func UInt64sLength(ns []uint64) (ln int) {
 	}
 }
 
-func WriteUInt64(dst []byte, n uint64) (ln int) {
-	if n != 0 {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendInt(tmp, int64(n), 10)
-		return copy(dst, tmp)
+// Writes "null" to the buffer when nil, otherwise writes an 64 bit unsigned integer.
+func (w *Writer) UInt64p(n *uint64) {
+	if n == nil {
+		w.Raw("null")
 	} else {
-		dst[0] = '0'
-		return 1
+		w.UInt64(*n)
 	}
 }
 
-func WriteUInt64Ptr(dst []byte, n *uint64) (ln int) {
-	if n != nil {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendInt(tmp, int64(*n), 10)
-		return copy(dst, tmp)
+// Writes an 64 bit unsigned integer to the buffer.
+func (w *Writer) UInt64(n uint64) {
+	var vln int
+	var dst []byte
+
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	vln = ui64dc(uint64(n))
+	if vln <= ln-cr {
+		dst = bf[cr:]
+		w.Cursor += vln
 	} else {
-		return copy(dst, "null")
+		w.Storage = append(w.Storage, bf[:cr])
+		dst = make([]byte, vln+CHUNK_SIZE)
+		w.Cursor, w.Buffer = vln, dst
 	}
+	strconv.AppendInt(dst[:0], int64(n), 10)
 }
 
-func WriteUInt64s(dst []byte, ns []uint64) (ln int) {
-	tmp, res := make([]byte, 0, 32), ([]byte)(nil)
-	if len(ns) > 0 {
-		ln = 1
+// Writes an array of 64 bit unsigned integer values separated by commas and enclosed
+// by square brackets to the buffer. When the slice is nil, writes "null".
+func (w *Writer) UInt64s(ns []uint64) {
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	vln, cap := 0, ln-cr
+
+	if ns == nil {
+		if 4 <= cap {
+			copy(bf[cr:], "null")
+			w.Cursor += 4
+		} else {
+			copy(bf[cr:], "null"[:cap])
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, 4-cap+CHUNK_SIZE)
+			w.Cursor = copy(bf, "null"[cap:])
+			w.Buffer = bf
+		}
+		return
+	} else if len(ns) == 0 {
+		if 2 <= cap {
+			bf[cr], bf[cr+1] = '[', ']'
+			w.Cursor += 2
+		} else if cap == 1 {
+			bf[cr] = '['
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			w.Cursor, bf[0] = 1, ']'
+			w.Buffer = bf
+		} else {
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			w.Cursor, bf[0], bf[1] = 2, '[', ']'
+			w.Buffer = bf
+		}
+		return
+	} else if 1+len(ns)*21 <= ln-cr {
+		bf[cr] = '['
 		for _, n := range ns {
-			res = strconv.AppendInt(tmp, int64(n), 10)
-			ln += copy(dst[ln:], res)
-			dst[ln] = ','
-			ln++
+			cr++
+			tb := strconv.AppendInt(bf[:cr], int64(n), 10)
+			cr = len(tb)
+			bf[cr] = ','
 		}
 
-		dst[0], dst[ln-1] = '[', ']'
-		return ln
-	} else if ns != nil {
-		return copy(dst, "[]")
+		bf[cr] = ']'
+		w.Cursor = cr + 1
+		return
 	} else {
-		return copy(dst, "null")
+		if ln != cr {
+			bf[cr] = '['
+			cr++
+		} else {
+			w.Storage = append(w.Storage, bf)
+			cr, ln = 1, CHUNK_SIZE
+			bf = make([]byte, CHUNK_SIZE)
+			bf[0] = '['
+		}
+
+		for _, n := range ns {
+			vln = UInt64Len(n)
+			if cap = ln - cr; vln <= cap {
+				strconv.AppendInt(bf[:cr], int64(n), 10)
+				cr += vln
+			} else {
+				w.Storage = append(w.Storage, bf[:cr])
+				cr, ln = vln-cap, vln-cap+CHUNK_SIZE
+				bf = make([]byte, ln)
+				strconv.AppendInt(bf, int64(n), 10)
+			}
+
+			if ln != cr {
+				bf[cr] = ','
+				cr++
+			} else {
+				w.Storage = append(w.Storage, bf)
+				cr, ln = 1, CHUNK_SIZE
+				bf = make([]byte, CHUNK_SIZE)
+				bf[0] = ','
+			}
+		}
+
+		bf[cr-1] = ']'
+		w.Cursor, w.Buffer = cr, bf
+		return
 	}
 }
 
-func UIntLength(n uint) (ln int) {
+func UIntLen(n uint) (ln int) {
 	return ui32dc(uint32(n))
 }
 
-func UIntsLength(ns []uint) (ln int) {
+func UIntsLen(ns []uint) (ln int) {
 	for _, n := range ns {
 		ln += ui32dc(uint32(n)) + 1
 	}
@@ -241,43 +501,118 @@ func UIntsLength(ns []uint) (ln int) {
 	}
 }
 
-func WriteUInt(dst []byte, n uint) (ln int) {
-	if n != 0 {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendInt(tmp, int64(n), 10)
-		return copy(dst, tmp)
+// Writes "null" to the buffer when nil, otherwise writes an unsigned integer.
+func (w *Writer) UIntp(n *uint) {
+	if n == nil {
+		w.Raw("null")
 	} else {
-		dst[0] = '0'
-		return 1
+		w.UInt(*n)
 	}
 }
 
-func WriteUIntPtr(dst []byte, n *uint) (ln int) {
-	if n != nil {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendInt(tmp, int64(*n), 10)
-		return copy(dst, tmp)
+// Writes an unsigned integer to the buffer.
+func (w *Writer) UInt(n uint) {
+	var vln int
+	var dst []byte
+
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	vln = ui32dc(uint32(n))
+	if vln <= ln-cr {
+		dst = bf[cr:]
+		w.Cursor += vln
 	} else {
-		return copy(dst, "null")
+		w.Storage = append(w.Storage, bf[:cr])
+		dst = make([]byte, vln+CHUNK_SIZE)
+		w.Cursor, w.Buffer = vln, dst
 	}
+	strconv.AppendInt(dst[:0], int64(n), 10)
 }
 
-func WriteUInts(dst []byte, ns []uint) (ln int) {
-	tmp, res := make([]byte, 0, 32), ([]byte)(nil)
-	if len(ns) > 0 {
-		ln = 1
+// Writes an array of unsigned integer values separated by commas and enclosed
+// by square brackets to the buffer. When the slice is nil, writes "null".
+func (w *Writer) UInts(ns []uint) {
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	vln, cap := 0, ln-cr
+
+	if ns == nil {
+		if 4 <= cap {
+			copy(bf[cr:], "null")
+			w.Cursor += 4
+		} else {
+			copy(bf[cr:], "null"[:cap])
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, 4-cap+CHUNK_SIZE)
+			w.Cursor = copy(bf, "null"[cap:])
+			w.Buffer = bf
+		}
+		return
+	} else if len(ns) == 0 {
+		if 2 <= cap {
+			bf[cr], bf[cr+1] = '[', ']'
+			w.Cursor += 2
+		} else if cap == 1 {
+			bf[cr] = '['
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			w.Cursor, bf[0] = 1, ']'
+			w.Buffer = bf
+		} else {
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			w.Cursor, bf[0], bf[1] = 2, '[', ']'
+			w.Buffer = bf
+		}
+		return
+	} else if 1+len(ns)*12 <= ln-cr {
+		bf[cr] = '['
 		for _, n := range ns {
-			res = strconv.AppendInt(tmp, int64(n), 10)
-			ln += copy(dst[ln:], res)
-			dst[ln] = ','
-			ln++
+			cr++
+			tb := strconv.AppendInt(bf[:cr], int64(n), 10)
+			cr = len(tb)
+			bf[cr] = ','
 		}
 
-		dst[0], dst[ln-1] = '[', ']'
-		return ln
-	} else if ns != nil {
-		return copy(dst, "[]")
+		bf[cr] = ']'
+		w.Cursor = cr + 1
+		return
 	} else {
-		return copy(dst, "null")
+		if ln != cr {
+			bf[cr] = '['
+			cr++
+		} else {
+			w.Storage = append(w.Storage, bf)
+			cr, ln = 1, CHUNK_SIZE
+			bf = make([]byte, CHUNK_SIZE)
+			bf[0] = '['
+		}
+
+		for _, n := range ns {
+			vln = UIntLen(n)
+			if cap = ln - cr; vln <= cap {
+				strconv.AppendInt(bf[:cr], int64(n), 10)
+				cr += vln
+			} else {
+				w.Storage = append(w.Storage, bf[:cr])
+				cr, ln = vln-cap, vln-cap+CHUNK_SIZE
+				bf = make([]byte, ln)
+				strconv.AppendInt(bf, int64(n), 10)
+			}
+
+			if ln != cr {
+				bf[cr] = ','
+				cr++
+			} else {
+				w.Storage = append(w.Storage, bf)
+				cr, ln = 1, CHUNK_SIZE
+				bf = make([]byte, CHUNK_SIZE)
+				bf[0] = ','
+			}
+		}
+
+		bf[cr-1] = ']'
+		w.Cursor, w.Buffer = cr, bf
+		return
 	}
 }

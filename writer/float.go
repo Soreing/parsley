@@ -1,12 +1,14 @@
 package writer
 
-import "strconv"
+import (
+	"strconv"
+)
 
-func Float32Length(n float32) (ln int) {
+func Float32Len(n float32) (ln int) {
 	return 24
 }
 
-func Float32sLength(ns []float32) (ln int) {
+func Float32sLen(ns []float32) (ln int) {
 	for range ns {
 		ln += 24 + 1
 	}
@@ -17,53 +19,126 @@ func Float32sLength(ns []float32) (ln int) {
 	}
 }
 
-func WriteFloat32(dst []byte, n float32) (ln int) {
-	if n != 0 {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendFloat(tmp, float64(n), 'g', -1, 32)
-		copy(dst, tmp)
-		return len(tmp)
+// Writes "null" to the buffer when nil, otherwise writes an 32 bit float.
+func (w *Writer) Float32p(n *float32) {
+	if n == nil {
+		w.Raw("null")
 	} else {
-		dst[0] = '0'
-		return 1
+		w.Float32(*n)
 	}
 }
 
-func WriteFloat32Ptr(dst []byte, n *float32) (ln int) {
-	if n != nil {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendFloat(tmp, float64(*n), 'g', -1, 32)
-		copy(dst, tmp)
-		return len(tmp)
+// Writes an 32 bit float to the buffer.
+func (w *Writer) Float32(n float32) {
+	var vln int
+	var dst []byte
+
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	vln = Float32Len(n)
+	if vln <= ln-cr {
+		dst = bf[cr:]
 	} else {
-		return copy(dst, "null")
+		w.Storage = append(w.Storage, bf[:cr])
+		dst = make([]byte, vln+CHUNK_SIZE)
+		w.Cursor, w.Buffer = 0, dst
 	}
+	w.Cursor += len(strconv.AppendFloat(dst[:0], float64(n), 'g', -1, 32))
 }
 
-func WriteFloat32s(dst []byte, ns []float32) (ln int) {
-	tmp, res := make([]byte, 0, 32), ([]byte)(nil)
-	if len(ns) > 0 {
-		ln = 1
-		for _, n := range ns {
-			res = strconv.AppendFloat(tmp, float64(n), 'g', -1, 32)
-			ln += copy(dst[ln:], res)
-			dst[ln] = ','
-			ln++
+// Writes an array of 32 bit float values separated by commas and enclosed
+// by square brackets to the buffer. When the slice is nil, writes "null".
+func (w *Writer) Float32s(ns []float32) {
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	vln, cap := 0, ln-cr
+
+	if ns == nil {
+		if 4 <= cap {
+			copy(bf[cr:], "null")
+			w.Cursor += 4
+		} else {
+			copy(bf[cr:], "null"[:cap])
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, 4-cap+CHUNK_SIZE)
+			w.Cursor = copy(bf, "null"[cap:])
+			w.Buffer = bf
 		}
-		dst[0], dst[ln-1] = '[', ']'
-		return ln
-	} else if ns != nil {
-		return copy(dst, "[]")
+		return
+	} else if len(ns) == 0 {
+		if 2 <= cap {
+			bf[cr], bf[cr+1] = '[', ']'
+			w.Cursor += 2
+		} else if cap == 1 {
+			bf[cr] = '['
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			w.Cursor, bf[0] = 1, ']'
+			w.Buffer = bf
+		} else {
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			w.Cursor, bf[0], bf[1] = 2, '[', ']'
+			w.Buffer = bf
+		}
+		return
+	} else if 1+len(ns)*25 <= ln-cr {
+		bf[cr] = '['
+		for _, n := range ns {
+			cr++
+			tb := strconv.AppendFloat(bf[:cr], float64(n), 'g', -1, 32)
+			cr = len(tb)
+			bf[cr] = ','
+		}
+
+		bf[cr] = ']'
+		w.Cursor = cr + 1
+		return
 	} else {
-		return copy(dst, "null")
+		if ln != cr {
+			bf[cr] = '['
+			cr++
+		} else {
+			w.Storage = append(w.Storage, bf)
+			cr, ln = 1, CHUNK_SIZE
+			bf = make([]byte, CHUNK_SIZE)
+			bf[0] = '['
+		}
+
+		for _, n := range ns {
+			vln = Float32Len(n)
+			if cap = ln - cr; vln <= cap {
+				strconv.AppendFloat(bf[:cr], float64(n), 'g', -1, 32)
+				cr += vln
+			} else {
+				w.Storage = append(w.Storage, bf[:cr])
+				cr, ln = vln-cap, vln-cap+CHUNK_SIZE
+				bf = make([]byte, ln)
+				strconv.AppendFloat(bf, float64(n), 'g', -1, 32)
+			}
+
+			if ln != cr {
+				bf[cr] = ','
+				cr++
+			} else {
+				w.Storage = append(w.Storage, bf)
+				cr, ln = 1, CHUNK_SIZE
+				bf = make([]byte, CHUNK_SIZE)
+				bf[0] = ','
+			}
+		}
+
+		bf[cr-1] = ']'
+		w.Cursor, w.Buffer = cr, bf
+		return
 	}
 }
 
-func Float64Length(n float64) (ln int) {
+func Float64Len(n float64) (ln int) {
 	return 24
 }
 
-func Float64sLength(ns []float64) (ln int) {
+func Float64sLen(ns []float64) (ln int) {
 	for range ns {
 		ln += 24 + 1
 	}
@@ -74,44 +149,117 @@ func Float64sLength(ns []float64) (ln int) {
 	}
 }
 
-func WriteFloat64(dst []byte, n float64) (ln int) {
-	if n != 0 {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendFloat(tmp, float64(n), 'g', -1, 64)
-		copy(dst, tmp)
-		return len(tmp)
+// Writes "null" to the buffer when nil, otherwise writes an 64 bit float.
+func (w *Writer) Float64p(n *float64) {
+	if n == nil {
+		w.Raw("null")
 	} else {
-		dst[0] = '0'
-		return 1
+		w.Float64(*n)
 	}
 }
 
-func WriteFloat64Ptr(dst []byte, n *float64) (ln int) {
-	if n != nil {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendFloat(tmp, float64(*n), 'g', -1, 64)
-		copy(dst, tmp)
-		return len(tmp)
+// Writes an 64 bit float to the buffer.
+func (w *Writer) Float64(n float64) {
+	var vln int
+	var dst []byte
+
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	vln = Float64Len(n)
+	if vln <= ln-cr {
+		dst = bf[cr:]
 	} else {
-		return copy(dst, "null")
+		w.Storage = append(w.Storage, bf[:cr])
+		dst = make([]byte, vln+CHUNK_SIZE)
+		w.Cursor, w.Buffer = 0, dst
 	}
+	w.Cursor += len(strconv.AppendFloat(dst[:0], float64(n), 'g', -1, 64))
 }
 
-func WriteFloat64s(dst []byte, ns []float64) (ln int) {
-	tmp, res := make([]byte, 0, 32), ([]byte)(nil)
-	if len(ns) > 0 {
-		ln = 1
-		for _, n := range ns {
-			res = strconv.AppendFloat(tmp, float64(n), 'g', -1, 64)
-			ln += copy(dst[ln:], res)
-			dst[ln] = ','
-			ln++
+// Writes an array of 64 bit float values separated by commas and enclosed
+// by square brackets to the buffer. When the slice is nil, writes "null".
+func (w *Writer) Float64s(ns []float64) {
+	bf := w.Buffer
+	cr, ln := w.Cursor, len(bf)
+	vln, cap := 0, ln-cr
+
+	if ns == nil {
+		if 4 <= cap {
+			copy(bf[cr:], "null")
+			w.Cursor += 4
+		} else {
+			copy(bf[cr:], "null"[:cap])
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, 4-cap+CHUNK_SIZE)
+			w.Cursor = copy(bf, "null"[cap:])
+			w.Buffer = bf
 		}
-		dst[0], dst[ln-1] = '[', ']'
-		return ln
-	} else if ns != nil {
-		return copy(dst, "[]")
+		return
+	} else if len(ns) == 0 {
+		if 2 <= cap {
+			bf[cr], bf[cr+1] = '[', ']'
+			w.Cursor += 2
+		} else if cap == 1 {
+			bf[cr] = '['
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			w.Cursor, bf[0] = 1, ']'
+			w.Buffer = bf
+		} else {
+			w.Storage = append(w.Storage, bf)
+			bf = make([]byte, CHUNK_SIZE)
+			w.Cursor, bf[0], bf[1] = 2, '[', ']'
+			w.Buffer = bf
+		}
+		return
+	} else if 1+len(ns)*25 <= ln-cr {
+		bf[cr] = '['
+		for _, n := range ns {
+			cr++
+			tb := strconv.AppendFloat(bf[:cr], float64(n), 'g', -1, 64)
+			cr = len(tb)
+			bf[cr] = ','
+		}
+
+		bf[cr] = ']'
+		w.Cursor = cr + 1
+		return
 	} else {
-		return copy(dst, "null")
+		if ln != cr {
+			bf[cr] = '['
+			cr++
+		} else {
+			w.Storage = append(w.Storage, bf)
+			cr, ln = 1, CHUNK_SIZE
+			bf = make([]byte, CHUNK_SIZE)
+			bf[0] = '['
+		}
+
+		for _, n := range ns {
+			vln = Float64Len(n)
+			if cap = ln - cr; vln <= cap {
+				strconv.AppendFloat(bf[:cr], float64(n), 'g', -1, 64)
+				cr += vln
+			} else {
+				w.Storage = append(w.Storage, bf[:cr])
+				cr, ln = vln-cap, vln-cap+CHUNK_SIZE
+				bf = make([]byte, ln)
+				strconv.AppendFloat(bf, float64(n), 'g', -1, 64)
+			}
+
+			if ln != cr {
+				bf[cr] = ','
+				cr++
+			} else {
+				w.Storage = append(w.Storage, bf)
+				cr, ln = 1, CHUNK_SIZE
+				bf = make([]byte, CHUNK_SIZE)
+				bf[0] = ','
+			}
+		}
+
+		bf[cr-1] = ']'
+		w.Cursor, w.Buffer = cr, bf
+		return
 	}
 }
