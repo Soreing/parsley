@@ -1,18 +1,22 @@
 package parsley
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/Soreing/parsley/writer"
+)
 
 type ParsleyJSONMarshaller interface {
-	MarshalParsleyJSON(dst []byte) int
+	MarshalParsleyJSON(w *writer.Writer)
 	LengthParsleyJSON() int
 }
 
-func Marshal(obj ParsleyJSONMarshaller) ([]byte, error) {
-	if obj == nil {
+func Marshal(ptr ParsleyJSONMarshaller) ([]byte, error) {
+	if ptr == nil {
 		return nil, fmt.Errorf("object is nil")
+	} else {
+		w := writer.NewWriter(ptr.LengthParsleyJSON())
+		ptr.MarshalParsleyJSON(w)
+		return w.Build(), nil
 	}
-
-	dst := make([]byte, obj.LengthParsleyJSON())
-	ln := obj.MarshalParsleyJSON(dst)
-	return dst[:ln], nil
 }
