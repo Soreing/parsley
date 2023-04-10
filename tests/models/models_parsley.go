@@ -74,50 +74,45 @@ func (o *Employee) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []Employee, 
 	return
 }
 
-func (o *Employee) MarshalParsleyJSON(dst []byte) (ln int) {
+func (o *Employee) MarshalParsleyJSON(w *writer.Writer) {
 	if o == nil {
-		return copy(dst, "null")
+		w.Raw("null")
+	} else {
+		w.Byte('{')
+		off := 1
+		w.Raw(",\"id\":"[off:])
+		w.String(o.Id)
+		off = 0
+		w.Raw(",\"person\":")
+		o.Person.MarshalParsleyJSON(w)
+		w.Raw(",\"devices\":")
+		(*externals.Device)(nil).MarshalParsleyJSONSlice(w, o.Devices)
+		w.Raw(",\"isActive\":")
+		w.Bool(o.IsActive)
+		w.Raw(",\"rating\":")
+		w.Float64(o.Rating)
+		w.Raw(",\"lineManager\":")
+		o.LineManager.MarshalParsleyJSON(w)
+		w.Raw(",\"tags\":")
+		w.Strings(o.Tags)
+		w.Byte('}')
 	}
-	off := 1
-	_ = off
-	dst[0] = '{'
-	ln++
-	ln += copy(dst[ln:], ",\"id\":"[off:])
-	ln += writer.WriteString(dst[ln:], o.Id)
-	off = 0
-	ln += copy(dst[ln:], ",\"person\":")
-	ln += o.Person.MarshalParsleyJSON(dst[ln:])
-	ln += copy(dst[ln:], ",\"devices\":")
-	ln += (*externals.Device)(nil).MarshalParsleyJSONSlice(dst[ln:], o.Devices)
-	ln += copy(dst[ln:], ",\"isActive\":")
-	ln += writer.WriteBool(dst[ln:], o.IsActive)
-	ln += copy(dst[ln:], ",\"rating\":")
-	ln += writer.WriteFloat64(dst[ln:], o.Rating)
-	ln += copy(dst[ln:], ",\"lineManager\":")
-	ln += o.LineManager.MarshalParsleyJSON(dst[ln:])
-	ln += copy(dst[ln:], ",\"tags\":")
-	ln += writer.WriteStrings(dst[ln:], o.Tags)
-	dst[ln] = '}'
-	ln++
-	return ln
 }
 
-func (o *Employee) MarshalParsleyJSONSlice(dst []byte, slc []Employee) (ln int) {
+func (o *Employee) MarshalParsleyJSONSlice(w *writer.Writer, slc []Employee) {
 	if slc == nil {
-		return copy(dst, "null")
-	}
-	dst[0] = '['
-	ln++
-	if len(slc) > 0 {
-		ln += slc[0].MarshalParsleyJSON(dst[1:])
-		for _, o := range slc[1:] {
-			dst[ln] = ','
-			ln++
-			ln += o.MarshalParsleyJSON(dst[ln:])
+		w.Raw("null")
+	} else if len(slc) == 0 {
+		w.Raw("[]")
+	} else {
+		w.Byte('[')
+		slc[0].MarshalParsleyJSON(w)
+		for i := 1; i < len(slc); i++ {
+			w.Byte(',')
+			slc[i].MarshalParsleyJSON(w)
 		}
+		w.Byte(']')
 	}
-	dst[ln] = ']'
-	return ln + 1
 }
 
 func (o *Employee) LengthParsleyJSON() (ln int) {
@@ -126,23 +121,23 @@ func (o *Employee) LengthParsleyJSON() (ln int) {
 	}
 	ln = 92
 	if o.Id != "" {
-		ln += writer.StringLength(o.Id) - 2
+		ln += writer.StringLen(o.Id) - 2
 	}
 	ln += o.Person.LengthParsleyJSON()
 	if o.Devices != nil {
 		ln += (*externals.Device)(nil).LengthParsleyJSONSlice(o.Devices) - 4
 	}
 	if o.IsActive != false {
-		ln += writer.BoolLength(o.IsActive) - 5
+		ln += writer.BoolLen(o.IsActive) - 5
 	}
 	if o.Rating != 0 {
-		ln += writer.Float64Length(o.Rating) - 1
+		ln += writer.Float64Len(o.Rating) - 1
 	}
 	if o.LineManager != nil {
 		ln += o.LineManager.LengthParsleyJSON() - 4
 	}
 	if o.Tags != nil {
-		ln += writer.StringsLength(o.Tags) - 4
+		ln += writer.StringsLen(o.Tags) - 4
 	}
 	if ln == 0 {
 		return 2
@@ -216,42 +211,37 @@ func (o *Person) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []Person, err 
 	return
 }
 
-func (o *Person) MarshalParsleyJSON(dst []byte) (ln int) {
+func (o *Person) MarshalParsleyJSON(w *writer.Writer) {
 	if o == nil {
-		return copy(dst, "null")
+		w.Raw("null")
+	} else {
+		w.Byte('{')
+		off := 1
+		w.Raw(",\"fname\":"[off:])
+		w.String(o.Fname)
+		off = 0
+		w.Raw(",\"lname\":")
+		w.String(o.Lname)
+		w.Raw(",\"dob\":")
+		w.Time(o.DOB)
+		w.Byte('}')
 	}
-	off := 1
-	_ = off
-	dst[0] = '{'
-	ln++
-	ln += copy(dst[ln:], ",\"fname\":"[off:])
-	ln += writer.WriteString(dst[ln:], o.Fname)
-	off = 0
-	ln += copy(dst[ln:], ",\"lname\":")
-	ln += writer.WriteString(dst[ln:], o.Lname)
-	ln += copy(dst[ln:], ",\"dob\":")
-	ln += writer.WriteTime(dst[ln:], o.DOB)
-	dst[ln] = '}'
-	ln++
-	return ln
 }
 
-func (o *Person) MarshalParsleyJSONSlice(dst []byte, slc []Person) (ln int) {
+func (o *Person) MarshalParsleyJSONSlice(w *writer.Writer, slc []Person) {
 	if slc == nil {
-		return copy(dst, "null")
-	}
-	dst[0] = '['
-	ln++
-	if len(slc) > 0 {
-		ln += slc[0].MarshalParsleyJSON(dst[1:])
-		for _, o := range slc[1:] {
-			dst[ln] = ','
-			ln++
-			ln += o.MarshalParsleyJSON(dst[ln:])
+		w.Raw("null")
+	} else if len(slc) == 0 {
+		w.Raw("[]")
+	} else {
+		w.Byte('[')
+		slc[0].MarshalParsleyJSON(w)
+		for i := 1; i < len(slc); i++ {
+			w.Byte(',')
+			slc[i].MarshalParsleyJSON(w)
 		}
+		w.Byte(']')
 	}
-	dst[ln] = ']'
-	return ln + 1
 }
 
 func (o *Person) LengthParsleyJSON() (ln int) {
@@ -260,13 +250,13 @@ func (o *Person) LengthParsleyJSON() (ln int) {
 	}
 	ln = 51
 	if o.Fname != "" {
-		ln += writer.StringLength(o.Fname) - 2
+		ln += writer.StringLen(o.Fname) - 2
 	}
 	if o.Lname != "" {
-		ln += writer.StringLength(o.Lname) - 2
+		ln += writer.StringLen(o.Lname) - 2
 	}
 	if o.DOB.IsZero() != true {
-		ln += writer.TimeLength(o.DOB) - 22
+		ln += writer.TimeLen(o.DOB) - 22
 	}
 	if ln == 0 {
 		return 2
@@ -313,30 +303,27 @@ func (o *EmployeeList) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []Employ
 	return
 }
 
-func (o *EmployeeList) MarshalParsleyJSON(dst []byte) (ln int) {
+func (o *EmployeeList) MarshalParsleyJSON(w *writer.Writer) {
 	if o == nil {
-		return copy(dst, "null")
+		w.Raw("null")
 	}
-	return (*Employee)(nil).MarshalParsleyJSONSlice(dst[ln:], *o)
+	(*Employee)(nil).MarshalParsleyJSONSlice(w, *o)
 
 }
 
-func (o *EmployeeList) MarshalParsleyJSONSlice(dst []byte, slc []EmployeeList) (ln int) {
+func (o *EmployeeList) MarshalParsleyJSONSlice(w *writer.Writer, slc []EmployeeList) {
 	if slc == nil {
-		return copy(dst, "null")
+		w.Raw("null")
 	}
-	dst[0] = '['
-	ln++
+	w.Byte('[')
 	if len(slc) > 0 {
-		ln += slc[0].MarshalParsleyJSON(dst[1:])
-		for _, o := range slc[1:] {
-			dst[ln] = ','
-			ln++
-			ln += o.MarshalParsleyJSON(dst[ln:])
+		slc[0].MarshalParsleyJSON(w)
+		for i := 1; i < len(slc); i++ {
+			w.Byte(',')
+			slc[i].MarshalParsleyJSON(w)
 		}
 	}
-	dst[ln] = ']'
-	return ln + 1
+	w.Byte(']')
 }
 
 func (o *EmployeeList) LengthParsleyJSON() (ln int) {

@@ -64,42 +64,37 @@ func (o *BooleansColl) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []Boolea
 	return
 }
 
-func (o *BooleansColl) MarshalParsleyJSON(dst []byte) (ln int) {
+func (o *BooleansColl) MarshalParsleyJSON(w *writer.Writer) {
 	if o == nil {
-		return copy(dst, "null")
+		w.Raw("null")
+	} else {
+		w.Byte('{')
+		off := 1
+		w.Raw(",\"bdat\":"[off:])
+		w.Bool(o.BDat)
+		off = 0
+		w.Raw(",\"bslc\":")
+		w.Bools(o.BSlc)
+		w.Raw(",\"bptr\":")
+		w.Boolp(o.BPtr)
+		w.Byte('}')
 	}
-	off := 1
-	_ = off
-	dst[0] = '{'
-	ln++
-	ln += copy(dst[ln:], ",\"bdat\":"[off:])
-	ln += writer.WriteBool(dst[ln:], o.BDat)
-	off = 0
-	ln += copy(dst[ln:], ",\"bslc\":")
-	ln += writer.WriteBools(dst[ln:], o.BSlc)
-	ln += copy(dst[ln:], ",\"bptr\":")
-	ln += writer.WriteBoolPtr(dst[ln:], o.BPtr)
-	dst[ln] = '}'
-	ln++
-	return ln
 }
 
-func (o *BooleansColl) MarshalParsleyJSONSlice(dst []byte, slc []BooleansColl) (ln int) {
+func (o *BooleansColl) MarshalParsleyJSONSlice(w *writer.Writer, slc []BooleansColl) {
 	if slc == nil {
-		return copy(dst, "null")
-	}
-	dst[0] = '['
-	ln++
-	if len(slc) > 0 {
-		ln += slc[0].MarshalParsleyJSON(dst[1:])
-		for _, o := range slc[1:] {
-			dst[ln] = ','
-			ln++
-			ln += o.MarshalParsleyJSON(dst[ln:])
+		w.Raw("null")
+	} else if len(slc) == 0 {
+		w.Raw("[]")
+	} else {
+		w.Byte('[')
+		slc[0].MarshalParsleyJSON(w)
+		for i := 1; i < len(slc); i++ {
+			w.Byte(',')
+			slc[i].MarshalParsleyJSON(w)
 		}
+		w.Byte(']')
 	}
-	dst[ln] = ']'
-	return ln + 1
 }
 
 func (o *BooleansColl) LengthParsleyJSON() (ln int) {
@@ -108,13 +103,13 @@ func (o *BooleansColl) LengthParsleyJSON() (ln int) {
 	}
 	ln = 37
 	if o.BDat != false {
-		ln += writer.BoolLength(o.BDat) - 5
+		ln += writer.BoolLen(o.BDat) - 5
 	}
 	if o.BSlc != nil {
-		ln += writer.BoolsLength(o.BSlc) - 4
+		ln += writer.BoolsLen(o.BSlc) - 4
 	}
 	if o.BPtr != nil {
-		ln += writer.BoolLength(*o.BPtr) - 4
+		ln += writer.BoolLen(*o.BPtr) - 4
 	}
 	if ln == 0 {
 		return 2
@@ -194,48 +189,43 @@ func (o *FloatingPointColl) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []F
 	return
 }
 
-func (o *FloatingPointColl) MarshalParsleyJSON(dst []byte) (ln int) {
+func (o *FloatingPointColl) MarshalParsleyJSON(w *writer.Writer) {
 	if o == nil {
-		return copy(dst, "null")
+		w.Raw("null")
+	} else {
+		w.Byte('{')
+		off := 1
+		w.Raw(",\"f32dat\":"[off:])
+		w.Float32(o.F32Dat)
+		off = 0
+		w.Raw(",\"f32slc\":")
+		w.Float32s(o.F32Slc)
+		w.Raw(",\"f32ptr\":")
+		w.Float32p(o.F32Ptr)
+		w.Raw(",\"f64dat\":")
+		w.Float64(o.F64Dat)
+		w.Raw(",\"f64slc\":")
+		w.Float64s(o.F64Slc)
+		w.Raw(",\"f64ptr\":")
+		w.Float64p(o.F64Ptr)
+		w.Byte('}')
 	}
-	off := 1
-	_ = off
-	dst[0] = '{'
-	ln++
-	ln += copy(dst[ln:], ",\"f32dat\":"[off:])
-	ln += writer.WriteFloat32(dst[ln:], o.F32Dat)
-	off = 0
-	ln += copy(dst[ln:], ",\"f32slc\":")
-	ln += writer.WriteFloat32s(dst[ln:], o.F32Slc)
-	ln += copy(dst[ln:], ",\"f32ptr\":")
-	ln += writer.WriteFloat32Ptr(dst[ln:], o.F32Ptr)
-	ln += copy(dst[ln:], ",\"f64dat\":")
-	ln += writer.WriteFloat64(dst[ln:], o.F64Dat)
-	ln += copy(dst[ln:], ",\"f64slc\":")
-	ln += writer.WriteFloat64s(dst[ln:], o.F64Slc)
-	ln += copy(dst[ln:], ",\"f64ptr\":")
-	ln += writer.WriteFloat64Ptr(dst[ln:], o.F64Ptr)
-	dst[ln] = '}'
-	ln++
-	return ln
 }
 
-func (o *FloatingPointColl) MarshalParsleyJSONSlice(dst []byte, slc []FloatingPointColl) (ln int) {
+func (o *FloatingPointColl) MarshalParsleyJSONSlice(w *writer.Writer, slc []FloatingPointColl) {
 	if slc == nil {
-		return copy(dst, "null")
-	}
-	dst[0] = '['
-	ln++
-	if len(slc) > 0 {
-		ln += slc[0].MarshalParsleyJSON(dst[1:])
-		for _, o := range slc[1:] {
-			dst[ln] = ','
-			ln++
-			ln += o.MarshalParsleyJSON(dst[ln:])
+		w.Raw("null")
+	} else if len(slc) == 0 {
+		w.Raw("[]")
+	} else {
+		w.Byte('[')
+		slc[0].MarshalParsleyJSON(w)
+		for i := 1; i < len(slc); i++ {
+			w.Byte(',')
+			slc[i].MarshalParsleyJSON(w)
 		}
+		w.Byte(']')
 	}
-	dst[ln] = ']'
-	return ln + 1
 }
 
 func (o *FloatingPointColl) LengthParsleyJSON() (ln int) {
@@ -244,22 +234,22 @@ func (o *FloatingPointColl) LengthParsleyJSON() (ln int) {
 	}
 	ln = 78
 	if o.F32Dat != 0 {
-		ln += writer.Float32Length(o.F32Dat) - 1
+		ln += writer.Float32Len(o.F32Dat) - 1
 	}
 	if o.F32Slc != nil {
-		ln += writer.Float32sLength(o.F32Slc) - 4
+		ln += writer.Float32sLen(o.F32Slc) - 4
 	}
 	if o.F32Ptr != nil {
-		ln += writer.Float32Length(*o.F32Ptr) - 4
+		ln += writer.Float32Len(*o.F32Ptr) - 4
 	}
 	if o.F64Dat != 0 {
-		ln += writer.Float64Length(o.F64Dat) - 1
+		ln += writer.Float64Len(o.F64Dat) - 1
 	}
 	if o.F64Slc != nil {
-		ln += writer.Float64sLength(o.F64Slc) - 4
+		ln += writer.Float64sLen(o.F64Slc) - 4
 	}
 	if o.F64Ptr != nil {
-		ln += writer.Float64Length(*o.F64Ptr) - 4
+		ln += writer.Float64Len(*o.F64Ptr) - 4
 	}
 	if ln == 0 {
 		return 2
@@ -357,66 +347,61 @@ func (o *IntegersColl) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []Intege
 	return
 }
 
-func (o *IntegersColl) MarshalParsleyJSON(dst []byte) (ln int) {
+func (o *IntegersColl) MarshalParsleyJSON(w *writer.Writer) {
 	if o == nil {
-		return copy(dst, "null")
+		w.Raw("null")
+	} else {
+		w.Byte('{')
+		off := 1
+		w.Raw(",\"i8dat\":"[off:])
+		w.Int8(o.I8Dat)
+		off = 0
+		w.Raw(",\"i8slc\":")
+		w.Int8s(o.I8Slc)
+		w.Raw(",\"i8ptr\":")
+		w.Int8p(o.I8Ptr)
+		w.Raw(",\"i16dat\":")
+		w.Int16(o.I16Dat)
+		w.Raw(",\"i16slc\":")
+		w.Int16s(o.I16Slc)
+		w.Raw(",\"i16ptr\":")
+		w.Int16p(o.I16Ptr)
+		w.Raw(",\"i32dat\":")
+		w.Int32(o.I32Dat)
+		w.Raw(",\"i32slc\":")
+		w.Int32s(o.I32Slc)
+		w.Raw(",\"i32ptr\":")
+		w.Int32p(o.I32Ptr)
+		w.Raw(",\"i64dat\":")
+		w.Int64(o.I64Dat)
+		w.Raw(",\"i64slc\":")
+		w.Int64s(o.I64Slc)
+		w.Raw(",\"i64ptr\":")
+		w.Int64p(o.I64Ptr)
+		w.Raw(",\"idat\":")
+		w.Int(o.IDat)
+		w.Raw(",\"islc\":")
+		w.Ints(o.ISlc)
+		w.Raw(",\"iptr\":")
+		w.Intp(o.IPtr)
+		w.Byte('}')
 	}
-	off := 1
-	_ = off
-	dst[0] = '{'
-	ln++
-	ln += copy(dst[ln:], ",\"i8dat\":"[off:])
-	ln += writer.WriteInt8(dst[ln:], o.I8Dat)
-	off = 0
-	ln += copy(dst[ln:], ",\"i8slc\":")
-	ln += writer.WriteInt8s(dst[ln:], o.I8Slc)
-	ln += copy(dst[ln:], ",\"i8ptr\":")
-	ln += writer.WriteInt8Ptr(dst[ln:], o.I8Ptr)
-	ln += copy(dst[ln:], ",\"i16dat\":")
-	ln += writer.WriteInt16(dst[ln:], o.I16Dat)
-	ln += copy(dst[ln:], ",\"i16slc\":")
-	ln += writer.WriteInt16s(dst[ln:], o.I16Slc)
-	ln += copy(dst[ln:], ",\"i16ptr\":")
-	ln += writer.WriteInt16Ptr(dst[ln:], o.I16Ptr)
-	ln += copy(dst[ln:], ",\"i32dat\":")
-	ln += writer.WriteInt32(dst[ln:], o.I32Dat)
-	ln += copy(dst[ln:], ",\"i32slc\":")
-	ln += writer.WriteInt32s(dst[ln:], o.I32Slc)
-	ln += copy(dst[ln:], ",\"i32ptr\":")
-	ln += writer.WriteInt32Ptr(dst[ln:], o.I32Ptr)
-	ln += copy(dst[ln:], ",\"i64dat\":")
-	ln += writer.WriteInt64(dst[ln:], o.I64Dat)
-	ln += copy(dst[ln:], ",\"i64slc\":")
-	ln += writer.WriteInt64s(dst[ln:], o.I64Slc)
-	ln += copy(dst[ln:], ",\"i64ptr\":")
-	ln += writer.WriteInt64Ptr(dst[ln:], o.I64Ptr)
-	ln += copy(dst[ln:], ",\"idat\":")
-	ln += writer.WriteInt(dst[ln:], o.IDat)
-	ln += copy(dst[ln:], ",\"islc\":")
-	ln += writer.WriteInts(dst[ln:], o.ISlc)
-	ln += copy(dst[ln:], ",\"iptr\":")
-	ln += writer.WriteIntPtr(dst[ln:], o.IPtr)
-	dst[ln] = '}'
-	ln++
-	return ln
 }
 
-func (o *IntegersColl) MarshalParsleyJSONSlice(dst []byte, slc []IntegersColl) (ln int) {
+func (o *IntegersColl) MarshalParsleyJSONSlice(w *writer.Writer, slc []IntegersColl) {
 	if slc == nil {
-		return copy(dst, "null")
-	}
-	dst[0] = '['
-	ln++
-	if len(slc) > 0 {
-		ln += slc[0].MarshalParsleyJSON(dst[1:])
-		for _, o := range slc[1:] {
-			dst[ln] = ','
-			ln++
-			ln += o.MarshalParsleyJSON(dst[ln:])
+		w.Raw("null")
+	} else if len(slc) == 0 {
+		w.Raw("[]")
+	} else {
+		w.Byte('[')
+		slc[0].MarshalParsleyJSON(w)
+		for i := 1; i < len(slc); i++ {
+			w.Byte(',')
+			slc[i].MarshalParsleyJSON(w)
 		}
+		w.Byte(']')
 	}
-	dst[ln] = ']'
-	return ln + 1
 }
 
 func (o *IntegersColl) LengthParsleyJSON() (ln int) {
@@ -425,49 +410,49 @@ func (o *IntegersColl) LengthParsleyJSON() (ln int) {
 	}
 	ln = 186
 	if o.I8Dat != 0 {
-		ln += writer.Int8Length(o.I8Dat) - 1
+		ln += writer.Int8Len(o.I8Dat) - 1
 	}
 	if o.I8Slc != nil {
-		ln += writer.Int8sLength(o.I8Slc) - 4
+		ln += writer.Int8sLen(o.I8Slc) - 4
 	}
 	if o.I8Ptr != nil {
-		ln += writer.Int8Length(*o.I8Ptr) - 4
+		ln += writer.Int8Len(*o.I8Ptr) - 4
 	}
 	if o.I16Dat != 0 {
-		ln += writer.Int16Length(o.I16Dat) - 1
+		ln += writer.Int16Len(o.I16Dat) - 1
 	}
 	if o.I16Slc != nil {
-		ln += writer.Int16sLength(o.I16Slc) - 4
+		ln += writer.Int16sLen(o.I16Slc) - 4
 	}
 	if o.I16Ptr != nil {
-		ln += writer.Int16Length(*o.I16Ptr) - 4
+		ln += writer.Int16Len(*o.I16Ptr) - 4
 	}
 	if o.I32Dat != 0 {
-		ln += writer.Int32Length(o.I32Dat) - 1
+		ln += writer.Int32Len(o.I32Dat) - 1
 	}
 	if o.I32Slc != nil {
-		ln += writer.Int32sLength(o.I32Slc) - 4
+		ln += writer.Int32sLen(o.I32Slc) - 4
 	}
 	if o.I32Ptr != nil {
-		ln += writer.Int32Length(*o.I32Ptr) - 4
+		ln += writer.Int32Len(*o.I32Ptr) - 4
 	}
 	if o.I64Dat != 0 {
-		ln += writer.Int64Length(o.I64Dat) - 1
+		ln += writer.Int64Len(o.I64Dat) - 1
 	}
 	if o.I64Slc != nil {
-		ln += writer.Int64sLength(o.I64Slc) - 4
+		ln += writer.Int64sLen(o.I64Slc) - 4
 	}
 	if o.I64Ptr != nil {
-		ln += writer.Int64Length(*o.I64Ptr) - 4
+		ln += writer.Int64Len(*o.I64Ptr) - 4
 	}
 	if o.IDat != 0 {
-		ln += writer.IntLength(o.IDat) - 1
+		ln += writer.IntLen(o.IDat) - 1
 	}
 	if o.ISlc != nil {
-		ln += writer.IntsLength(o.ISlc) - 4
+		ln += writer.IntsLen(o.ISlc) - 4
 	}
 	if o.IPtr != nil {
-		ln += writer.IntLength(*o.IPtr) - 4
+		ln += writer.IntLen(*o.IPtr) - 4
 	}
 	if ln == 0 {
 		return 2
@@ -547,48 +532,43 @@ func (o *StringsColl) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []Strings
 	return
 }
 
-func (o *StringsColl) MarshalParsleyJSON(dst []byte) (ln int) {
+func (o *StringsColl) MarshalParsleyJSON(w *writer.Writer) {
 	if o == nil {
-		return copy(dst, "null")
+		w.Raw("null")
+	} else {
+		w.Byte('{')
+		off := 1
+		w.Raw(",\"sdat\":"[off:])
+		w.String(o.SDat)
+		off = 0
+		w.Raw(",\"sslc\":")
+		w.Strings(o.SSlc)
+		w.Raw(",\"sptr\":")
+		w.Stringp(o.SPtr)
+		w.Raw(",\"tdat\":")
+		w.Time(o.TDat)
+		w.Raw(",\"tslc\":")
+		w.Times(o.TSlc)
+		w.Raw(",\"tptr\":")
+		w.Timep(o.TPtr)
+		w.Byte('}')
 	}
-	off := 1
-	_ = off
-	dst[0] = '{'
-	ln++
-	ln += copy(dst[ln:], ",\"sdat\":"[off:])
-	ln += writer.WriteString(dst[ln:], o.SDat)
-	off = 0
-	ln += copy(dst[ln:], ",\"sslc\":")
-	ln += writer.WriteStrings(dst[ln:], o.SSlc)
-	ln += copy(dst[ln:], ",\"sptr\":")
-	ln += writer.WriteStringPtr(dst[ln:], o.SPtr)
-	ln += copy(dst[ln:], ",\"tdat\":")
-	ln += writer.WriteTime(dst[ln:], o.TDat)
-	ln += copy(dst[ln:], ",\"tslc\":")
-	ln += writer.WriteTimes(dst[ln:], o.TSlc)
-	ln += copy(dst[ln:], ",\"tptr\":")
-	ln += writer.WriteTimePtr(dst[ln:], o.TPtr)
-	dst[ln] = '}'
-	ln++
-	return ln
 }
 
-func (o *StringsColl) MarshalParsleyJSONSlice(dst []byte, slc []StringsColl) (ln int) {
+func (o *StringsColl) MarshalParsleyJSONSlice(w *writer.Writer, slc []StringsColl) {
 	if slc == nil {
-		return copy(dst, "null")
-	}
-	dst[0] = '['
-	ln++
-	if len(slc) > 0 {
-		ln += slc[0].MarshalParsleyJSON(dst[1:])
-		for _, o := range slc[1:] {
-			dst[ln] = ','
-			ln++
-			ln += o.MarshalParsleyJSON(dst[ln:])
+		w.Raw("null")
+	} else if len(slc) == 0 {
+		w.Raw("[]")
+	} else {
+		w.Byte('[')
+		slc[0].MarshalParsleyJSON(w)
+		for i := 1; i < len(slc); i++ {
+			w.Byte(',')
+			slc[i].MarshalParsleyJSON(w)
 		}
+		w.Byte(']')
 	}
-	dst[ln] = ']'
-	return ln + 1
 }
 
 func (o *StringsColl) LengthParsleyJSON() (ln int) {
@@ -597,22 +577,22 @@ func (o *StringsColl) LengthParsleyJSON() (ln int) {
 	}
 	ln = 88
 	if o.SDat != "" {
-		ln += writer.StringLength(o.SDat) - 2
+		ln += writer.StringLen(o.SDat) - 2
 	}
 	if o.SSlc != nil {
-		ln += writer.StringsLength(o.SSlc) - 4
+		ln += writer.StringsLen(o.SSlc) - 4
 	}
 	if o.SPtr != nil {
-		ln += writer.StringLength(*o.SPtr) - 4
+		ln += writer.StringLen(*o.SPtr) - 4
 	}
 	if o.TDat.IsZero() != true {
-		ln += writer.TimeLength(o.TDat) - 22
+		ln += writer.TimeLen(o.TDat) - 22
 	}
 	if o.TSlc != nil {
-		ln += writer.TimesLength(o.TSlc) - 4
+		ln += writer.TimesLen(o.TSlc) - 4
 	}
 	if o.TPtr != nil {
-		ln += writer.TimeLength(*o.TPtr) - 4
+		ln += writer.TimeLen(*o.TPtr) - 4
 	}
 	if ln == 0 {
 		return 2
@@ -710,66 +690,61 @@ func (o *UnsignedIntegersColl) UnmarshalParsleyJSONSlice(r *reader.Reader) (res 
 	return
 }
 
-func (o *UnsignedIntegersColl) MarshalParsleyJSON(dst []byte) (ln int) {
+func (o *UnsignedIntegersColl) MarshalParsleyJSON(w *writer.Writer) {
 	if o == nil {
-		return copy(dst, "null")
+		w.Raw("null")
+	} else {
+		w.Byte('{')
+		off := 1
+		w.Raw(",\"ui8dat\":"[off:])
+		w.UInt8(o.UI8Dat)
+		off = 0
+		w.Raw(",\"ui8slc\":")
+		w.UInt8s(o.UI8Slc)
+		w.Raw(",\"ui8ptr\":")
+		w.UInt8p(o.UI8Ptr)
+		w.Raw(",\"ui16dat\":")
+		w.UInt16(o.UI16Dat)
+		w.Raw(",\"ui16slc\":")
+		w.UInt16s(o.UI16Slc)
+		w.Raw(",\"ui16ptr\":")
+		w.UInt16p(o.UI16Ptr)
+		w.Raw(",\"ui32dat\":")
+		w.UInt32(o.UI32Dat)
+		w.Raw(",\"ui32slc\":")
+		w.UInt32s(o.UI32Slc)
+		w.Raw(",\"ui32ptr\":")
+		w.UInt32p(o.UI32Ptr)
+		w.Raw(",\"ui64dat\":")
+		w.UInt64(o.UI64Dat)
+		w.Raw(",\"ui64slc\":")
+		w.UInt64s(o.UI64Slc)
+		w.Raw(",\"ui64ptr\":")
+		w.UInt64p(o.UI64Ptr)
+		w.Raw(",\"uidat\":")
+		w.UInt(o.UIDat)
+		w.Raw(",\"uislc\":")
+		w.UInts(o.UISlc)
+		w.Raw(",\"uiptr\":")
+		w.UIntp(o.UIPtr)
+		w.Byte('}')
 	}
-	off := 1
-	_ = off
-	dst[0] = '{'
-	ln++
-	ln += copy(dst[ln:], ",\"ui8dat\":"[off:])
-	ln += writer.WriteUInt8(dst[ln:], o.UI8Dat)
-	off = 0
-	ln += copy(dst[ln:], ",\"ui8slc\":")
-	ln += writer.WriteUInt8s(dst[ln:], o.UI8Slc)
-	ln += copy(dst[ln:], ",\"ui8ptr\":")
-	ln += writer.WriteUInt8Ptr(dst[ln:], o.UI8Ptr)
-	ln += copy(dst[ln:], ",\"ui16dat\":")
-	ln += writer.WriteUInt16(dst[ln:], o.UI16Dat)
-	ln += copy(dst[ln:], ",\"ui16slc\":")
-	ln += writer.WriteUInt16s(dst[ln:], o.UI16Slc)
-	ln += copy(dst[ln:], ",\"ui16ptr\":")
-	ln += writer.WriteUInt16Ptr(dst[ln:], o.UI16Ptr)
-	ln += copy(dst[ln:], ",\"ui32dat\":")
-	ln += writer.WriteUInt32(dst[ln:], o.UI32Dat)
-	ln += copy(dst[ln:], ",\"ui32slc\":")
-	ln += writer.WriteUInt32s(dst[ln:], o.UI32Slc)
-	ln += copy(dst[ln:], ",\"ui32ptr\":")
-	ln += writer.WriteUInt32Ptr(dst[ln:], o.UI32Ptr)
-	ln += copy(dst[ln:], ",\"ui64dat\":")
-	ln += writer.WriteUInt64(dst[ln:], o.UI64Dat)
-	ln += copy(dst[ln:], ",\"ui64slc\":")
-	ln += writer.WriteUInt64s(dst[ln:], o.UI64Slc)
-	ln += copy(dst[ln:], ",\"ui64ptr\":")
-	ln += writer.WriteUInt64Ptr(dst[ln:], o.UI64Ptr)
-	ln += copy(dst[ln:], ",\"uidat\":")
-	ln += writer.WriteUInt(dst[ln:], o.UIDat)
-	ln += copy(dst[ln:], ",\"uislc\":")
-	ln += writer.WriteUInts(dst[ln:], o.UISlc)
-	ln += copy(dst[ln:], ",\"uiptr\":")
-	ln += writer.WriteUIntPtr(dst[ln:], o.UIPtr)
-	dst[ln] = '}'
-	ln++
-	return ln
 }
 
-func (o *UnsignedIntegersColl) MarshalParsleyJSONSlice(dst []byte, slc []UnsignedIntegersColl) (ln int) {
+func (o *UnsignedIntegersColl) MarshalParsleyJSONSlice(w *writer.Writer, slc []UnsignedIntegersColl) {
 	if slc == nil {
-		return copy(dst, "null")
-	}
-	dst[0] = '['
-	ln++
-	if len(slc) > 0 {
-		ln += slc[0].MarshalParsleyJSON(dst[1:])
-		for _, o := range slc[1:] {
-			dst[ln] = ','
-			ln++
-			ln += o.MarshalParsleyJSON(dst[ln:])
+		w.Raw("null")
+	} else if len(slc) == 0 {
+		w.Raw("[]")
+	} else {
+		w.Byte('[')
+		slc[0].MarshalParsleyJSON(w)
+		for i := 1; i < len(slc); i++ {
+			w.Byte(',')
+			slc[i].MarshalParsleyJSON(w)
 		}
+		w.Byte(']')
 	}
-	dst[ln] = ']'
-	return ln + 1
 }
 
 func (o *UnsignedIntegersColl) LengthParsleyJSON() (ln int) {
@@ -778,49 +753,49 @@ func (o *UnsignedIntegersColl) LengthParsleyJSON() (ln int) {
 	}
 	ln = 201
 	if o.UI8Dat != 0 {
-		ln += writer.UInt8Length(o.UI8Dat) - 1
+		ln += writer.UInt8Len(o.UI8Dat) - 1
 	}
 	if o.UI8Slc != nil {
-		ln += writer.UInt8sLength(o.UI8Slc) - 4
+		ln += writer.UInt8sLen(o.UI8Slc) - 4
 	}
 	if o.UI8Ptr != nil {
-		ln += writer.UInt8Length(*o.UI8Ptr) - 4
+		ln += writer.UInt8Len(*o.UI8Ptr) - 4
 	}
 	if o.UI16Dat != 0 {
-		ln += writer.UInt16Length(o.UI16Dat) - 1
+		ln += writer.UInt16Len(o.UI16Dat) - 1
 	}
 	if o.UI16Slc != nil {
-		ln += writer.UInt16sLength(o.UI16Slc) - 4
+		ln += writer.UInt16sLen(o.UI16Slc) - 4
 	}
 	if o.UI16Ptr != nil {
-		ln += writer.UInt16Length(*o.UI16Ptr) - 4
+		ln += writer.UInt16Len(*o.UI16Ptr) - 4
 	}
 	if o.UI32Dat != 0 {
-		ln += writer.UInt32Length(o.UI32Dat) - 1
+		ln += writer.UInt32Len(o.UI32Dat) - 1
 	}
 	if o.UI32Slc != nil {
-		ln += writer.UInt32sLength(o.UI32Slc) - 4
+		ln += writer.UInt32sLen(o.UI32Slc) - 4
 	}
 	if o.UI32Ptr != nil {
-		ln += writer.UInt32Length(*o.UI32Ptr) - 4
+		ln += writer.UInt32Len(*o.UI32Ptr) - 4
 	}
 	if o.UI64Dat != 0 {
-		ln += writer.UInt64Length(o.UI64Dat) - 1
+		ln += writer.UInt64Len(o.UI64Dat) - 1
 	}
 	if o.UI64Slc != nil {
-		ln += writer.UInt64sLength(o.UI64Slc) - 4
+		ln += writer.UInt64sLen(o.UI64Slc) - 4
 	}
 	if o.UI64Ptr != nil {
-		ln += writer.UInt64Length(*o.UI64Ptr) - 4
+		ln += writer.UInt64Len(*o.UI64Ptr) - 4
 	}
 	if o.UIDat != 0 {
-		ln += writer.UIntLength(o.UIDat) - 1
+		ln += writer.UIntLen(o.UIDat) - 1
 	}
 	if o.UISlc != nil {
-		ln += writer.UIntsLength(o.UISlc) - 4
+		ln += writer.UIntsLen(o.UISlc) - 4
 	}
 	if o.UIPtr != nil {
-		ln += writer.UIntLength(*o.UIPtr) - 4
+		ln += writer.UIntLen(*o.UIPtr) - 4
 	}
 	if ln == 0 {
 		return 2
