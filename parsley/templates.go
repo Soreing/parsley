@@ -61,35 +61,35 @@ func getDefaultValueByteLength(fi FieldInfo) (ln int) {
 func getLengthTypeFormat(typename string) (tmpl string, unknown bool) {
 	switch typename {
 	case "int":
-		tmpl = "writer.Int%sLength(%s)"
+		tmpl = "writer.Int%sLen(%s)"
 	case "int8":
-		tmpl = "writer.Int8%sLength(%s)"
+		tmpl = "writer.Int8%sLen(%s)"
 	case "int16":
-		tmpl = "writer.Int16%sLength(%s)"
+		tmpl = "writer.Int16%sLen(%s)"
 	case "int32":
-		tmpl = "writer.Int32%sLength(%s)"
+		tmpl = "writer.Int32%sLen(%s)"
 	case "int64":
-		tmpl = "writer.Int64%sLength(%s)"
+		tmpl = "writer.Int64%sLen(%s)"
 	case "uint":
-		tmpl = "writer.UInt%sLength(%s)"
+		tmpl = "writer.UInt%sLen(%s)"
 	case "uint8":
-		tmpl = "writer.UInt8%sLength(%s)"
+		tmpl = "writer.UInt8%sLen(%s)"
 	case "uint16":
-		tmpl = "writer.UInt16%sLength(%s)"
+		tmpl = "writer.UInt16%sLen(%s)"
 	case "uint32":
-		tmpl = "writer.UInt32%sLength(%s)"
+		tmpl = "writer.UInt32%sLen(%s)"
 	case "uint64":
-		tmpl = "writer.UInt64%sLength(%s)"
+		tmpl = "writer.UInt64%sLen(%s)"
 	case "float32":
-		tmpl = "writer.Float32%sLength(%s)"
+		tmpl = "writer.Float32%sLen(%s)"
 	case "float64":
-		tmpl = "writer.Float64%sLength(%s)"
+		tmpl = "writer.Float64%sLen(%s)"
 	case "bool":
-		tmpl = "writer.Bool%sLength(%s)"
+		tmpl = "writer.Bool%sLen(%s)"
 	case "string":
-		tmpl = "writer.String%sLength(%s)"
+		tmpl = "writer.String%sLen(%s)"
 	case "time.Time":
-		tmpl = "writer.Time%sLength(%s)"
+		tmpl = "writer.Time%sLen(%s)"
 	default:
 		unknown = true
 	}
@@ -139,35 +139,35 @@ func getReaderTypeFormat(typename string) (tmpl string, unknown bool) {
 func getWriterTypeFormat(typename string) (tmpl string, unknown bool) {
 	switch typename {
 	case "int":
-		tmpl = "writer.WriteInt%s(dst[ln:], %s)"
+		tmpl = "w.Int%s(%s)"
 	case "int8":
-		tmpl = "writer.WriteInt8%s(dst[ln:], %s)"
+		tmpl = "w.Int8%s(%s)"
 	case "int16":
-		tmpl = "writer.WriteInt16%s(dst[ln:], %s)"
+		tmpl = "w.Int16%s(%s)"
 	case "int32":
-		tmpl = "writer.WriteInt32%s(dst[ln:], %s)"
+		tmpl = "w.Int32%s(%s)"
 	case "int64":
-		tmpl = "writer.WriteInt64%s(dst[ln:], %s)"
+		tmpl = "w.Int64%s(%s)"
 	case "uint":
-		tmpl = "writer.WriteUInt%s(dst[ln:], %s)"
+		tmpl = "w.UInt%s(%s)"
 	case "uint8":
-		tmpl = "writer.WriteUInt8%s(dst[ln:], %s)"
+		tmpl = "w.UInt8%s(%s)"
 	case "uint16":
-		tmpl = "writer.WriteUInt16%s(dst[ln:], %s)"
+		tmpl = "w.UInt16%s(%s)"
 	case "uint32":
-		tmpl = "writer.WriteUInt32%s(dst[ln:], %s)"
+		tmpl = "w.UInt32%s(%s)"
 	case "uint64":
-		tmpl = "writer.WriteUInt64%s(dst[ln:], %s)"
+		tmpl = "w.UInt64%s(%s)"
 	case "float32":
-		tmpl = "writer.WriteFloat32%s(dst[ln:], %s)"
+		tmpl = "w.Float32%s(%s)"
 	case "float64":
-		tmpl = "writer.WriteFloat64%s(dst[ln:], %s)"
+		tmpl = "w.Float64%s(%s)"
 	case "bool":
-		tmpl = "writer.WriteBool%s(dst[ln:], %s)"
+		tmpl = "w.Bool%s(%s)"
 	case "string":
-		tmpl = "writer.WriteString%s(dst[ln:], %s)"
+		tmpl = "w.String%s(%s)"
 	case "time.Time":
-		tmpl = "writer.WriteTime%s(dst[ln:], %s)"
+		tmpl = "w.Time%s(%s)"
 	default:
 		unknown = true
 	}
@@ -258,21 +258,25 @@ func createMarshalStructBody(fis []FieldInfo) (code string) {
 	subs := make([]string, len(fis))
 	skipComma, resetOffset, offsetSuffix := false, "off = 0\n", "[off:]"
 
+	if len(fis) == 0 {
+		return ""
+	}
+
 	for i, fi := range fis {
-		value := "ln += copy(dst[ln:], \",\\\"" + fi.AliasEscEsc + "\\\":\"" + offsetSuffix + ")\n"
+		value := "w.Raw(\",\\\"" + fi.AliasEscEsc + "\\\":\"" + offsetSuffix + ")\n"
 		if fn, unknown := getWriterTypeFormat(fi.TypeName); !unknown {
 			if fi.Array {
-				value += "ln += " + fmt.Sprintf(fn, "s", "o."+fi.Name) + "\n"
+				value += fmt.Sprintf(fn, "s", "o."+fi.Name) + "\n"
 			} else if fi.Pointer {
-				value += "ln += " + fmt.Sprintf(fn, "Ptr", "o."+fi.Name) + "\n"
+				value += fmt.Sprintf(fn, "p", "o."+fi.Name) + "\n"
 			} else {
-				value += "ln += " + fmt.Sprintf(fn, "", "o."+fi.Name) + "\n"
+				value += fmt.Sprintf(fn, "", "o."+fi.Name) + "\n"
 			}
 		} else {
 			if fi.Array {
-				value += "ln += (*" + fi.TypeName + ")(nil).MarshalParsleyJSONSlice(dst[ln:], o." + fi.Name + ")\n"
+				value += "(*" + fi.TypeName + ")(nil).MarshalParsleyJSONSlice(w, o." + fi.Name + ")\n"
 			} else {
-				value += "ln += o." + fi.Name + ".MarshalParsleyJSON(dst[ln:])\n"
+				value += "o." + fi.Name + ".MarshalParsleyJSON(w)\n"
 			}
 		}
 		if !skipComma {
@@ -291,7 +295,7 @@ func createMarshalStructBody(fis []FieldInfo) (code string) {
 		subs[i] = fmt.Sprintf(format, value)
 	}
 
-	return strings.Join(subs, "")
+	return "off := 1\n" + strings.Join(subs, "")
 }
 
 func createDefineLengthBody(di DefineInfo) (code string) {
@@ -335,7 +339,7 @@ func createMarshalDefineBody(di DefineInfo) (code string) {
 		}
 	} else {
 		if di.Array {
-			return "(*" + di.TypeName + ")(nil).MarshalParsleyJSONSlice(dst[ln:], *o)\n"
+			return "(*" + di.TypeName + ")(nil).MarshalParsleyJSONSlice(w, *o)\n"
 		} else {
 			return "o.MarshalParsleyJSON(dst[ln:])\n"
 		}

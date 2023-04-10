@@ -49,28 +49,25 @@ func (g *Generator) WriteDefine(df Define) {
 		"    }\n" +
 		"    return\n" +
 		"}\n\n" +
-		"func (o *" + name + ") MarshalParsleyJSON(dst []byte) (ln int) {\n" +
+		"func (o *" + name + ") MarshalParsleyJSON(w *writer.Writer) {\n" +
 		"    if o == nil {\n" +
-		"        return copy(dst, \"null\")\n" +
+		"        w.Raw(\"null\")\n" +
 		"    }\n" +
-		"    return " + createMarshalDefineBody(di) + "\n" +
+		"    " + createMarshalDefineBody(di) + "\n" +
 		"}\n\n" +
-		"func (o *" + name + ") MarshalParsleyJSONSlice(dst []byte, slc []" + name + ") (ln int) {\n" +
+		"func (o *" + name + ") MarshalParsleyJSONSlice(w *writer.Writer, slc []" + name + ") {\n" +
 		"    if slc == nil {\n" +
-		"        return copy(dst, \"null\")\n" +
+		"        w.Raw(\"null\")\n" +
 		"    }\n" +
-		"    dst[0] = '['\n" +
-		"    ln++\n" +
+		"    w.Byte('[')\n" +
 		"    if len(slc) > 0 {\n" +
-		"        ln += slc[0].MarshalParsleyJSON(dst[1:])\n" +
-		"        for _, o := range slc[1:] {\n" +
-		"            dst[ln] = ','\n" +
-		"            ln++\n" +
-		"            ln += o.MarshalParsleyJSON(dst[ln:])\n" +
+		"        slc[0].MarshalParsleyJSON(w)\n" +
+		"        for i:=1; i<len(slc); i++ {\n" +
+		"            w.Byte(',')\n" +
+		"            slc[i].MarshalParsleyJSON(w)\n" +
 		"        }\n" +
 		"    }\n" +
-		"    dst[ln] = ']'\n" +
-		"    return ln + 1\n" +
+		"    w.Byte(']')\n" +
 		"}\n\n" +
 		"func (o *" + name + ") LengthParsleyJSON() (ln int) {\n" +
 		"    if o == nil {\n" +
@@ -146,35 +143,29 @@ func (g *Generator) WriteStruct(st Struct) {
 		"    }\n" +
 		"    return\n" +
 		"}\n\n" +
-		"func (o *" + name + ") MarshalParsleyJSON(dst []byte) (ln int) {\n" +
+		"func (o *" + name + ") MarshalParsleyJSON(w *writer.Writer) {\n" +
 		"    if o == nil {\n" +
-		"        return copy(dst, \"null\")\n" +
-		"    }\n" +
-		"    off := 1\n" +
-		"    _ = off\n" +
-		"    dst[0] = '{'\n" +
-		"    ln++\n" +
+		"        w.Raw(\"null\")\n" +
+		"    } else {\n" +
+		"        w.Byte('{')\n" +
 		createMarshalStructBody(fis) +
-		"    dst[ln] = '}'\n" +
-		"    ln++\n" +
-		"    return ln\n" +
+		"        w.Byte('}')\n" +
+		"    }\n" +
 		"}\n\n" +
-		"func (o *" + name + ") MarshalParsleyJSONSlice(dst []byte, slc []" + name + ") (ln int) {\n" +
+		"func (o *" + name + ") MarshalParsleyJSONSlice(w *writer.Writer, slc []" + name + ") {\n" +
 		"    if slc == nil {\n" +
-		"        return copy(dst, \"null\")\n" +
-		"    }\n" +
-		"    dst[0] = '['\n" +
-		"    ln++\n" +
-		"    if len(slc) > 0 {\n" +
-		"        ln += slc[0].MarshalParsleyJSON(dst[1:])\n" +
-		"        for _, o := range slc[1:] {\n" +
-		"            dst[ln] = ','\n" +
-		"            ln++\n" +
-		"            ln += o.MarshalParsleyJSON(dst[ln:])\n" +
+		"        w.Raw(\"null\")\n" +
+		"    } else if len(slc) == 0 {\n" +
+		"        w.Raw(\"[]\")\n" +
+		"    } else {\n" +
+		"        w.Byte('[')\n" +
+		"        slc[0].MarshalParsleyJSON(w)\n" +
+		"        for i:=1; i<len(slc); i++  {\n" +
+		"            w.Byte(',')\n" +
+		"            slc[i].MarshalParsleyJSON(w)\n" +
 		"        }\n" +
+		"        w.Byte(']')\n" +
 		"    }\n" +
-		"    dst[ln] = ']'\n" +
-		"    return ln + 1\n" +
 		"}\n\n" +
 		"func (o *" + name + ") LengthParsleyJSON() (ln int) {\n" +
 		"    if o == nil {\n" +
