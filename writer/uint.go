@@ -5,18 +5,23 @@ import (
 	"strconv"
 )
 
-func UInt8Len(n uint8) (ln int) {
+func UInt8Len(n uint8) (bytes int) {
 	return ui8dc(uint8(n))
 }
 
-func UInt8sLen(ns []uint8) (ln int) {
-	for _, n := range ns {
-		ln += ui8dc(n) + 1
-	}
-	if ln == 0 {
-		return 2
+func UInt8pLen(n *uint8) (bytes int) {
+	if n == nil {
+		return 4
 	} else {
-		return ln + 1
+		return ui8dc(uint8(*n))
+	}
+}
+
+func UInt8sLen(ns []uint8) (bytes int) {
+	if ns == nil {
+		return 4
+	} else {
+		return (len(ns)+2)/3*4 + 2
 	}
 }
 
@@ -89,22 +94,34 @@ func (w *Writer) UInt8s(ns []uint8) {
 		w.Cursor += vln
 		return
 	} else {
+		// TODO
 		return
 	}
 }
 
-func UInt16Len(n uint16) (ln int) {
+func UInt16Len(n uint16) (bytes int) {
 	return ui16dc(uint16(n))
 }
 
-func UInt16sLen(ns []uint16) (ln int) {
-	for _, n := range ns {
-		ln += ui16dc(n) + 1
+func UInt16pLen(n *uint16) (bytes int) {
+	if n == nil {
+		return 4
+	} else {
+		return ui16dc(uint16(*n))
 	}
-	if ln == 0 {
+}
+
+func UInt16sLen(ns []uint16) (bytes int) {
+	if ns == nil {
+		return 4
+	} else if len(ns) == 0 {
 		return 2
 	} else {
-		return ln + 1
+		bytes++
+		for _, n := range ns {
+			bytes += ui16dc(uint16(n)) + 1
+		}
+		return
 	}
 }
 
@@ -224,18 +241,29 @@ func (w *Writer) UInt16s(ns []uint16) {
 	}
 }
 
-func UInt32Len(n uint32) (ln int) {
+func UInt32Len(n uint32) (bytes int) {
 	return ui32dc(uint32(n))
 }
 
-func UInt32sLen(ns []uint32) (ln int) {
-	for _, n := range ns {
-		ln += ui32dc(n) + 1
+func UInt32pLen(n *uint32) (bytes int) {
+	if n == nil {
+		return 4
+	} else {
+		return ui32dc(uint32(*n))
 	}
-	if ln == 0 {
+}
+
+func UInt32sLen(ns []uint32) (bytes int) {
+	if ns == nil {
+		return 4
+	} else if len(ns) == 0 {
 		return 2
 	} else {
-		return ln + 1
+		bytes++
+		for _, n := range ns {
+			bytes += ui32dc(uint32(n)) + 1
+		}
+		return
 	}
 }
 
@@ -355,18 +383,29 @@ func (w *Writer) UInt32s(ns []uint32) {
 	}
 }
 
-func UInt64Len(n uint64) (ln int) {
+func UInt64Len(n uint64) (bytes int) {
 	return ui64dc(uint64(n))
 }
 
-func UInt64sLen(ns []uint64) (ln int) {
-	for _, n := range ns {
-		ln += ui64dc(n) + 1
+func UInt64pLen(n *uint64) (bytes int) {
+	if n == nil {
+		return 4
+	} else {
+		return ui64dc(uint64(*n))
 	}
-	if ln == 0 {
+}
+
+func UInt64sLen(ns []uint64) (bytes int) {
+	if ns == nil {
+		return 4
+	} else if len(ns) == 0 {
 		return 2
 	} else {
-		return ln + 1
+		bytes++
+		for _, n := range ns {
+			bytes += ui64dc(uint64(n)) + 1
+		}
+		return
 	}
 }
 
@@ -486,18 +525,29 @@ func (w *Writer) UInt64s(ns []uint64) {
 	}
 }
 
-func UIntLen(n uint) (ln int) {
+func UIntLen(n uint) (bytes int) {
 	return ui32dc(uint32(n))
 }
 
-func UIntsLen(ns []uint) (ln int) {
-	for _, n := range ns {
-		ln += ui32dc(uint32(n)) + 1
+func UIntpLen(n *uint) (bytes int) {
+	if n == nil {
+		return 4
+	} else {
+		return ui32dc(uint32(*n))
 	}
-	if ln == 0 {
+}
+
+func UIntsLen(ns []uint) (bytes int) {
+	if ns == nil {
+		return 4
+	} else if len(ns) == 0 {
 		return 2
 	} else {
-		return ln + 1
+		bytes++
+		for _, n := range ns {
+			bytes += ui32dc(uint32(n)) + 1
+		}
+		return
 	}
 }
 

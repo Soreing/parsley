@@ -5,7 +5,7 @@ import (
 )
 
 // Gets the encoded byte length of an RFC3339 time string with quotes.
-func TimeLen(t time.Time) (ln int) {
+func TimeLen(t time.Time) (bytes int) {
 	nano, nanol := t.Nanosecond(), 10
 
 	if nano > 0 {
@@ -25,16 +25,28 @@ func TimeLen(t time.Time) (ln int) {
 	}
 }
 
+// Gets the encoded byte length of an RFC3339 time string pointer with quotes.
+func TimepLen(t *time.Time) (bytes int) {
+	if t == nil {
+		return 4
+	} else {
+		return TimeLen(*t)
+	}
+}
+
 // Gets the encoded byte length of an RFC3339 time string slice with
 // brackets, commas and quotes.
-func TimesLen(ts []time.Time) (ln int) {
-	for _, t := range ts {
-		ln += TimeLen(t) + 1
-	}
-	if ln == 0 {
+func TimesLen(ts []time.Time) (bytes int) {
+	if ts == nil {
+		return 4
+	} else if len(ts) == 0 {
 		return 2
 	} else {
-		return ln + 1
+		bytes++
+		for _, t := range ts {
+			bytes += TimeLen(t) + 1
+		}
+		return
 	}
 }
 

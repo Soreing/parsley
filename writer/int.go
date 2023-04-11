@@ -4,7 +4,7 @@ import (
 	"strconv"
 )
 
-func Int8Len(n int8) (ln int) {
+func Int8Len(n int8) (bytes int) {
 	if n < 0 {
 		return ui8dc(uint8(-n)) + 1
 	} else {
@@ -12,14 +12,27 @@ func Int8Len(n int8) (ln int) {
 	}
 }
 
-func Int8sLen(ns []int8) (ln int) {
-	for _, n := range ns {
-		ln += Int8Len(n) + 1
+func Int8pLen(n *int8) (bytes int) {
+	if n == nil {
+		return 4
+	} else if *n < 0 {
+		return ui8dc(uint8(-*n)) + 1
+	} else {
+		return ui8dc(uint8(*n))
 	}
-	if ln == 0 {
+}
+
+func Int8sLen(ns []int8) (bytes int) {
+	if ns == nil {
+		return 4
+	} else if len(ns) == 0 {
 		return 2
 	} else {
-		return ln + 1
+		bytes++
+		for _, n := range ns {
+			bytes += Int8Len(n) + 1
+		}
+		return
 	}
 }
 
@@ -144,7 +157,7 @@ func (w *Writer) Int8s(ns []int8) {
 	}
 }
 
-func Int16Len(n int16) (ln int) {
+func Int16Len(n int16) (bytes int) {
 	if n < 0 {
 		return ui16dc(uint16(-n)) + 1
 	} else {
@@ -152,14 +165,27 @@ func Int16Len(n int16) (ln int) {
 	}
 }
 
-func Int16sLen(ns []int16) (ln int) {
-	for _, n := range ns {
-		ln += Int16Len(n) + 1
+func Int16pLen(n *int16) (bytes int) {
+	if n == nil {
+		return 4
+	} else if *n < 0 {
+		return ui16dc(uint16(-*n)) + 1
+	} else {
+		return ui16dc(uint16(*n))
 	}
-	if ln == 0 {
+}
+
+func Int16sLen(ns []int16) (bytes int) {
+	if ns == nil {
+		return 4
+	} else if len(ns) == 0 {
 		return 2
 	} else {
-		return ln + 1
+		bytes++
+		for _, n := range ns {
+			bytes += Int16Len(n) + 1
+		}
+		return
 	}
 }
 
@@ -284,7 +310,7 @@ func (w *Writer) Int16s(ns []int16) {
 	}
 }
 
-func Int32Len(n int32) (ln int) {
+func Int32Len(n int32) (bytes int) {
 	if n < 0 {
 		return ui32dc(uint32(-n)) + 1
 	} else {
@@ -292,14 +318,27 @@ func Int32Len(n int32) (ln int) {
 	}
 }
 
-func Int32sLen(ns []int32) (ln int) {
-	for _, n := range ns {
-		ln += Int32Len(n) + 1
+func Int32pLen(n *int32) (bytes int) {
+	if n == nil {
+		return 4
+	} else if *n < 0 {
+		return ui32dc(uint32(-*n)) + 1
+	} else {
+		return ui32dc(uint32(*n))
 	}
-	if ln == 0 {
+}
+
+func Int32sLen(ns []int32) (bytes int) {
+	if ns == nil {
+		return 4
+	} else if len(ns) == 0 {
 		return 2
 	} else {
-		return ln + 1
+		bytes++
+		for _, n := range ns {
+			bytes += Int32Len(n) + 1
+		}
+		return
 	}
 }
 
@@ -424,7 +463,7 @@ func (w *Writer) Int32s(ns []int32) {
 	}
 }
 
-func Int64Len(n int64) (ln int) {
+func Int64Len(n int64) (bytes int) {
 	if n < 0 {
 		return ui64dc(-uint64(n)) + 1
 	} else {
@@ -432,14 +471,27 @@ func Int64Len(n int64) (ln int) {
 	}
 }
 
-func Int64sLen(ns []int64) (ln int) {
-	for _, n := range ns {
-		ln += Int64Len(n) + 1
+func Int64pLen(n *int64) (bytes int) {
+	if n == nil {
+		return 4
+	} else if *n < 0 {
+		return ui64dc(uint64(-*n)) + 1
+	} else {
+		return ui64dc(uint64(*n))
 	}
-	if ln == 0 {
+}
+
+func Int64sLen(ns []int64) (bytes int) {
+	if ns == nil {
+		return 4
+	} else if len(ns) == 0 {
 		return 2
 	} else {
-		return ln + 1
+		bytes++
+		for _, n := range ns {
+			bytes += Int64Len(n) + 1
+		}
+		return
 	}
 }
 
@@ -564,7 +616,7 @@ func (w *Writer) Int64s(ns []int64) {
 	}
 }
 
-func IntLen(n int) (ln int) {
+func IntLen(n int) (bytes int) {
 	if n < 0 {
 		return ui32dc(uint32(-n)) + 1
 	} else {
@@ -572,57 +624,27 @@ func IntLen(n int) (ln int) {
 	}
 }
 
-func IntsLen(ns []int) (ln int) {
-	for _, n := range ns {
-		ln += IntLen(n) + 1
+func IntpLen(n *int) (bytes int) {
+	if n == nil {
+		return 4
+	} else if *n < 0 {
+		return ui32dc(uint32(-*n)) + 1
+	} else {
+		return ui32dc(uint32(*n))
 	}
-	if ln == 0 {
+}
+
+func IntsLen(ns []int) (bytes int) {
+	if ns == nil {
+		return 4
+	} else if len(ns) == 0 {
 		return 2
 	} else {
-		return ln + 1
-	}
-}
-
-func WriteInt(dst []byte, n int) (ln int) {
-	if n != 0 {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendInt(tmp, int64(n), 10)
-		copy(dst, tmp)
-		return len(tmp)
-	} else {
-		dst[0] = '0'
-		return 1
-	}
-}
-
-func WriteIntPtr(dst []byte, n *int) (ln int) {
-	if n != nil {
-		tmp := make([]byte, 0, 32)
-		tmp = strconv.AppendInt(tmp, int64(*n), 10)
-		copy(dst, tmp)
-		return len(tmp)
-	} else {
-		return copy(dst, "null")
-	}
-}
-
-func WriteInts(dst []byte, ns []int) (ln int) {
-	tmp, res := make([]byte, 0, 32), ([]byte)(nil)
-	if len(ns) > 0 {
-		ln = 1
+		bytes++
 		for _, n := range ns {
-			res = strconv.AppendInt(tmp, int64(n), 10)
-			ln += copy(dst[ln:], res)
-			dst[ln] = ','
-			ln++
+			bytes += IntLen(n) + 1
 		}
-
-		dst[0], dst[ln-1] = '[', ']'
-		return ln
-	} else if ns != nil {
-		return copy(dst, "[]")
-	} else {
-		return copy(dst, "null")
+		return
 	}
 }
 

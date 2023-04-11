@@ -1,7 +1,7 @@
 package writer
 
 // Gets the encoded byte length of a boolean.
-func BoolLen(b bool) (ln int) {
+func BoolLen(b bool) (bytes int) {
 	if b {
 		return 4
 	} else {
@@ -9,18 +9,31 @@ func BoolLen(b bool) (ln int) {
 	}
 }
 
-// Gets the encoded byte length of a boolean slice with brackets and commas.
-func BoolsLen(bs []bool) (ln int) {
-	ln = 6 * len(bs)
-	for _, b := range bs {
-		if b {
-			ln--
-		}
+// Gets the encoded byte length of a boolean pointer.
+func BoolpLen(b *bool) (bytes int) {
+	if b == nil {
+		return 4
+	} else if *b {
+		return 4
+	} else {
+		return 5
 	}
-	if ln == 0 {
+}
+
+// Gets the encoded byte length of a boolean slice with brackets and commas.
+func BoolsLen(bs []bool) (bytes int) {
+	if bs == nil {
+		return 4
+	} else if len(bs) == 0 {
 		return 2
 	} else {
-		return ln + 1
+		bytes = 6*len(bs) + 1
+		for _, b := range bs {
+			if b {
+				bytes--
+			}
+		}
+		return
 	}
 }
 

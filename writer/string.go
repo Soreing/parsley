@@ -39,19 +39,32 @@ func (w *Writer) swrite(bfp *[]byte, crp *int, lnp *int, v string) {
 }
 
 // Gets the encoded byte length of a string with quotes.
-func StringLen(str string) (ln int) {
-	return len(str) + 2
+func StringLen(str string) (bytes int, volatile int) {
+	return len(str) + 2, len(str)
+}
+
+// Gets the encoded byte length of a string pointer with quotes.
+func StringpLen(str *string) (bytes int, volatile int) {
+	if str == nil {
+		return 4, 0
+	} else {
+		return len(*str) + 2, len(*str)
+	}
 }
 
 // Gets the encoded byte length of a string slice with brackets, commas and quotes.
-func StringsLen(strs []string) (ln int) {
-	for _, s := range strs {
-		ln += len(s) + 3
-	}
-	if ln == 0 {
-		return 2
+func StringsLen(strs []string) (bytes int, volatile int) {
+	if strs == nil {
+		return 4, 0
+	} else if len(strs) == 0 {
+		return 2, 0
 	} else {
-		return ln + 1
+		bytes++
+		for _, s := range strs {
+			bytes += len(s) + 3
+			volatile += len(s)
+		}
+		return
 	}
 }
 

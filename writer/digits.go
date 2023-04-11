@@ -1,6 +1,6 @@
 package writer
 
-func ui64dc(n uint64) (ln int) {
+func ui64dc(n uint64) (bytes int) {
 	if n < 1000000000 {
 		if n < 100000 {
 			if n < 100 {
@@ -64,7 +64,7 @@ func ui64dc(n uint64) (ln int) {
 	}
 }
 
-func ui32dc(n uint32) (ln int) {
+func ui32dc(n uint32) (bytes int) {
 	if n < 100000 {
 		if n < 100 {
 			if n < 10 {
@@ -98,7 +98,7 @@ func ui32dc(n uint32) (ln int) {
 	}
 }
 
-func ui16dc(n uint16) (ln int) {
+func ui16dc(n uint16) (bytes int) {
 	if n < 100 {
 		if n < 10 {
 			return 1
@@ -116,7 +116,7 @@ func ui16dc(n uint16) (ln int) {
 	}
 }
 
-func ui8dc(n uint8) (ln int) {
+func ui8dc(n uint8) (bytes int) {
 	if n < 10 {
 		return 1
 	} else if n < 100 {

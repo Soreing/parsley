@@ -4,18 +4,29 @@ import (
 	"strconv"
 )
 
-func Float32Len(n float32) (ln int) {
+func Float32Len(n float32) (bytes int) {
 	return 24
 }
 
-func Float32sLen(ns []float32) (ln int) {
-	for range ns {
-		ln += 24 + 1
+func Float32pLen(n *float32) (bytes int) {
+	if n == nil {
+		return 4
+	} else {
+		return 24
 	}
-	if ln == 0 {
+}
+
+func Float32sLen(ns []float32) (bytes int) {
+	if ns == nil {
+		return 4
+	} else if len(ns) == 0 {
 		return 2
 	} else {
-		return ln + 1
+		bytes++
+		for range ns {
+			bytes += 24 + 1
+		}
+		return
 	}
 }
 
@@ -134,18 +145,29 @@ func (w *Writer) Float32s(ns []float32) {
 	}
 }
 
-func Float64Len(n float64) (ln int) {
+func Float64Len(n float64) (bytes int) {
 	return 24
 }
 
-func Float64sLen(ns []float64) (ln int) {
-	for range ns {
-		ln += 24 + 1
+func Float64pLen(n *float64) (bytes int) {
+	if n == nil {
+		return 4
+	} else {
+		return 24
 	}
-	if ln == 0 {
+}
+
+func Float64sLen(ns []float64) (bytes int) {
+	if ns == nil {
+		return 4
+	} else if len(ns) == 0 {
 		return 2
 	} else {
-		return ln + 1
+		bytes++
+		for range ns {
+			bytes += 24 + 1
+		}
+		return
 	}
 }
 
