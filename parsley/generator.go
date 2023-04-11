@@ -65,6 +65,7 @@ func (g *Generator) GetRequiredPackages(
 	s []Struct,
 ) (pkgs map[string]string) {
 	pkgs = map[string]string{
+		"parse":  "\"github.com/Soreing/parsley\"",
 		"reader": "\"github.com/Soreing/parsley/reader\"",
 		"writer": "\"github.com/Soreing/parsley/writer\"",
 	}

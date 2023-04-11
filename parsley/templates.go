@@ -13,6 +13,26 @@ var control = []string{
 	"u0018", "u0019", "u001A", "u001B", "u001C", "u001D", "u001E", "u001F",
 }
 
+func isBasicType(typename string) (basic bool) {
+	switch typename {
+	case "int", "int8", "int16", "int32", "int64",
+		"uint", "uint8", "uint16", "uint32", "uint64",
+		"float32", "float64", "bool", "string", "time.Time":
+		return true
+	}
+	return false
+}
+
+func isVolatile(typename string) (volatile bool) {
+	switch typename {
+	case "int", "int8", "int16", "int32", "int64",
+		"uint", "uint8", "uint16", "uint32", "uint64",
+		"float32", "float64", "bool", "time.Time":
+		return false
+	}
+	return true
+}
+
 // Returns the code/value used to compare types against their default values.
 // If the type is unknown, empty string is returned.
 func getValueCheck(fi FieldInfo) (zv string) {
@@ -32,28 +52,6 @@ func getValueCheck(fi FieldInfo) (zv string) {
 		return ".IsZero() != true"
 	default:
 		return ""
-	}
-}
-
-// Returns the byte length of the default values for each known type.
-// Unknown types return zero
-func getDefaultValueByteLength(fi FieldInfo) (ln int) {
-	if fi.Array || fi.Pointer {
-		return 4
-	}
-	switch fi.TypeName {
-	case "int", "int8", "int16", "int32", "int64",
-		"uint", "uint8", "uint16", "uint32", "uint64",
-		"float32", "float64":
-		return 1
-	case "bool":
-		return 5
-	case "string":
-		return 2
-	case "time.Time":
-		return 22
-	default:
-		return 0
 	}
 }
 
@@ -174,61 +172,100 @@ func getWriterTypeFormat(typename string) (tmpl string, unknown bool) {
 	return
 }
 
-func calculateDefaultLength(fis []FieldInfo) (ln int) {
+func createFilterHeader(fis []FieldInfo) (code string) {
+	if len(fis) == 0 {
+		return ""
+	}
+	lns := strconv.Itoa(len(fis))
+	subf := 0
 	for _, fi := range fis {
-		ln += getDefaultValueByteLength(fi)
-		if !fi.OmitEmpty {
-			ln += len(fi.AliasEsc) + len(`"":,`)
+		if !isBasicType(fi.TypeName) {
+			subf++
 		}
 	}
+
+	code += "c := [" + lns + "]bool{}\n"
+	if subf > 0 {
+		code += "f := [" + lns + "][]parse.Filter{}\n"
+	}
+	code += "if filter == nil {\n"
+	code += "    for i := range c {\n"
+	code += "        c[i]=true\n"
+	code += "    }\n"
+	code += "} else {\n"
+	code += "    for i := range filter {\n"
+	code += "        k := filter[i].Field\n"
+
+	nest := ""
+	for i, fi := range fis {
+		is := strconv.Itoa(i)
+		nest += "} else if k == \"" + fi.AliasEsc + "\" {\n"
+		if isBasicType(fi.TypeName) {
+			nest += "c[" + is + "] = true\n"
+		} else {
+			nest += "c[" + is + "], f[" + is + "] = true, filter[i].Filter\n"
+		}
+	}
+
+	code += strings.TrimPrefix(nest, "} else ")
+	code += "        }\n"
+	code += "    }\n"
+	code += "}\n"
 	return
 }
 
-func createStructLengthBody(fis []FieldInfo) (code string) {
+func createObjectLengthBody(fis []FieldInfo) (code string) {
 	subs := make([]string, len(fis))
 	for i, fi := range fis {
+		is := strconv.Itoa(i)
 		valCheck := getValueCheck(fi)
-		modBytes := -getDefaultValueByteLength(fi)
-		format, value, mod := "ln+=%s\n", "", ""
+		volatile := isVolatile(fi.TypeName)
+		fieldLen := strconv.Itoa(len(fi.AliasEsc) + len(`"":,`))
 
+		if fi.OmitEmpty && valCheck != "" {
+			subs[i] += "if c[" + is + "] && o." + fi.Name + valCheck + "{\n"
+		} else {
+			subs[i] += "if c[" + is + "] {\n"
+		}
+
+		lenFn := ""
 		if fn, unknown := getLengthTypeFormat(fi.TypeName); !unknown {
 			if fi.Array {
-				value = fmt.Sprintf(fn, "s", "o."+fi.Name)
+				lenFn = fmt.Sprintf(fn, "s", "o."+fi.Name)
 			} else if fi.Pointer {
-				value = fmt.Sprintf(fn, "", "*o."+fi.Name)
+				lenFn = fmt.Sprintf(fn, "p", "o."+fi.Name)
 			} else {
-				value = fmt.Sprintf(fn, "", "o."+fi.Name)
+				lenFn = fmt.Sprintf(fn, "", "o."+fi.Name)
 			}
 		} else {
 			if fi.Array {
-				value = "(*" + fi.TypeName + ")(nil).LengthParsleyJSONSlice(o." + fi.Name + ")"
+				lenFn = "(*" + fi.TypeName + ")(nil).SliceLengthPJSON(f[" + is + "], o." + fi.Name + ")"
 			} else {
-				value = "o." + fi.Name + ".LengthParsleyJSON()"
+				lenFn = "o." + fi.Name + ".ObjectLengthPJSON(f[" + is + "])"
 			}
 		}
 
-		if valCheck != "" {
-			format = "if o." + fi.Name + valCheck + "{\nln+=%s\n}\n"
+		if volatile {
+			subs[i] += "b, v := " + lenFn + "\n"
+			subs[i] += "bytes, volatile = bytes+b+" + fieldLen + ", volatile+v\n"
+		} else {
+			subs[i] += "bytes += " + lenFn + " + " + fieldLen + "\n"
 		}
-		if fi.OmitEmpty {
-			modBytes += len(fi.AliasEsc) + len(`"":,`)
-		}
-		if modBytes > 0 {
-			mod = "+" + strconv.Itoa(modBytes)
-		} else if modBytes < 0 {
-			mod = "-" + strconv.Itoa(-modBytes)
-		}
-
-		subs[i] = fmt.Sprintf(format, value+mod)
+		subs[i] += "}\n"
 	}
 
 	return strings.Join(subs, "")
 }
 
-func createUnmarshalStructBody(fis []FieldInfo) (code string) {
+func createDecodeObjectBody(fis []FieldInfo) (code string) {
+	if len(fis) == 0 {
+		return "err = r.Skip()"
+	}
+
 	subs := make([]string, len(fis))
 	for i, fi := range fis {
-		subs[i] = "case \"" + fi.AliasEsc + "\":\n"
+		is := strconv.Itoa(i)
+		subs[i] = "} else if string(key) == \"" + fi.AliasEsc + "\" && c[" + is + "] {\n"
 
 		if fn, unknown := getReaderTypeFormat(fi.TypeName); !unknown {
 			subs[i] += "o." + fi.Name + ", err = "
@@ -241,80 +278,81 @@ func createUnmarshalStructBody(fis []FieldInfo) (code string) {
 			}
 		} else {
 			if fi.Array {
-				subs[i] += "o." + fi.Name + ", err = (*" + fi.TypeName + ")(nil).UnmarshalParsleyJSONSlice(r)\n"
+				subs[i] += "o." + fi.Name + ", err = (*" + fi.TypeName + ")(nil).DecodeSlicePJSON(r, f[" + is + "])\n"
 			} else if fi.Pointer {
 				subs[i] += "o." + fi.Name + " = &" + fi.TypeName + "{}\n" +
-					"err = o." + fi.Name + ".UnmarshalParsleyJSON(r)\n"
+					"err = o." + fi.Name + ".DecodeObjectPJSON(r, f[" + is + "])\n"
 			} else {
-				subs[i] += "err = o." + fi.Name + ".UnmarshalParsleyJSON(r)\n"
+				subs[i] += "err = o." + fi.Name + ".DecodeObjectPJSON(r, f[" + is + "])\n"
 			}
 		}
 	}
-
+	subs = append(subs, "} else { \nerr = r.Skip()\n}")
+	subs[0] = strings.TrimPrefix(subs[0], "} else ")
 	return strings.Join(subs, "")
 }
 
-func createMarshalStructBody(fis []FieldInfo) (code string) {
-	subs := make([]string, len(fis))
-	skipComma, resetOffset, offsetSuffix := false, "off = 0\n", "[off:]"
-
+func createEncodeObjectBody(fis []FieldInfo) (code string) {
 	if len(fis) == 0 {
 		return ""
 	}
 
+	subs := make([]string, len(fis))
 	for i, fi := range fis {
-		value := "w.Raw(\",\\\"" + fi.AliasEscEsc + "\\\":\"" + offsetSuffix + ")\n"
-		if fn, unknown := getWriterTypeFormat(fi.TypeName); !unknown {
-			if fi.Array {
-				value += fmt.Sprintf(fn, "s", "o."+fi.Name) + "\n"
-			} else if fi.Pointer {
-				value += fmt.Sprintf(fn, "p", "o."+fi.Name) + "\n"
-			} else {
-				value += fmt.Sprintf(fn, "", "o."+fi.Name) + "\n"
-			}
-		} else {
-			if fi.Array {
-				value += "(*" + fi.TypeName + ")(nil).MarshalParsleyJSONSlice(w, o." + fi.Name + ")\n"
-			} else {
-				value += "o." + fi.Name + ".MarshalParsleyJSON(w)\n"
-			}
-		}
-		if !skipComma {
-			value += resetOffset
-		}
+		is := strconv.Itoa(i)
 
-		format := "%s"
 		valCheck := getValueCheck(fi)
 		if fi.OmitEmpty && valCheck != "" {
-			format = "if o." + fi.Name + valCheck + "{\n%s}\n"
+			subs[i] += "if c[" + is + "] && o." + fi.Name + valCheck + "{\n"
 		} else {
-			skipComma = true
-			offsetSuffix = ""
+			subs[i] += "if c[" + is + "] {\n"
 		}
 
-		subs[i] = fmt.Sprintf(format, value)
+		subs[i] += "w.Raw(\",\\\"" + fi.AliasEscEsc + "\\\":\"[off:])\n"
+		if fn, unknown := getWriterTypeFormat(fi.TypeName); !unknown {
+			if fi.Array {
+				subs[i] += fmt.Sprintf(fn, "s", "o."+fi.Name) + "\n"
+			} else if fi.Pointer {
+				subs[i] += fmt.Sprintf(fn, "p", "o."+fi.Name) + "\n"
+			} else {
+				subs[i] += fmt.Sprintf(fn, "", "o."+fi.Name) + "\n"
+			}
+		} else {
+			if fi.Array {
+				subs[i] += "(*" + fi.TypeName + ")(nil).EncodeSlicePJSON(w, f[" + is + "], o." + fi.Name + ")\n"
+			} else {
+				subs[i] += "o." + fi.Name + ".EncodeObjectPJSON(w, f[" + is + "])\n"
+			}
+		}
+		subs[i] += "off = 0\n"
+		subs[i] += "}\n"
 	}
 
 	return "off := 1\n" + strings.Join(subs, "")
 }
 
 func createDefineLengthBody(di DefineInfo) (code string) {
+	vlt := ""
+	if !isVolatile(di.TypeName) {
+		vlt = ", 0"
+	}
+
 	if fn, unknown := getLengthTypeFormat(di.TypeName); !unknown {
 		if di.Array {
-			return fmt.Sprintf(fn, "s", "*o")
+			return fmt.Sprintf(fn, "s", "*o") + vlt
 		} else {
-			return fmt.Sprintf(fn, "", di.TypeName+"(*o)") + "\n"
+			return fmt.Sprintf(fn, "", di.TypeName+"(*o)") + vlt + "\n"
 		}
 	} else {
 		if di.Array {
-			return "(*" + di.TypeName + ")(nil).LengthParsleyJSONSlice(*o)"
+			return "(*" + di.TypeName + ")(nil).SliceLengthPJSON(filter, *o)"
 		} else {
-			return "o.LengthParsleyJSON()"
+			return "o.ObjectLengthPJSON(filter)"
 		}
 	}
 }
 
-func createUnmarshalDefineBody(di DefineInfo) (code string) {
+func createDecodeDefineBody(di DefineInfo) (code string) {
 	if fn, unknown := getReaderTypeFormat(di.TypeName); !unknown {
 		if di.Array {
 			return "*o, err = " + fmt.Sprintf(fn, "s") + "\n"
@@ -323,14 +361,14 @@ func createUnmarshalDefineBody(di DefineInfo) (code string) {
 		}
 	} else {
 		if di.Array {
-			return "*o, err = (*" + di.TypeName + ")(nil).UnmarshalParsleyJSONSlice(r)\n"
+			return "*o, err = (*" + di.TypeName + ")(nil).DecodeSlicePJSON(r, filter)\n"
 		} else {
-			return "err = o.UnmarshalParsleyJSON(r)\n"
+			return "err = o.DecodeObjectPJSON(r, filter)\n"
 		}
 	}
 }
 
-func createMarshalDefineBody(di DefineInfo) (code string) {
+func createEncodeDefineBody(di DefineInfo) (code string) {
 	if fn, unknown := getWriterTypeFormat(di.TypeName); !unknown {
 		if di.Array {
 			return fmt.Sprintf(fn, "s", "*o") + "\n"
@@ -339,9 +377,9 @@ func createMarshalDefineBody(di DefineInfo) (code string) {
 		}
 	} else {
 		if di.Array {
-			return "(*" + di.TypeName + ")(nil).MarshalParsleyJSONSlice(w, *o)\n"
+			return "(*" + di.TypeName + ")(nil).EncodeSlicePJSON(w, filter, *o)\n"
 		} else {
-			return "o.MarshalParsleyJSON(dst[ln:])\n"
+			return "o.EncodeObjectPJSON(filter, dst[ln:])\n"
 		}
 	}
 }
