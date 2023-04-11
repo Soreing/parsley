@@ -2,6 +2,7 @@
 package controls
 
 import (
+	parse "github.com/Soreing/parsley"
 	reader "github.com/Soreing/parsley/reader"
 	writer "github.com/Soreing/parsley/writer"
 )
@@ -9,8 +10,9 @@ import (
 var _ *reader.Reader
 var _ *writer.Writer
 
-func (o *EmptyObject) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
+func (o *EmptyObject) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
 	var key []byte
+	_ = key
 	err = r.OpenObject()
 	if r.GetType() != reader.TerminatorToken {
 		for err == nil {
@@ -18,10 +20,7 @@ func (o *EmptyObject) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
-					switch string(key) {
-					default:
-						err = r.Skip()
-					}
+					err = r.Skip()
 				}
 				if err == nil && !r.Next() {
 					break
@@ -35,30 +34,30 @@ func (o *EmptyObject) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	return
 }
 
-func (o *EmptyObject) sequenceParsleyJSON(r *reader.Reader, idx int) (res []EmptyObject, err error) {
+func (o *EmptyObject) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx int) (res []EmptyObject, err error) {
 	var e EmptyObject
-	if err = e.UnmarshalParsleyJSON(r); err == nil {
+	if err = e.DecodeObjectPJSON(r, filter); err == nil {
 		if !r.Next() {
 			res = make([]EmptyObject, idx+1)
 			res[idx] = e
 			return
-		} else if res, err = o.sequenceParsleyJSON(r, idx+1); err == nil {
+		} else if res, err = o.sequencePJSON(r, filter, idx+1); err == nil {
 			res[idx] = e
 		}
 	}
 	return
 }
 
-func (o *EmptyObject) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []EmptyObject, err error) {
+func (o *EmptyObject) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []EmptyObject, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
+		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (o *EmptyObject) MarshalParsleyJSON(w *writer.Writer) {
+func (o *EmptyObject) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
 	if o == nil {
 		w.Raw("null")
 	} else {
@@ -67,46 +66,62 @@ func (o *EmptyObject) MarshalParsleyJSON(w *writer.Writer) {
 	}
 }
 
-func (o *EmptyObject) MarshalParsleyJSONSlice(w *writer.Writer, slc []EmptyObject) {
+func (o *EmptyObject) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []EmptyObject) {
 	if slc == nil {
 		w.Raw("null")
 	} else if len(slc) == 0 {
 		w.Raw("[]")
 	} else {
 		w.Byte('[')
-		slc[0].MarshalParsleyJSON(w)
+		slc[0].EncodeObjectPJSON(w, filter)
 		for i := 1; i < len(slc); i++ {
 			w.Byte(',')
-			slc[i].MarshalParsleyJSON(w)
+			slc[i].EncodeObjectPJSON(w, filter)
 		}
 		w.Byte(']')
 	}
 }
 
-func (o *EmptyObject) LengthParsleyJSON() (ln int) {
+func (o *EmptyObject) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
 	if o == nil {
-		return 4
-	}
-	ln = 0
-	if ln == 0 {
-		return 2
-	}
-	return ln + 1
-}
-
-func (o *EmptyObject) LengthParsleyJSONSlice(slc []EmptyObject) (ln int) {
-	for _, obj := range slc {
-		ln += obj.LengthParsleyJSON() + 1
-	}
-	if ln == 0 {
-		return 2
+		return 4, 0
 	} else {
-		return ln + 1
+		if bytes == 0 {
+			return 2, 0
+		} else {
+			return bytes + 1, volatile
+		}
 	}
 }
 
-func (o *EscapedField) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
+func (o *EmptyObject) SliceLengthPJSON(filter []parse.Filter, slc []EmptyObject) (bytes int, volatile int) {
+	for _, obj := range slc {
+		b, v := obj.ObjectLengthPJSON(filter)
+		bytes, volatile = bytes+b+1, volatile+v
+	}
+	if bytes == 0 {
+		return 2, 0
+	} else {
+		return bytes + 1, volatile
+	}
+}
+
+func (o *EscapedField) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
+	c := [1]bool{}
+	if filter == nil {
+		for i := range c {
+			c[i] = true
+		}
+	} else {
+		for i := range filter {
+			k := filter[i].Field
+			if k == "soɯə \"value\"" {
+				c[0] = true
+			}
+		}
+	}
 	var key []byte
+	_ = key
 	err = r.OpenObject()
 	if r.GetType() != reader.TerminatorToken {
 		for err == nil {
@@ -114,10 +129,9 @@ func (o *EscapedField) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
-					switch string(key) {
-					case "soɯə \"value\"":
+					if string(key) == "soɯə \"value\"" && c[0] {
 						o.Value, err = r.GetString()
-					default:
+					} else {
 						err = r.Skip()
 					}
 				}
@@ -133,85 +147,117 @@ func (o *EscapedField) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	return
 }
 
-func (o *EscapedField) sequenceParsleyJSON(r *reader.Reader, idx int) (res []EscapedField, err error) {
+func (o *EscapedField) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx int) (res []EscapedField, err error) {
 	var e EscapedField
-	if err = e.UnmarshalParsleyJSON(r); err == nil {
+	if err = e.DecodeObjectPJSON(r, filter); err == nil {
 		if !r.Next() {
 			res = make([]EscapedField, idx+1)
 			res[idx] = e
 			return
-		} else if res, err = o.sequenceParsleyJSON(r, idx+1); err == nil {
+		} else if res, err = o.sequencePJSON(r, filter, idx+1); err == nil {
 			res[idx] = e
 		}
 	}
 	return
 }
 
-func (o *EscapedField) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []EscapedField, err error) {
+func (o *EscapedField) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []EscapedField, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
+		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (o *EscapedField) MarshalParsleyJSON(w *writer.Writer) {
+func (o *EscapedField) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
 	if o == nil {
 		w.Raw("null")
 	} else {
+		c := [1]bool{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "soɯə \"value\"" {
+					c[0] = true
+				}
+			}
+		}
 		w.Byte('{')
 		off := 1
-		w.Raw(",\"soɯə \\\"value\\\"\":"[off:])
-		w.String(o.Value)
-		off = 0
+		if c[0] {
+			w.Raw(",\"soɯə \\\"value\\\"\":"[off:])
+			w.String(o.Value)
+			off = 0
+		}
 		w.Byte('}')
 	}
 }
 
-func (o *EscapedField) MarshalParsleyJSONSlice(w *writer.Writer, slc []EscapedField) {
+func (o *EscapedField) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []EscapedField) {
 	if slc == nil {
 		w.Raw("null")
 	} else if len(slc) == 0 {
 		w.Raw("[]")
 	} else {
 		w.Byte('[')
-		slc[0].MarshalParsleyJSON(w)
+		slc[0].EncodeObjectPJSON(w, filter)
 		for i := 1; i < len(slc); i++ {
 			w.Byte(',')
-			slc[i].MarshalParsleyJSON(w)
+			slc[i].EncodeObjectPJSON(w, filter)
 		}
 		w.Byte(']')
 	}
 }
 
-func (o *EscapedField) LengthParsleyJSON() (ln int) {
+func (o *EscapedField) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
 	if o == nil {
-		return 4
-	}
-	ln = 22
-	if o.Value != "" {
-		ln += writer.StringLen(o.Value) - 2
-	}
-	if ln == 0 {
-		return 2
-	}
-	return ln + 1
-}
-
-func (o *EscapedField) LengthParsleyJSONSlice(slc []EscapedField) (ln int) {
-	for _, obj := range slc {
-		ln += obj.LengthParsleyJSON() + 1
-	}
-	if ln == 0 {
-		return 2
+		return 4, 0
 	} else {
-		return ln + 1
+		c := [1]bool{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "soɯə \"value\"" {
+					c[0] = true
+				}
+			}
+		}
+		if c[0] {
+			b, v := writer.StringLen(o.Value)
+			bytes, volatile = bytes+b+20, volatile+v
+		}
+		if bytes == 0 {
+			return 2, 0
+		} else {
+			return bytes + 1, volatile
+		}
 	}
 }
 
-func (o *PrivateField) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
+func (o *EscapedField) SliceLengthPJSON(filter []parse.Filter, slc []EscapedField) (bytes int, volatile int) {
+	for _, obj := range slc {
+		b, v := obj.ObjectLengthPJSON(filter)
+		bytes, volatile = bytes+b+1, volatile+v
+	}
+	if bytes == 0 {
+		return 2, 0
+	} else {
+		return bytes + 1, volatile
+	}
+}
+
+func (o *PrivateField) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
 	var key []byte
+	_ = key
 	err = r.OpenObject()
 	if r.GetType() != reader.TerminatorToken {
 		for err == nil {
@@ -219,10 +265,7 @@ func (o *PrivateField) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
-					switch string(key) {
-					default:
-						err = r.Skip()
-					}
+					err = r.Skip()
 				}
 				if err == nil && !r.Next() {
 					break
@@ -236,30 +279,30 @@ func (o *PrivateField) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	return
 }
 
-func (o *PrivateField) sequenceParsleyJSON(r *reader.Reader, idx int) (res []PrivateField, err error) {
+func (o *PrivateField) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx int) (res []PrivateField, err error) {
 	var e PrivateField
-	if err = e.UnmarshalParsleyJSON(r); err == nil {
+	if err = e.DecodeObjectPJSON(r, filter); err == nil {
 		if !r.Next() {
 			res = make([]PrivateField, idx+1)
 			res[idx] = e
 			return
-		} else if res, err = o.sequenceParsleyJSON(r, idx+1); err == nil {
+		} else if res, err = o.sequencePJSON(r, filter, idx+1); err == nil {
 			res[idx] = e
 		}
 	}
 	return
 }
 
-func (o *PrivateField) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []PrivateField, err error) {
+func (o *PrivateField) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []PrivateField, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
+		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (o *PrivateField) MarshalParsleyJSON(w *writer.Writer) {
+func (o *PrivateField) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
 	if o == nil {
 		w.Raw("null")
 	} else {
@@ -268,46 +311,62 @@ func (o *PrivateField) MarshalParsleyJSON(w *writer.Writer) {
 	}
 }
 
-func (o *PrivateField) MarshalParsleyJSONSlice(w *writer.Writer, slc []PrivateField) {
+func (o *PrivateField) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []PrivateField) {
 	if slc == nil {
 		w.Raw("null")
 	} else if len(slc) == 0 {
 		w.Raw("[]")
 	} else {
 		w.Byte('[')
-		slc[0].MarshalParsleyJSON(w)
+		slc[0].EncodeObjectPJSON(w, filter)
 		for i := 1; i < len(slc); i++ {
 			w.Byte(',')
-			slc[i].MarshalParsleyJSON(w)
+			slc[i].EncodeObjectPJSON(w, filter)
 		}
 		w.Byte(']')
 	}
 }
 
-func (o *PrivateField) LengthParsleyJSON() (ln int) {
+func (o *PrivateField) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
 	if o == nil {
-		return 4
-	}
-	ln = 0
-	if ln == 0 {
-		return 2
-	}
-	return ln + 1
-}
-
-func (o *PrivateField) LengthParsleyJSONSlice(slc []PrivateField) (ln int) {
-	for _, obj := range slc {
-		ln += obj.LengthParsleyJSON() + 1
-	}
-	if ln == 0 {
-		return 2
+		return 4, 0
 	} else {
-		return ln + 1
+		if bytes == 0 {
+			return 2, 0
+		} else {
+			return bytes + 1, volatile
+		}
 	}
 }
 
-func (o *PublicField) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
+func (o *PrivateField) SliceLengthPJSON(filter []parse.Filter, slc []PrivateField) (bytes int, volatile int) {
+	for _, obj := range slc {
+		b, v := obj.ObjectLengthPJSON(filter)
+		bytes, volatile = bytes+b+1, volatile+v
+	}
+	if bytes == 0 {
+		return 2, 0
+	} else {
+		return bytes + 1, volatile
+	}
+}
+
+func (o *PublicField) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
+	c := [1]bool{}
+	if filter == nil {
+		for i := range c {
+			c[i] = true
+		}
+	} else {
+		for i := range filter {
+			k := filter[i].Field
+			if k == "field" {
+				c[0] = true
+			}
+		}
+	}
 	var key []byte
+	_ = key
 	err = r.OpenObject()
 	if r.GetType() != reader.TerminatorToken {
 		for err == nil {
@@ -315,10 +374,9 @@ func (o *PublicField) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
-					switch string(key) {
-					case "field":
+					if string(key) == "field" && c[0] {
 						o.field, err = r.GetString()
-					default:
+					} else {
 						err = r.Skip()
 					}
 				}
@@ -334,79 +392,110 @@ func (o *PublicField) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	return
 }
 
-func (o *PublicField) sequenceParsleyJSON(r *reader.Reader, idx int) (res []PublicField, err error) {
+func (o *PublicField) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx int) (res []PublicField, err error) {
 	var e PublicField
-	if err = e.UnmarshalParsleyJSON(r); err == nil {
+	if err = e.DecodeObjectPJSON(r, filter); err == nil {
 		if !r.Next() {
 			res = make([]PublicField, idx+1)
 			res[idx] = e
 			return
-		} else if res, err = o.sequenceParsleyJSON(r, idx+1); err == nil {
+		} else if res, err = o.sequencePJSON(r, filter, idx+1); err == nil {
 			res[idx] = e
 		}
 	}
 	return
 }
 
-func (o *PublicField) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []PublicField, err error) {
+func (o *PublicField) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []PublicField, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
+		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (o *PublicField) MarshalParsleyJSON(w *writer.Writer) {
+func (o *PublicField) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
 	if o == nil {
 		w.Raw("null")
 	} else {
+		c := [1]bool{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "field" {
+					c[0] = true
+				}
+			}
+		}
 		w.Byte('{')
 		off := 1
-		w.Raw(",\"field\":"[off:])
-		w.String(o.field)
-		off = 0
+		if c[0] {
+			w.Raw(",\"field\":"[off:])
+			w.String(o.field)
+			off = 0
+		}
 		w.Byte('}')
 	}
 }
 
-func (o *PublicField) MarshalParsleyJSONSlice(w *writer.Writer, slc []PublicField) {
+func (o *PublicField) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []PublicField) {
 	if slc == nil {
 		w.Raw("null")
 	} else if len(slc) == 0 {
 		w.Raw("[]")
 	} else {
 		w.Byte('[')
-		slc[0].MarshalParsleyJSON(w)
+		slc[0].EncodeObjectPJSON(w, filter)
 		for i := 1; i < len(slc); i++ {
 			w.Byte(',')
-			slc[i].MarshalParsleyJSON(w)
+			slc[i].EncodeObjectPJSON(w, filter)
 		}
 		w.Byte(']')
 	}
 }
 
-func (o *PublicField) LengthParsleyJSON() (ln int) {
+func (o *PublicField) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
 	if o == nil {
-		return 4
+		return 4, 0
+	} else {
+		c := [1]bool{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "field" {
+					c[0] = true
+				}
+			}
+		}
+		if c[0] {
+			b, v := writer.StringLen(o.field)
+			bytes, volatile = bytes+b+9, volatile+v
+		}
+		if bytes == 0 {
+			return 2, 0
+		} else {
+			return bytes + 1, volatile
+		}
 	}
-	ln = 11
-	if o.field != "" {
-		ln += writer.StringLen(o.field) - 2
-	}
-	if ln == 0 {
-		return 2
-	}
-	return ln + 1
 }
 
-func (o *PublicField) LengthParsleyJSONSlice(slc []PublicField) (ln int) {
+func (o *PublicField) SliceLengthPJSON(filter []parse.Filter, slc []PublicField) (bytes int, volatile int) {
 	for _, obj := range slc {
-		ln += obj.LengthParsleyJSON() + 1
+		b, v := obj.ObjectLengthPJSON(filter)
+		bytes, volatile = bytes+b+1, volatile+v
 	}
-	if ln == 0 {
-		return 2
+	if bytes == 0 {
+		return 2, 0
 	} else {
-		return ln + 1
+		return bytes + 1, volatile
 	}
 }

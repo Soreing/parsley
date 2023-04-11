@@ -2,6 +2,7 @@
 package basics
 
 import (
+	parse "github.com/Soreing/parsley"
 	reader "github.com/Soreing/parsley/reader"
 	writer "github.com/Soreing/parsley/writer"
 )
@@ -9,8 +10,26 @@ import (
 var _ *reader.Reader
 var _ *writer.Writer
 
-func (o *BooleansColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
+func (o *BooleansColl) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
+	c := [3]bool{}
+	if filter == nil {
+		for i := range c {
+			c[i] = true
+		}
+	} else {
+		for i := range filter {
+			k := filter[i].Field
+			if k == "bdat" {
+				c[0] = true
+			} else if k == "bslc" {
+				c[1] = true
+			} else if k == "bptr" {
+				c[2] = true
+			}
+		}
+	}
 	var key []byte
+	_ = key
 	err = r.OpenObject()
 	if r.GetType() != reader.TerminatorToken {
 		for err == nil {
@@ -18,14 +37,13 @@ func (o *BooleansColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
-					switch string(key) {
-					case "bdat":
+					if string(key) == "bdat" && c[0] {
 						o.BDat, err = r.GetBool()
-					case "bslc":
+					} else if string(key) == "bslc" && c[1] {
 						o.BSlc, err = r.GetBools()
-					case "bptr":
+					} else if string(key) == "bptr" && c[2] {
 						o.BPtr, err = r.GetBoolPtr()
-					default:
+					} else {
 						err = r.Skip()
 					}
 				}
@@ -41,95 +59,163 @@ func (o *BooleansColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	return
 }
 
-func (o *BooleansColl) sequenceParsleyJSON(r *reader.Reader, idx int) (res []BooleansColl, err error) {
+func (o *BooleansColl) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx int) (res []BooleansColl, err error) {
 	var e BooleansColl
-	if err = e.UnmarshalParsleyJSON(r); err == nil {
+	if err = e.DecodeObjectPJSON(r, filter); err == nil {
 		if !r.Next() {
 			res = make([]BooleansColl, idx+1)
 			res[idx] = e
 			return
-		} else if res, err = o.sequenceParsleyJSON(r, idx+1); err == nil {
+		} else if res, err = o.sequencePJSON(r, filter, idx+1); err == nil {
 			res[idx] = e
 		}
 	}
 	return
 }
 
-func (o *BooleansColl) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []BooleansColl, err error) {
+func (o *BooleansColl) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []BooleansColl, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
+		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (o *BooleansColl) MarshalParsleyJSON(w *writer.Writer) {
+func (o *BooleansColl) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
 	if o == nil {
 		w.Raw("null")
 	} else {
+		c := [3]bool{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "bdat" {
+					c[0] = true
+				} else if k == "bslc" {
+					c[1] = true
+				} else if k == "bptr" {
+					c[2] = true
+				}
+			}
+		}
 		w.Byte('{')
 		off := 1
-		w.Raw(",\"bdat\":"[off:])
-		w.Bool(o.BDat)
-		off = 0
-		w.Raw(",\"bslc\":")
-		w.Bools(o.BSlc)
-		w.Raw(",\"bptr\":")
-		w.Boolp(o.BPtr)
+		if c[0] {
+			w.Raw(",\"bdat\":"[off:])
+			w.Bool(o.BDat)
+			off = 0
+		}
+		if c[1] {
+			w.Raw(",\"bslc\":"[off:])
+			w.Bools(o.BSlc)
+			off = 0
+		}
+		if c[2] {
+			w.Raw(",\"bptr\":"[off:])
+			w.Boolp(o.BPtr)
+			off = 0
+		}
 		w.Byte('}')
 	}
 }
 
-func (o *BooleansColl) MarshalParsleyJSONSlice(w *writer.Writer, slc []BooleansColl) {
+func (o *BooleansColl) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []BooleansColl) {
 	if slc == nil {
 		w.Raw("null")
 	} else if len(slc) == 0 {
 		w.Raw("[]")
 	} else {
 		w.Byte('[')
-		slc[0].MarshalParsleyJSON(w)
+		slc[0].EncodeObjectPJSON(w, filter)
 		for i := 1; i < len(slc); i++ {
 			w.Byte(',')
-			slc[i].MarshalParsleyJSON(w)
+			slc[i].EncodeObjectPJSON(w, filter)
 		}
 		w.Byte(']')
 	}
 }
 
-func (o *BooleansColl) LengthParsleyJSON() (ln int) {
+func (o *BooleansColl) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
 	if o == nil {
-		return 4
-	}
-	ln = 37
-	if o.BDat != false {
-		ln += writer.BoolLen(o.BDat) - 5
-	}
-	if o.BSlc != nil {
-		ln += writer.BoolsLen(o.BSlc) - 4
-	}
-	if o.BPtr != nil {
-		ln += writer.BoolLen(*o.BPtr) - 4
-	}
-	if ln == 0 {
-		return 2
-	}
-	return ln + 1
-}
-
-func (o *BooleansColl) LengthParsleyJSONSlice(slc []BooleansColl) (ln int) {
-	for _, obj := range slc {
-		ln += obj.LengthParsleyJSON() + 1
-	}
-	if ln == 0 {
-		return 2
+		return 4, 0
 	} else {
-		return ln + 1
+		c := [3]bool{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "bdat" {
+					c[0] = true
+				} else if k == "bslc" {
+					c[1] = true
+				} else if k == "bptr" {
+					c[2] = true
+				}
+			}
+		}
+		if c[0] {
+			bytes += writer.BoolLen(o.BDat) + 8
+		}
+		if c[1] {
+			bytes += writer.BoolsLen(o.BSlc) + 8
+		}
+		if c[2] {
+			bytes += writer.BoolpLen(o.BPtr) + 8
+		}
+		if bytes == 0 {
+			return 2, 0
+		} else {
+			return bytes + 1, volatile
+		}
 	}
 }
 
-func (o *FloatingPointColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
+func (o *BooleansColl) SliceLengthPJSON(filter []parse.Filter, slc []BooleansColl) (bytes int, volatile int) {
+	for _, obj := range slc {
+		b, v := obj.ObjectLengthPJSON(filter)
+		bytes, volatile = bytes+b+1, volatile+v
+	}
+	if bytes == 0 {
+		return 2, 0
+	} else {
+		return bytes + 1, volatile
+	}
+}
+
+func (o *FloatingPointColl) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
+	c := [6]bool{}
+	if filter == nil {
+		for i := range c {
+			c[i] = true
+		}
+	} else {
+		for i := range filter {
+			k := filter[i].Field
+			if k == "f32dat" {
+				c[0] = true
+			} else if k == "f32slc" {
+				c[1] = true
+			} else if k == "f32ptr" {
+				c[2] = true
+			} else if k == "f64dat" {
+				c[3] = true
+			} else if k == "f64slc" {
+				c[4] = true
+			} else if k == "f64ptr" {
+				c[5] = true
+			}
+		}
+	}
 	var key []byte
+	_ = key
 	err = r.OpenObject()
 	if r.GetType() != reader.TerminatorToken {
 		for err == nil {
@@ -137,20 +223,19 @@ func (o *FloatingPointColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
-					switch string(key) {
-					case "f32dat":
+					if string(key) == "f32dat" && c[0] {
 						o.F32Dat, err = r.GetFloat32()
-					case "f32slc":
+					} else if string(key) == "f32slc" && c[1] {
 						o.F32Slc, err = r.GetFloat32s()
-					case "f32ptr":
+					} else if string(key) == "f32ptr" && c[2] {
 						o.F32Ptr, err = r.GetFloat32Ptr()
-					case "f64dat":
+					} else if string(key) == "f64dat" && c[3] {
 						o.F64Dat, err = r.GetFloat64()
-					case "f64slc":
+					} else if string(key) == "f64slc" && c[4] {
 						o.F64Slc, err = r.GetFloat64s()
-					case "f64ptr":
+					} else if string(key) == "f64ptr" && c[5] {
 						o.F64Ptr, err = r.GetFloat64Ptr()
-					default:
+					} else {
 						err = r.Skip()
 					}
 				}
@@ -166,110 +251,217 @@ func (o *FloatingPointColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	return
 }
 
-func (o *FloatingPointColl) sequenceParsleyJSON(r *reader.Reader, idx int) (res []FloatingPointColl, err error) {
+func (o *FloatingPointColl) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx int) (res []FloatingPointColl, err error) {
 	var e FloatingPointColl
-	if err = e.UnmarshalParsleyJSON(r); err == nil {
+	if err = e.DecodeObjectPJSON(r, filter); err == nil {
 		if !r.Next() {
 			res = make([]FloatingPointColl, idx+1)
 			res[idx] = e
 			return
-		} else if res, err = o.sequenceParsleyJSON(r, idx+1); err == nil {
+		} else if res, err = o.sequencePJSON(r, filter, idx+1); err == nil {
 			res[idx] = e
 		}
 	}
 	return
 }
 
-func (o *FloatingPointColl) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []FloatingPointColl, err error) {
+func (o *FloatingPointColl) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []FloatingPointColl, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
+		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (o *FloatingPointColl) MarshalParsleyJSON(w *writer.Writer) {
+func (o *FloatingPointColl) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
 	if o == nil {
 		w.Raw("null")
 	} else {
+		c := [6]bool{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "f32dat" {
+					c[0] = true
+				} else if k == "f32slc" {
+					c[1] = true
+				} else if k == "f32ptr" {
+					c[2] = true
+				} else if k == "f64dat" {
+					c[3] = true
+				} else if k == "f64slc" {
+					c[4] = true
+				} else if k == "f64ptr" {
+					c[5] = true
+				}
+			}
+		}
 		w.Byte('{')
 		off := 1
-		w.Raw(",\"f32dat\":"[off:])
-		w.Float32(o.F32Dat)
-		off = 0
-		w.Raw(",\"f32slc\":")
-		w.Float32s(o.F32Slc)
-		w.Raw(",\"f32ptr\":")
-		w.Float32p(o.F32Ptr)
-		w.Raw(",\"f64dat\":")
-		w.Float64(o.F64Dat)
-		w.Raw(",\"f64slc\":")
-		w.Float64s(o.F64Slc)
-		w.Raw(",\"f64ptr\":")
-		w.Float64p(o.F64Ptr)
+		if c[0] {
+			w.Raw(",\"f32dat\":"[off:])
+			w.Float32(o.F32Dat)
+			off = 0
+		}
+		if c[1] {
+			w.Raw(",\"f32slc\":"[off:])
+			w.Float32s(o.F32Slc)
+			off = 0
+		}
+		if c[2] {
+			w.Raw(",\"f32ptr\":"[off:])
+			w.Float32p(o.F32Ptr)
+			off = 0
+		}
+		if c[3] {
+			w.Raw(",\"f64dat\":"[off:])
+			w.Float64(o.F64Dat)
+			off = 0
+		}
+		if c[4] {
+			w.Raw(",\"f64slc\":"[off:])
+			w.Float64s(o.F64Slc)
+			off = 0
+		}
+		if c[5] {
+			w.Raw(",\"f64ptr\":"[off:])
+			w.Float64p(o.F64Ptr)
+			off = 0
+		}
 		w.Byte('}')
 	}
 }
 
-func (o *FloatingPointColl) MarshalParsleyJSONSlice(w *writer.Writer, slc []FloatingPointColl) {
+func (o *FloatingPointColl) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []FloatingPointColl) {
 	if slc == nil {
 		w.Raw("null")
 	} else if len(slc) == 0 {
 		w.Raw("[]")
 	} else {
 		w.Byte('[')
-		slc[0].MarshalParsleyJSON(w)
+		slc[0].EncodeObjectPJSON(w, filter)
 		for i := 1; i < len(slc); i++ {
 			w.Byte(',')
-			slc[i].MarshalParsleyJSON(w)
+			slc[i].EncodeObjectPJSON(w, filter)
 		}
 		w.Byte(']')
 	}
 }
 
-func (o *FloatingPointColl) LengthParsleyJSON() (ln int) {
+func (o *FloatingPointColl) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
 	if o == nil {
-		return 4
-	}
-	ln = 78
-	if o.F32Dat != 0 {
-		ln += writer.Float32Len(o.F32Dat) - 1
-	}
-	if o.F32Slc != nil {
-		ln += writer.Float32sLen(o.F32Slc) - 4
-	}
-	if o.F32Ptr != nil {
-		ln += writer.Float32Len(*o.F32Ptr) - 4
-	}
-	if o.F64Dat != 0 {
-		ln += writer.Float64Len(o.F64Dat) - 1
-	}
-	if o.F64Slc != nil {
-		ln += writer.Float64sLen(o.F64Slc) - 4
-	}
-	if o.F64Ptr != nil {
-		ln += writer.Float64Len(*o.F64Ptr) - 4
-	}
-	if ln == 0 {
-		return 2
-	}
-	return ln + 1
-}
-
-func (o *FloatingPointColl) LengthParsleyJSONSlice(slc []FloatingPointColl) (ln int) {
-	for _, obj := range slc {
-		ln += obj.LengthParsleyJSON() + 1
-	}
-	if ln == 0 {
-		return 2
+		return 4, 0
 	} else {
-		return ln + 1
+		c := [6]bool{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "f32dat" {
+					c[0] = true
+				} else if k == "f32slc" {
+					c[1] = true
+				} else if k == "f32ptr" {
+					c[2] = true
+				} else if k == "f64dat" {
+					c[3] = true
+				} else if k == "f64slc" {
+					c[4] = true
+				} else if k == "f64ptr" {
+					c[5] = true
+				}
+			}
+		}
+		if c[0] {
+			bytes += writer.Float32Len(o.F32Dat) + 10
+		}
+		if c[1] {
+			bytes += writer.Float32sLen(o.F32Slc) + 10
+		}
+		if c[2] {
+			bytes += writer.Float32pLen(o.F32Ptr) + 10
+		}
+		if c[3] {
+			bytes += writer.Float64Len(o.F64Dat) + 10
+		}
+		if c[4] {
+			bytes += writer.Float64sLen(o.F64Slc) + 10
+		}
+		if c[5] {
+			bytes += writer.Float64pLen(o.F64Ptr) + 10
+		}
+		if bytes == 0 {
+			return 2, 0
+		} else {
+			return bytes + 1, volatile
+		}
 	}
 }
 
-func (o *IntegersColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
+func (o *FloatingPointColl) SliceLengthPJSON(filter []parse.Filter, slc []FloatingPointColl) (bytes int, volatile int) {
+	for _, obj := range slc {
+		b, v := obj.ObjectLengthPJSON(filter)
+		bytes, volatile = bytes+b+1, volatile+v
+	}
+	if bytes == 0 {
+		return 2, 0
+	} else {
+		return bytes + 1, volatile
+	}
+}
+
+func (o *IntegersColl) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
+	c := [15]bool{}
+	if filter == nil {
+		for i := range c {
+			c[i] = true
+		}
+	} else {
+		for i := range filter {
+			k := filter[i].Field
+			if k == "i8dat" {
+				c[0] = true
+			} else if k == "i8slc" {
+				c[1] = true
+			} else if k == "i8ptr" {
+				c[2] = true
+			} else if k == "i16dat" {
+				c[3] = true
+			} else if k == "i16slc" {
+				c[4] = true
+			} else if k == "i16ptr" {
+				c[5] = true
+			} else if k == "i32dat" {
+				c[6] = true
+			} else if k == "i32slc" {
+				c[7] = true
+			} else if k == "i32ptr" {
+				c[8] = true
+			} else if k == "i64dat" {
+				c[9] = true
+			} else if k == "i64slc" {
+				c[10] = true
+			} else if k == "i64ptr" {
+				c[11] = true
+			} else if k == "idat" {
+				c[12] = true
+			} else if k == "islc" {
+				c[13] = true
+			} else if k == "iptr" {
+				c[14] = true
+			}
+		}
+	}
 	var key []byte
+	_ = key
 	err = r.OpenObject()
 	if r.GetType() != reader.TerminatorToken {
 		for err == nil {
@@ -277,38 +469,37 @@ func (o *IntegersColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
-					switch string(key) {
-					case "i8dat":
+					if string(key) == "i8dat" && c[0] {
 						o.I8Dat, err = r.GetInt8()
-					case "i8slc":
+					} else if string(key) == "i8slc" && c[1] {
 						o.I8Slc, err = r.GetInt8s()
-					case "i8ptr":
+					} else if string(key) == "i8ptr" && c[2] {
 						o.I8Ptr, err = r.GetInt8Ptr()
-					case "i16dat":
+					} else if string(key) == "i16dat" && c[3] {
 						o.I16Dat, err = r.GetInt16()
-					case "i16slc":
+					} else if string(key) == "i16slc" && c[4] {
 						o.I16Slc, err = r.GetInt16s()
-					case "i16ptr":
+					} else if string(key) == "i16ptr" && c[5] {
 						o.I16Ptr, err = r.GetInt16Ptr()
-					case "i32dat":
+					} else if string(key) == "i32dat" && c[6] {
 						o.I32Dat, err = r.GetInt32()
-					case "i32slc":
+					} else if string(key) == "i32slc" && c[7] {
 						o.I32Slc, err = r.GetInt32s()
-					case "i32ptr":
+					} else if string(key) == "i32ptr" && c[8] {
 						o.I32Ptr, err = r.GetInt32Ptr()
-					case "i64dat":
+					} else if string(key) == "i64dat" && c[9] {
 						o.I64Dat, err = r.GetInt64()
-					case "i64slc":
+					} else if string(key) == "i64slc" && c[10] {
 						o.I64Slc, err = r.GetInt64s()
-					case "i64ptr":
+					} else if string(key) == "i64ptr" && c[11] {
 						o.I64Ptr, err = r.GetInt64Ptr()
-					case "idat":
+					} else if string(key) == "idat" && c[12] {
 						o.IDat, err = r.GetInt()
-					case "islc":
+					} else if string(key) == "islc" && c[13] {
 						o.ISlc, err = r.GetInts()
-					case "iptr":
+					} else if string(key) == "iptr" && c[14] {
 						o.IPtr, err = r.GetIntPtr()
-					default:
+					} else {
 						err = r.Skip()
 					}
 				}
@@ -324,155 +515,307 @@ func (o *IntegersColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	return
 }
 
-func (o *IntegersColl) sequenceParsleyJSON(r *reader.Reader, idx int) (res []IntegersColl, err error) {
+func (o *IntegersColl) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx int) (res []IntegersColl, err error) {
 	var e IntegersColl
-	if err = e.UnmarshalParsleyJSON(r); err == nil {
+	if err = e.DecodeObjectPJSON(r, filter); err == nil {
 		if !r.Next() {
 			res = make([]IntegersColl, idx+1)
 			res[idx] = e
 			return
-		} else if res, err = o.sequenceParsleyJSON(r, idx+1); err == nil {
+		} else if res, err = o.sequencePJSON(r, filter, idx+1); err == nil {
 			res[idx] = e
 		}
 	}
 	return
 }
 
-func (o *IntegersColl) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []IntegersColl, err error) {
+func (o *IntegersColl) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []IntegersColl, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
+		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (o *IntegersColl) MarshalParsleyJSON(w *writer.Writer) {
+func (o *IntegersColl) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
 	if o == nil {
 		w.Raw("null")
 	} else {
+		c := [15]bool{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "i8dat" {
+					c[0] = true
+				} else if k == "i8slc" {
+					c[1] = true
+				} else if k == "i8ptr" {
+					c[2] = true
+				} else if k == "i16dat" {
+					c[3] = true
+				} else if k == "i16slc" {
+					c[4] = true
+				} else if k == "i16ptr" {
+					c[5] = true
+				} else if k == "i32dat" {
+					c[6] = true
+				} else if k == "i32slc" {
+					c[7] = true
+				} else if k == "i32ptr" {
+					c[8] = true
+				} else if k == "i64dat" {
+					c[9] = true
+				} else if k == "i64slc" {
+					c[10] = true
+				} else if k == "i64ptr" {
+					c[11] = true
+				} else if k == "idat" {
+					c[12] = true
+				} else if k == "islc" {
+					c[13] = true
+				} else if k == "iptr" {
+					c[14] = true
+				}
+			}
+		}
 		w.Byte('{')
 		off := 1
-		w.Raw(",\"i8dat\":"[off:])
-		w.Int8(o.I8Dat)
-		off = 0
-		w.Raw(",\"i8slc\":")
-		w.Int8s(o.I8Slc)
-		w.Raw(",\"i8ptr\":")
-		w.Int8p(o.I8Ptr)
-		w.Raw(",\"i16dat\":")
-		w.Int16(o.I16Dat)
-		w.Raw(",\"i16slc\":")
-		w.Int16s(o.I16Slc)
-		w.Raw(",\"i16ptr\":")
-		w.Int16p(o.I16Ptr)
-		w.Raw(",\"i32dat\":")
-		w.Int32(o.I32Dat)
-		w.Raw(",\"i32slc\":")
-		w.Int32s(o.I32Slc)
-		w.Raw(",\"i32ptr\":")
-		w.Int32p(o.I32Ptr)
-		w.Raw(",\"i64dat\":")
-		w.Int64(o.I64Dat)
-		w.Raw(",\"i64slc\":")
-		w.Int64s(o.I64Slc)
-		w.Raw(",\"i64ptr\":")
-		w.Int64p(o.I64Ptr)
-		w.Raw(",\"idat\":")
-		w.Int(o.IDat)
-		w.Raw(",\"islc\":")
-		w.Ints(o.ISlc)
-		w.Raw(",\"iptr\":")
-		w.Intp(o.IPtr)
+		if c[0] {
+			w.Raw(",\"i8dat\":"[off:])
+			w.Int8(o.I8Dat)
+			off = 0
+		}
+		if c[1] {
+			w.Raw(",\"i8slc\":"[off:])
+			w.Int8s(o.I8Slc)
+			off = 0
+		}
+		if c[2] {
+			w.Raw(",\"i8ptr\":"[off:])
+			w.Int8p(o.I8Ptr)
+			off = 0
+		}
+		if c[3] {
+			w.Raw(",\"i16dat\":"[off:])
+			w.Int16(o.I16Dat)
+			off = 0
+		}
+		if c[4] {
+			w.Raw(",\"i16slc\":"[off:])
+			w.Int16s(o.I16Slc)
+			off = 0
+		}
+		if c[5] {
+			w.Raw(",\"i16ptr\":"[off:])
+			w.Int16p(o.I16Ptr)
+			off = 0
+		}
+		if c[6] {
+			w.Raw(",\"i32dat\":"[off:])
+			w.Int32(o.I32Dat)
+			off = 0
+		}
+		if c[7] {
+			w.Raw(",\"i32slc\":"[off:])
+			w.Int32s(o.I32Slc)
+			off = 0
+		}
+		if c[8] {
+			w.Raw(",\"i32ptr\":"[off:])
+			w.Int32p(o.I32Ptr)
+			off = 0
+		}
+		if c[9] {
+			w.Raw(",\"i64dat\":"[off:])
+			w.Int64(o.I64Dat)
+			off = 0
+		}
+		if c[10] {
+			w.Raw(",\"i64slc\":"[off:])
+			w.Int64s(o.I64Slc)
+			off = 0
+		}
+		if c[11] {
+			w.Raw(",\"i64ptr\":"[off:])
+			w.Int64p(o.I64Ptr)
+			off = 0
+		}
+		if c[12] {
+			w.Raw(",\"idat\":"[off:])
+			w.Int(o.IDat)
+			off = 0
+		}
+		if c[13] {
+			w.Raw(",\"islc\":"[off:])
+			w.Ints(o.ISlc)
+			off = 0
+		}
+		if c[14] {
+			w.Raw(",\"iptr\":"[off:])
+			w.Intp(o.IPtr)
+			off = 0
+		}
 		w.Byte('}')
 	}
 }
 
-func (o *IntegersColl) MarshalParsleyJSONSlice(w *writer.Writer, slc []IntegersColl) {
+func (o *IntegersColl) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []IntegersColl) {
 	if slc == nil {
 		w.Raw("null")
 	} else if len(slc) == 0 {
 		w.Raw("[]")
 	} else {
 		w.Byte('[')
-		slc[0].MarshalParsleyJSON(w)
+		slc[0].EncodeObjectPJSON(w, filter)
 		for i := 1; i < len(slc); i++ {
 			w.Byte(',')
-			slc[i].MarshalParsleyJSON(w)
+			slc[i].EncodeObjectPJSON(w, filter)
 		}
 		w.Byte(']')
 	}
 }
 
-func (o *IntegersColl) LengthParsleyJSON() (ln int) {
+func (o *IntegersColl) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
 	if o == nil {
-		return 4
-	}
-	ln = 186
-	if o.I8Dat != 0 {
-		ln += writer.Int8Len(o.I8Dat) - 1
-	}
-	if o.I8Slc != nil {
-		ln += writer.Int8sLen(o.I8Slc) - 4
-	}
-	if o.I8Ptr != nil {
-		ln += writer.Int8Len(*o.I8Ptr) - 4
-	}
-	if o.I16Dat != 0 {
-		ln += writer.Int16Len(o.I16Dat) - 1
-	}
-	if o.I16Slc != nil {
-		ln += writer.Int16sLen(o.I16Slc) - 4
-	}
-	if o.I16Ptr != nil {
-		ln += writer.Int16Len(*o.I16Ptr) - 4
-	}
-	if o.I32Dat != 0 {
-		ln += writer.Int32Len(o.I32Dat) - 1
-	}
-	if o.I32Slc != nil {
-		ln += writer.Int32sLen(o.I32Slc) - 4
-	}
-	if o.I32Ptr != nil {
-		ln += writer.Int32Len(*o.I32Ptr) - 4
-	}
-	if o.I64Dat != 0 {
-		ln += writer.Int64Len(o.I64Dat) - 1
-	}
-	if o.I64Slc != nil {
-		ln += writer.Int64sLen(o.I64Slc) - 4
-	}
-	if o.I64Ptr != nil {
-		ln += writer.Int64Len(*o.I64Ptr) - 4
-	}
-	if o.IDat != 0 {
-		ln += writer.IntLen(o.IDat) - 1
-	}
-	if o.ISlc != nil {
-		ln += writer.IntsLen(o.ISlc) - 4
-	}
-	if o.IPtr != nil {
-		ln += writer.IntLen(*o.IPtr) - 4
-	}
-	if ln == 0 {
-		return 2
-	}
-	return ln + 1
-}
-
-func (o *IntegersColl) LengthParsleyJSONSlice(slc []IntegersColl) (ln int) {
-	for _, obj := range slc {
-		ln += obj.LengthParsleyJSON() + 1
-	}
-	if ln == 0 {
-		return 2
+		return 4, 0
 	} else {
-		return ln + 1
+		c := [15]bool{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "i8dat" {
+					c[0] = true
+				} else if k == "i8slc" {
+					c[1] = true
+				} else if k == "i8ptr" {
+					c[2] = true
+				} else if k == "i16dat" {
+					c[3] = true
+				} else if k == "i16slc" {
+					c[4] = true
+				} else if k == "i16ptr" {
+					c[5] = true
+				} else if k == "i32dat" {
+					c[6] = true
+				} else if k == "i32slc" {
+					c[7] = true
+				} else if k == "i32ptr" {
+					c[8] = true
+				} else if k == "i64dat" {
+					c[9] = true
+				} else if k == "i64slc" {
+					c[10] = true
+				} else if k == "i64ptr" {
+					c[11] = true
+				} else if k == "idat" {
+					c[12] = true
+				} else if k == "islc" {
+					c[13] = true
+				} else if k == "iptr" {
+					c[14] = true
+				}
+			}
+		}
+		if c[0] {
+			bytes += writer.Int8Len(o.I8Dat) + 9
+		}
+		if c[1] {
+			bytes += writer.Int8sLen(o.I8Slc) + 9
+		}
+		if c[2] {
+			bytes += writer.Int8pLen(o.I8Ptr) + 9
+		}
+		if c[3] {
+			bytes += writer.Int16Len(o.I16Dat) + 10
+		}
+		if c[4] {
+			bytes += writer.Int16sLen(o.I16Slc) + 10
+		}
+		if c[5] {
+			bytes += writer.Int16pLen(o.I16Ptr) + 10
+		}
+		if c[6] {
+			bytes += writer.Int32Len(o.I32Dat) + 10
+		}
+		if c[7] {
+			bytes += writer.Int32sLen(o.I32Slc) + 10
+		}
+		if c[8] {
+			bytes += writer.Int32pLen(o.I32Ptr) + 10
+		}
+		if c[9] {
+			bytes += writer.Int64Len(o.I64Dat) + 10
+		}
+		if c[10] {
+			bytes += writer.Int64sLen(o.I64Slc) + 10
+		}
+		if c[11] {
+			bytes += writer.Int64pLen(o.I64Ptr) + 10
+		}
+		if c[12] {
+			bytes += writer.IntLen(o.IDat) + 8
+		}
+		if c[13] {
+			bytes += writer.IntsLen(o.ISlc) + 8
+		}
+		if c[14] {
+			bytes += writer.IntpLen(o.IPtr) + 8
+		}
+		if bytes == 0 {
+			return 2, 0
+		} else {
+			return bytes + 1, volatile
+		}
 	}
 }
 
-func (o *StringsColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
+func (o *IntegersColl) SliceLengthPJSON(filter []parse.Filter, slc []IntegersColl) (bytes int, volatile int) {
+	for _, obj := range slc {
+		b, v := obj.ObjectLengthPJSON(filter)
+		bytes, volatile = bytes+b+1, volatile+v
+	}
+	if bytes == 0 {
+		return 2, 0
+	} else {
+		return bytes + 1, volatile
+	}
+}
+
+func (o *StringsColl) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
+	c := [6]bool{}
+	if filter == nil {
+		for i := range c {
+			c[i] = true
+		}
+	} else {
+		for i := range filter {
+			k := filter[i].Field
+			if k == "sdat" {
+				c[0] = true
+			} else if k == "sslc" {
+				c[1] = true
+			} else if k == "sptr" {
+				c[2] = true
+			} else if k == "tdat" {
+				c[3] = true
+			} else if k == "tslc" {
+				c[4] = true
+			} else if k == "tptr" {
+				c[5] = true
+			}
+		}
+	}
 	var key []byte
+	_ = key
 	err = r.OpenObject()
 	if r.GetType() != reader.TerminatorToken {
 		for err == nil {
@@ -480,20 +823,19 @@ func (o *StringsColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
-					switch string(key) {
-					case "sdat":
+					if string(key) == "sdat" && c[0] {
 						o.SDat, err = r.GetString()
-					case "sslc":
+					} else if string(key) == "sslc" && c[1] {
 						o.SSlc, err = r.GetStrings()
-					case "sptr":
+					} else if string(key) == "sptr" && c[2] {
 						o.SPtr, err = r.GetStringPtr()
-					case "tdat":
+					} else if string(key) == "tdat" && c[3] {
 						o.TDat, err = r.GetTime()
-					case "tslc":
+					} else if string(key) == "tslc" && c[4] {
 						o.TSlc, err = r.GetTimes()
-					case "tptr":
+					} else if string(key) == "tptr" && c[5] {
 						o.TPtr, err = r.GetTimePtr()
-					default:
+					} else {
 						err = r.Skip()
 					}
 				}
@@ -509,110 +851,220 @@ func (o *StringsColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	return
 }
 
-func (o *StringsColl) sequenceParsleyJSON(r *reader.Reader, idx int) (res []StringsColl, err error) {
+func (o *StringsColl) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx int) (res []StringsColl, err error) {
 	var e StringsColl
-	if err = e.UnmarshalParsleyJSON(r); err == nil {
+	if err = e.DecodeObjectPJSON(r, filter); err == nil {
 		if !r.Next() {
 			res = make([]StringsColl, idx+1)
 			res[idx] = e
 			return
-		} else if res, err = o.sequenceParsleyJSON(r, idx+1); err == nil {
+		} else if res, err = o.sequencePJSON(r, filter, idx+1); err == nil {
 			res[idx] = e
 		}
 	}
 	return
 }
 
-func (o *StringsColl) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []StringsColl, err error) {
+func (o *StringsColl) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []StringsColl, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
+		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (o *StringsColl) MarshalParsleyJSON(w *writer.Writer) {
+func (o *StringsColl) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
 	if o == nil {
 		w.Raw("null")
 	} else {
+		c := [6]bool{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "sdat" {
+					c[0] = true
+				} else if k == "sslc" {
+					c[1] = true
+				} else if k == "sptr" {
+					c[2] = true
+				} else if k == "tdat" {
+					c[3] = true
+				} else if k == "tslc" {
+					c[4] = true
+				} else if k == "tptr" {
+					c[5] = true
+				}
+			}
+		}
 		w.Byte('{')
 		off := 1
-		w.Raw(",\"sdat\":"[off:])
-		w.String(o.SDat)
-		off = 0
-		w.Raw(",\"sslc\":")
-		w.Strings(o.SSlc)
-		w.Raw(",\"sptr\":")
-		w.Stringp(o.SPtr)
-		w.Raw(",\"tdat\":")
-		w.Time(o.TDat)
-		w.Raw(",\"tslc\":")
-		w.Times(o.TSlc)
-		w.Raw(",\"tptr\":")
-		w.Timep(o.TPtr)
+		if c[0] {
+			w.Raw(",\"sdat\":"[off:])
+			w.String(o.SDat)
+			off = 0
+		}
+		if c[1] {
+			w.Raw(",\"sslc\":"[off:])
+			w.Strings(o.SSlc)
+			off = 0
+		}
+		if c[2] {
+			w.Raw(",\"sptr\":"[off:])
+			w.Stringp(o.SPtr)
+			off = 0
+		}
+		if c[3] {
+			w.Raw(",\"tdat\":"[off:])
+			w.Time(o.TDat)
+			off = 0
+		}
+		if c[4] {
+			w.Raw(",\"tslc\":"[off:])
+			w.Times(o.TSlc)
+			off = 0
+		}
+		if c[5] {
+			w.Raw(",\"tptr\":"[off:])
+			w.Timep(o.TPtr)
+			off = 0
+		}
 		w.Byte('}')
 	}
 }
 
-func (o *StringsColl) MarshalParsleyJSONSlice(w *writer.Writer, slc []StringsColl) {
+func (o *StringsColl) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []StringsColl) {
 	if slc == nil {
 		w.Raw("null")
 	} else if len(slc) == 0 {
 		w.Raw("[]")
 	} else {
 		w.Byte('[')
-		slc[0].MarshalParsleyJSON(w)
+		slc[0].EncodeObjectPJSON(w, filter)
 		for i := 1; i < len(slc); i++ {
 			w.Byte(',')
-			slc[i].MarshalParsleyJSON(w)
+			slc[i].EncodeObjectPJSON(w, filter)
 		}
 		w.Byte(']')
 	}
 }
 
-func (o *StringsColl) LengthParsleyJSON() (ln int) {
+func (o *StringsColl) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
 	if o == nil {
-		return 4
-	}
-	ln = 88
-	if o.SDat != "" {
-		ln += writer.StringLen(o.SDat) - 2
-	}
-	if o.SSlc != nil {
-		ln += writer.StringsLen(o.SSlc) - 4
-	}
-	if o.SPtr != nil {
-		ln += writer.StringLen(*o.SPtr) - 4
-	}
-	if o.TDat.IsZero() != true {
-		ln += writer.TimeLen(o.TDat) - 22
-	}
-	if o.TSlc != nil {
-		ln += writer.TimesLen(o.TSlc) - 4
-	}
-	if o.TPtr != nil {
-		ln += writer.TimeLen(*o.TPtr) - 4
-	}
-	if ln == 0 {
-		return 2
-	}
-	return ln + 1
-}
-
-func (o *StringsColl) LengthParsleyJSONSlice(slc []StringsColl) (ln int) {
-	for _, obj := range slc {
-		ln += obj.LengthParsleyJSON() + 1
-	}
-	if ln == 0 {
-		return 2
+		return 4, 0
 	} else {
-		return ln + 1
+		c := [6]bool{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "sdat" {
+					c[0] = true
+				} else if k == "sslc" {
+					c[1] = true
+				} else if k == "sptr" {
+					c[2] = true
+				} else if k == "tdat" {
+					c[3] = true
+				} else if k == "tslc" {
+					c[4] = true
+				} else if k == "tptr" {
+					c[5] = true
+				}
+			}
+		}
+		if c[0] {
+			b, v := writer.StringLen(o.SDat)
+			bytes, volatile = bytes+b+8, volatile+v
+		}
+		if c[1] {
+			b, v := writer.StringsLen(o.SSlc)
+			bytes, volatile = bytes+b+8, volatile+v
+		}
+		if c[2] {
+			b, v := writer.StringpLen(o.SPtr)
+			bytes, volatile = bytes+b+8, volatile+v
+		}
+		if c[3] {
+			bytes += writer.TimeLen(o.TDat) + 8
+		}
+		if c[4] {
+			bytes += writer.TimesLen(o.TSlc) + 8
+		}
+		if c[5] {
+			bytes += writer.TimepLen(o.TPtr) + 8
+		}
+		if bytes == 0 {
+			return 2, 0
+		} else {
+			return bytes + 1, volatile
+		}
 	}
 }
 
-func (o *UnsignedIntegersColl) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
+func (o *StringsColl) SliceLengthPJSON(filter []parse.Filter, slc []StringsColl) (bytes int, volatile int) {
+	for _, obj := range slc {
+		b, v := obj.ObjectLengthPJSON(filter)
+		bytes, volatile = bytes+b+1, volatile+v
+	}
+	if bytes == 0 {
+		return 2, 0
+	} else {
+		return bytes + 1, volatile
+	}
+}
+
+func (o *UnsignedIntegersColl) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
+	c := [15]bool{}
+	if filter == nil {
+		for i := range c {
+			c[i] = true
+		}
+	} else {
+		for i := range filter {
+			k := filter[i].Field
+			if k == "ui8dat" {
+				c[0] = true
+			} else if k == "ui8slc" {
+				c[1] = true
+			} else if k == "ui8ptr" {
+				c[2] = true
+			} else if k == "ui16dat" {
+				c[3] = true
+			} else if k == "ui16slc" {
+				c[4] = true
+			} else if k == "ui16ptr" {
+				c[5] = true
+			} else if k == "ui32dat" {
+				c[6] = true
+			} else if k == "ui32slc" {
+				c[7] = true
+			} else if k == "ui32ptr" {
+				c[8] = true
+			} else if k == "ui64dat" {
+				c[9] = true
+			} else if k == "ui64slc" {
+				c[10] = true
+			} else if k == "ui64ptr" {
+				c[11] = true
+			} else if k == "uidat" {
+				c[12] = true
+			} else if k == "uislc" {
+				c[13] = true
+			} else if k == "uiptr" {
+				c[14] = true
+			}
+		}
+	}
 	var key []byte
+	_ = key
 	err = r.OpenObject()
 	if r.GetType() != reader.TerminatorToken {
 		for err == nil {
@@ -620,38 +1072,37 @@ func (o *UnsignedIntegersColl) UnmarshalParsleyJSON(r *reader.Reader) (err error
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
-					switch string(key) {
-					case "ui8dat":
+					if string(key) == "ui8dat" && c[0] {
 						o.UI8Dat, err = r.GetUInt8()
-					case "ui8slc":
+					} else if string(key) == "ui8slc" && c[1] {
 						o.UI8Slc, err = r.GetUInt8s()
-					case "ui8ptr":
+					} else if string(key) == "ui8ptr" && c[2] {
 						o.UI8Ptr, err = r.GetUInt8Ptr()
-					case "ui16dat":
+					} else if string(key) == "ui16dat" && c[3] {
 						o.UI16Dat, err = r.GetUInt16()
-					case "ui16slc":
+					} else if string(key) == "ui16slc" && c[4] {
 						o.UI16Slc, err = r.GetUInt16s()
-					case "ui16ptr":
+					} else if string(key) == "ui16ptr" && c[5] {
 						o.UI16Ptr, err = r.GetUInt16Ptr()
-					case "ui32dat":
+					} else if string(key) == "ui32dat" && c[6] {
 						o.UI32Dat, err = r.GetUInt32()
-					case "ui32slc":
+					} else if string(key) == "ui32slc" && c[7] {
 						o.UI32Slc, err = r.GetUInt32s()
-					case "ui32ptr":
+					} else if string(key) == "ui32ptr" && c[8] {
 						o.UI32Ptr, err = r.GetUInt32Ptr()
-					case "ui64dat":
+					} else if string(key) == "ui64dat" && c[9] {
 						o.UI64Dat, err = r.GetUInt64()
-					case "ui64slc":
+					} else if string(key) == "ui64slc" && c[10] {
 						o.UI64Slc, err = r.GetUInt64s()
-					case "ui64ptr":
+					} else if string(key) == "ui64ptr" && c[11] {
 						o.UI64Ptr, err = r.GetUInt64Ptr()
-					case "uidat":
+					} else if string(key) == "uidat" && c[12] {
 						o.UIDat, err = r.GetUInt()
-					case "uislc":
+					} else if string(key) == "uislc" && c[13] {
 						o.UISlc, err = r.GetUInts()
-					case "uiptr":
+					} else if string(key) == "uiptr" && c[14] {
 						o.UIPtr, err = r.GetUIntPtr()
-					default:
+					} else {
 						err = r.Skip()
 					}
 				}
@@ -667,149 +1118,277 @@ func (o *UnsignedIntegersColl) UnmarshalParsleyJSON(r *reader.Reader) (err error
 	return
 }
 
-func (o *UnsignedIntegersColl) sequenceParsleyJSON(r *reader.Reader, idx int) (res []UnsignedIntegersColl, err error) {
+func (o *UnsignedIntegersColl) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx int) (res []UnsignedIntegersColl, err error) {
 	var e UnsignedIntegersColl
-	if err = e.UnmarshalParsleyJSON(r); err == nil {
+	if err = e.DecodeObjectPJSON(r, filter); err == nil {
 		if !r.Next() {
 			res = make([]UnsignedIntegersColl, idx+1)
 			res[idx] = e
 			return
-		} else if res, err = o.sequenceParsleyJSON(r, idx+1); err == nil {
+		} else if res, err = o.sequencePJSON(r, filter, idx+1); err == nil {
 			res[idx] = e
 		}
 	}
 	return
 }
 
-func (o *UnsignedIntegersColl) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []UnsignedIntegersColl, err error) {
+func (o *UnsignedIntegersColl) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []UnsignedIntegersColl, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
+		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (o *UnsignedIntegersColl) MarshalParsleyJSON(w *writer.Writer) {
+func (o *UnsignedIntegersColl) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
 	if o == nil {
 		w.Raw("null")
 	} else {
+		c := [15]bool{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "ui8dat" {
+					c[0] = true
+				} else if k == "ui8slc" {
+					c[1] = true
+				} else if k == "ui8ptr" {
+					c[2] = true
+				} else if k == "ui16dat" {
+					c[3] = true
+				} else if k == "ui16slc" {
+					c[4] = true
+				} else if k == "ui16ptr" {
+					c[5] = true
+				} else if k == "ui32dat" {
+					c[6] = true
+				} else if k == "ui32slc" {
+					c[7] = true
+				} else if k == "ui32ptr" {
+					c[8] = true
+				} else if k == "ui64dat" {
+					c[9] = true
+				} else if k == "ui64slc" {
+					c[10] = true
+				} else if k == "ui64ptr" {
+					c[11] = true
+				} else if k == "uidat" {
+					c[12] = true
+				} else if k == "uislc" {
+					c[13] = true
+				} else if k == "uiptr" {
+					c[14] = true
+				}
+			}
+		}
 		w.Byte('{')
 		off := 1
-		w.Raw(",\"ui8dat\":"[off:])
-		w.UInt8(o.UI8Dat)
-		off = 0
-		w.Raw(",\"ui8slc\":")
-		w.UInt8s(o.UI8Slc)
-		w.Raw(",\"ui8ptr\":")
-		w.UInt8p(o.UI8Ptr)
-		w.Raw(",\"ui16dat\":")
-		w.UInt16(o.UI16Dat)
-		w.Raw(",\"ui16slc\":")
-		w.UInt16s(o.UI16Slc)
-		w.Raw(",\"ui16ptr\":")
-		w.UInt16p(o.UI16Ptr)
-		w.Raw(",\"ui32dat\":")
-		w.UInt32(o.UI32Dat)
-		w.Raw(",\"ui32slc\":")
-		w.UInt32s(o.UI32Slc)
-		w.Raw(",\"ui32ptr\":")
-		w.UInt32p(o.UI32Ptr)
-		w.Raw(",\"ui64dat\":")
-		w.UInt64(o.UI64Dat)
-		w.Raw(",\"ui64slc\":")
-		w.UInt64s(o.UI64Slc)
-		w.Raw(",\"ui64ptr\":")
-		w.UInt64p(o.UI64Ptr)
-		w.Raw(",\"uidat\":")
-		w.UInt(o.UIDat)
-		w.Raw(",\"uislc\":")
-		w.UInts(o.UISlc)
-		w.Raw(",\"uiptr\":")
-		w.UIntp(o.UIPtr)
+		if c[0] {
+			w.Raw(",\"ui8dat\":"[off:])
+			w.UInt8(o.UI8Dat)
+			off = 0
+		}
+		if c[1] {
+			w.Raw(",\"ui8slc\":"[off:])
+			w.UInt8s(o.UI8Slc)
+			off = 0
+		}
+		if c[2] {
+			w.Raw(",\"ui8ptr\":"[off:])
+			w.UInt8p(o.UI8Ptr)
+			off = 0
+		}
+		if c[3] {
+			w.Raw(",\"ui16dat\":"[off:])
+			w.UInt16(o.UI16Dat)
+			off = 0
+		}
+		if c[4] {
+			w.Raw(",\"ui16slc\":"[off:])
+			w.UInt16s(o.UI16Slc)
+			off = 0
+		}
+		if c[5] {
+			w.Raw(",\"ui16ptr\":"[off:])
+			w.UInt16p(o.UI16Ptr)
+			off = 0
+		}
+		if c[6] {
+			w.Raw(",\"ui32dat\":"[off:])
+			w.UInt32(o.UI32Dat)
+			off = 0
+		}
+		if c[7] {
+			w.Raw(",\"ui32slc\":"[off:])
+			w.UInt32s(o.UI32Slc)
+			off = 0
+		}
+		if c[8] {
+			w.Raw(",\"ui32ptr\":"[off:])
+			w.UInt32p(o.UI32Ptr)
+			off = 0
+		}
+		if c[9] {
+			w.Raw(",\"ui64dat\":"[off:])
+			w.UInt64(o.UI64Dat)
+			off = 0
+		}
+		if c[10] {
+			w.Raw(",\"ui64slc\":"[off:])
+			w.UInt64s(o.UI64Slc)
+			off = 0
+		}
+		if c[11] {
+			w.Raw(",\"ui64ptr\":"[off:])
+			w.UInt64p(o.UI64Ptr)
+			off = 0
+		}
+		if c[12] {
+			w.Raw(",\"uidat\":"[off:])
+			w.UInt(o.UIDat)
+			off = 0
+		}
+		if c[13] {
+			w.Raw(",\"uislc\":"[off:])
+			w.UInts(o.UISlc)
+			off = 0
+		}
+		if c[14] {
+			w.Raw(",\"uiptr\":"[off:])
+			w.UIntp(o.UIPtr)
+			off = 0
+		}
 		w.Byte('}')
 	}
 }
 
-func (o *UnsignedIntegersColl) MarshalParsleyJSONSlice(w *writer.Writer, slc []UnsignedIntegersColl) {
+func (o *UnsignedIntegersColl) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []UnsignedIntegersColl) {
 	if slc == nil {
 		w.Raw("null")
 	} else if len(slc) == 0 {
 		w.Raw("[]")
 	} else {
 		w.Byte('[')
-		slc[0].MarshalParsleyJSON(w)
+		slc[0].EncodeObjectPJSON(w, filter)
 		for i := 1; i < len(slc); i++ {
 			w.Byte(',')
-			slc[i].MarshalParsleyJSON(w)
+			slc[i].EncodeObjectPJSON(w, filter)
 		}
 		w.Byte(']')
 	}
 }
 
-func (o *UnsignedIntegersColl) LengthParsleyJSON() (ln int) {
+func (o *UnsignedIntegersColl) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
 	if o == nil {
-		return 4
+		return 4, 0
+	} else {
+		c := [15]bool{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "ui8dat" {
+					c[0] = true
+				} else if k == "ui8slc" {
+					c[1] = true
+				} else if k == "ui8ptr" {
+					c[2] = true
+				} else if k == "ui16dat" {
+					c[3] = true
+				} else if k == "ui16slc" {
+					c[4] = true
+				} else if k == "ui16ptr" {
+					c[5] = true
+				} else if k == "ui32dat" {
+					c[6] = true
+				} else if k == "ui32slc" {
+					c[7] = true
+				} else if k == "ui32ptr" {
+					c[8] = true
+				} else if k == "ui64dat" {
+					c[9] = true
+				} else if k == "ui64slc" {
+					c[10] = true
+				} else if k == "ui64ptr" {
+					c[11] = true
+				} else if k == "uidat" {
+					c[12] = true
+				} else if k == "uislc" {
+					c[13] = true
+				} else if k == "uiptr" {
+					c[14] = true
+				}
+			}
+		}
+		if c[0] {
+			bytes += writer.UInt8Len(o.UI8Dat) + 10
+		}
+		if c[1] {
+			bytes += writer.UInt8sLen(o.UI8Slc) + 10
+		}
+		if c[2] {
+			bytes += writer.UInt8pLen(o.UI8Ptr) + 10
+		}
+		if c[3] {
+			bytes += writer.UInt16Len(o.UI16Dat) + 11
+		}
+		if c[4] {
+			bytes += writer.UInt16sLen(o.UI16Slc) + 11
+		}
+		if c[5] {
+			bytes += writer.UInt16pLen(o.UI16Ptr) + 11
+		}
+		if c[6] {
+			bytes += writer.UInt32Len(o.UI32Dat) + 11
+		}
+		if c[7] {
+			bytes += writer.UInt32sLen(o.UI32Slc) + 11
+		}
+		if c[8] {
+			bytes += writer.UInt32pLen(o.UI32Ptr) + 11
+		}
+		if c[9] {
+			bytes += writer.UInt64Len(o.UI64Dat) + 11
+		}
+		if c[10] {
+			bytes += writer.UInt64sLen(o.UI64Slc) + 11
+		}
+		if c[11] {
+			bytes += writer.UInt64pLen(o.UI64Ptr) + 11
+		}
+		if c[12] {
+			bytes += writer.UIntLen(o.UIDat) + 9
+		}
+		if c[13] {
+			bytes += writer.UIntsLen(o.UISlc) + 9
+		}
+		if c[14] {
+			bytes += writer.UIntpLen(o.UIPtr) + 9
+		}
+		if bytes == 0 {
+			return 2, 0
+		} else {
+			return bytes + 1, volatile
+		}
 	}
-	ln = 201
-	if o.UI8Dat != 0 {
-		ln += writer.UInt8Len(o.UI8Dat) - 1
-	}
-	if o.UI8Slc != nil {
-		ln += writer.UInt8sLen(o.UI8Slc) - 4
-	}
-	if o.UI8Ptr != nil {
-		ln += writer.UInt8Len(*o.UI8Ptr) - 4
-	}
-	if o.UI16Dat != 0 {
-		ln += writer.UInt16Len(o.UI16Dat) - 1
-	}
-	if o.UI16Slc != nil {
-		ln += writer.UInt16sLen(o.UI16Slc) - 4
-	}
-	if o.UI16Ptr != nil {
-		ln += writer.UInt16Len(*o.UI16Ptr) - 4
-	}
-	if o.UI32Dat != 0 {
-		ln += writer.UInt32Len(o.UI32Dat) - 1
-	}
-	if o.UI32Slc != nil {
-		ln += writer.UInt32sLen(o.UI32Slc) - 4
-	}
-	if o.UI32Ptr != nil {
-		ln += writer.UInt32Len(*o.UI32Ptr) - 4
-	}
-	if o.UI64Dat != 0 {
-		ln += writer.UInt64Len(o.UI64Dat) - 1
-	}
-	if o.UI64Slc != nil {
-		ln += writer.UInt64sLen(o.UI64Slc) - 4
-	}
-	if o.UI64Ptr != nil {
-		ln += writer.UInt64Len(*o.UI64Ptr) - 4
-	}
-	if o.UIDat != 0 {
-		ln += writer.UIntLen(o.UIDat) - 1
-	}
-	if o.UISlc != nil {
-		ln += writer.UIntsLen(o.UISlc) - 4
-	}
-	if o.UIPtr != nil {
-		ln += writer.UIntLen(*o.UIPtr) - 4
-	}
-	if ln == 0 {
-		return 2
-	}
-	return ln + 1
 }
 
-func (o *UnsignedIntegersColl) LengthParsleyJSONSlice(slc []UnsignedIntegersColl) (ln int) {
+func (o *UnsignedIntegersColl) SliceLengthPJSON(filter []parse.Filter, slc []UnsignedIntegersColl) (bytes int, volatile int) {
 	for _, obj := range slc {
-		ln += obj.LengthParsleyJSON() + 1
+		b, v := obj.ObjectLengthPJSON(filter)
+		bytes, volatile = bytes+b+1, volatile+v
 	}
-	if ln == 0 {
-		return 2
+	if bytes == 0 {
+		return 2, 0
 	} else {
-		return ln + 1
+		return bytes + 1, volatile
 	}
 }

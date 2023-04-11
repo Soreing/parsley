@@ -2,6 +2,7 @@
 package externals
 
 import (
+	parse "github.com/Soreing/parsley"
 	reader "github.com/Soreing/parsley/reader"
 	writer "github.com/Soreing/parsley/writer"
 )
@@ -9,8 +10,25 @@ import (
 var _ *reader.Reader
 var _ *writer.Writer
 
-func (o *Device) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
+func (o *Device) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
+	c := [2]bool{}
+	f := [2][]parse.Filter{}
+	if filter == nil {
+		for i := range c {
+			c[i] = true
+		}
+	} else {
+		for i := range filter {
+			k := filter[i].Field
+			if k == "name" {
+				c[0] = true
+			} else if k == "type" {
+				c[1], f[1] = true, filter[i].Filter
+			}
+		}
+	}
 	var key []byte
+	_ = key
 	err = r.OpenObject()
 	if r.GetType() != reader.TerminatorToken {
 		for err == nil {
@@ -18,12 +36,11 @@ func (o *Device) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
-					switch string(key) {
-					case "name":
+					if string(key) == "name" && c[0] {
 						o.Name, err = r.GetString()
-					case "type":
-						err = o.Type.UnmarshalParsleyJSON(r)
-					default:
+					} else if string(key) == "type" && c[1] {
+						err = o.Type.DecodeObjectPJSON(r, f[1])
+					} else {
 						err = r.Skip()
 					}
 				}
@@ -39,115 +56,158 @@ func (o *Device) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
 	return
 }
 
-func (o *Device) sequenceParsleyJSON(r *reader.Reader, idx int) (res []Device, err error) {
+func (o *Device) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx int) (res []Device, err error) {
 	var e Device
-	if err = e.UnmarshalParsleyJSON(r); err == nil {
+	if err = e.DecodeObjectPJSON(r, filter); err == nil {
 		if !r.Next() {
 			res = make([]Device, idx+1)
 			res[idx] = e
 			return
-		} else if res, err = o.sequenceParsleyJSON(r, idx+1); err == nil {
+		} else if res, err = o.sequencePJSON(r, filter, idx+1); err == nil {
 			res[idx] = e
 		}
 	}
 	return
 }
 
-func (o *Device) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []Device, err error) {
+func (o *Device) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []Device, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
+		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (o *Device) MarshalParsleyJSON(w *writer.Writer) {
+func (o *Device) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
 	if o == nil {
 		w.Raw("null")
 	} else {
+		c := [2]bool{}
+		f := [2][]parse.Filter{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "name" {
+					c[0] = true
+				} else if k == "type" {
+					c[1], f[1] = true, filter[i].Filter
+				}
+			}
+		}
 		w.Byte('{')
 		off := 1
-		w.Raw(",\"name\":"[off:])
-		w.String(o.Name)
-		off = 0
-		w.Raw(",\"type\":")
-		o.Type.MarshalParsleyJSON(w)
+		if c[0] {
+			w.Raw(",\"name\":"[off:])
+			w.String(o.Name)
+			off = 0
+		}
+		if c[1] {
+			w.Raw(",\"type\":"[off:])
+			o.Type.EncodeObjectPJSON(w, f[1])
+			off = 0
+		}
 		w.Byte('}')
 	}
 }
 
-func (o *Device) MarshalParsleyJSONSlice(w *writer.Writer, slc []Device) {
+func (o *Device) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []Device) {
 	if slc == nil {
 		w.Raw("null")
 	} else if len(slc) == 0 {
 		w.Raw("[]")
 	} else {
 		w.Byte('[')
-		slc[0].MarshalParsleyJSON(w)
+		slc[0].EncodeObjectPJSON(w, filter)
 		for i := 1; i < len(slc); i++ {
 			w.Byte(',')
-			slc[i].MarshalParsleyJSON(w)
+			slc[i].EncodeObjectPJSON(w, filter)
 		}
 		w.Byte(']')
 	}
 }
 
-func (o *Device) LengthParsleyJSON() (ln int) {
+func (o *Device) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
 	if o == nil {
-		return 4
-	}
-	ln = 18
-	if o.Name != "" {
-		ln += writer.StringLen(o.Name) - 2
-	}
-	ln += o.Type.LengthParsleyJSON()
-	if ln == 0 {
-		return 2
-	}
-	return ln + 1
-}
-
-func (o *Device) LengthParsleyJSONSlice(slc []Device) (ln int) {
-	for _, obj := range slc {
-		ln += obj.LengthParsleyJSON() + 1
-	}
-	if ln == 0 {
-		return 2
+		return 4, 0
 	} else {
-		return ln + 1
+		c := [2]bool{}
+		f := [2][]parse.Filter{}
+		if filter == nil {
+			for i := range c {
+				c[i] = true
+			}
+		} else {
+			for i := range filter {
+				k := filter[i].Field
+				if k == "name" {
+					c[0] = true
+				} else if k == "type" {
+					c[1], f[1] = true, filter[i].Filter
+				}
+			}
+		}
+		if c[0] {
+			b, v := writer.StringLen(o.Name)
+			bytes, volatile = bytes+b+8, volatile+v
+		}
+		if c[1] {
+			b, v := o.Type.ObjectLengthPJSON(f[1])
+			bytes, volatile = bytes+b+8, volatile+v
+		}
+		if bytes == 0 {
+			return 2, 0
+		} else {
+			return bytes + 1, volatile
+		}
 	}
 }
 
-func (o *DeviceType) UnmarshalParsleyJSON(r *reader.Reader) (err error) {
+func (o *Device) SliceLengthPJSON(filter []parse.Filter, slc []Device) (bytes int, volatile int) {
+	for _, obj := range slc {
+		b, v := obj.ObjectLengthPJSON(filter)
+		bytes, volatile = bytes+b+1, volatile+v
+	}
+	if bytes == 0 {
+		return 2, 0
+	} else {
+		return bytes + 1, volatile
+	}
+}
+
+func (o *DeviceType) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
 	*(*int)(o), err = r.GetInt()
 	return
 }
 
-func (o *DeviceType) sequenceParsleyJSON(r *reader.Reader, idx int) (res []DeviceType, err error) {
+func (o *DeviceType) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx int) (res []DeviceType, err error) {
 	var e DeviceType
-	if err = e.UnmarshalParsleyJSON(r); err == nil {
+	if err = e.DecodeObjectPJSON(r, filter); err == nil {
 		if !r.Next() {
 			res = make([]DeviceType, idx+1)
 			res[idx] = e
 			return
-		} else if res, err = o.sequenceParsleyJSON(r, idx+1); err == nil {
+		} else if res, err = o.sequencePJSON(r, filter, idx+1); err == nil {
 			res[idx] = e
 		}
 	}
 	return
 }
 
-func (o *DeviceType) UnmarshalParsleyJSONSlice(r *reader.Reader) (res []DeviceType, err error) {
+func (o *DeviceType) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []DeviceType, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequenceParsleyJSON(r, 0); err == nil {
+		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (o *DeviceType) MarshalParsleyJSON(w *writer.Writer) {
+func (o *DeviceType) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
 	if o == nil {
 		w.Raw("null")
 	}
@@ -155,36 +215,38 @@ func (o *DeviceType) MarshalParsleyJSON(w *writer.Writer) {
 
 }
 
-func (o *DeviceType) MarshalParsleyJSONSlice(w *writer.Writer, slc []DeviceType) {
+func (o *DeviceType) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []DeviceType) {
 	if slc == nil {
 		w.Raw("null")
 	}
 	w.Byte('[')
 	if len(slc) > 0 {
-		slc[0].MarshalParsleyJSON(w)
+		slc[0].EncodeObjectPJSON(w, filter)
 		for i := 1; i < len(slc); i++ {
 			w.Byte(',')
-			slc[i].MarshalParsleyJSON(w)
+			slc[i].EncodeObjectPJSON(w, filter)
 		}
 	}
 	w.Byte(']')
 }
 
-func (o *DeviceType) LengthParsleyJSON() (ln int) {
+func (o *DeviceType) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
 	if o == nil {
-		return 4
+		return 4, 0
 	}
-	return writer.IntLen(int(*o))
+	return writer.IntLen(int(*o)), 0
 
 }
 
-func (o *DeviceType) LengthParsleyJSONSlice(slc []DeviceType) (ln int) {
+func (o *DeviceType) SliceLengthPJSON(filter []parse.Filter, slc []DeviceType) (bytes int, volatile int) {
 	for _, obj := range slc {
-		ln += obj.LengthParsleyJSON() + 1
+		b, v := obj.ObjectLengthPJSON(filter)
+		bytes += b + 1
+		volatile += v
 	}
-	if ln == 0 {
-		return 2
+	if bytes == 0 {
+		return 2, 0
 	} else {
-		return ln + 1
+		return bytes + 1, volatile
 	}
 }
