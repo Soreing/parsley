@@ -173,7 +173,7 @@ func Test_MarshalEmptyIntegers(t *testing.T) {
 
 const UnsignedIntegersJSON = `{
 	"ui8dat": 4,
-	"ui8slc": [5, 85],
+	"ui8slc": "Ab52gdH=",
 	"ui8ptr": 2,
 	"ui16dat": 5,
 	"ui16slc": [6, 86],
@@ -192,7 +192,7 @@ const UnsignedIntegersJSON = `{
 var UI8Val, UI16Val, UI32Val, UI64Val, UIVal = uint8(2), uint16(3), uint32(4), uint64(5), uint(6)
 var UnsignedIntegersObject = basics.UnsignedIntegersColl{
 	UI8Dat:  4,
-	UI8Slc:  []uint8{5, 85},
+	UI8Slc:  []uint8{0x01, 0xBE, 0x76, 0x81, 0xD1},
 	UI8Ptr:  &UI8Val,
 	UI16Dat: 5,
 	UI16Slc: []uint16{6, 86},
@@ -218,15 +218,10 @@ func Test_UnmarshalUnsignedIntegers(t *testing.T) {
 		if uints.UI8Dat != 4 {
 			t.Error("ui8dat property value mismatch")
 		}
-		if len(uints.UI8Slc) != 2 {
+		if len(uints.UI8Slc) != 6 {
 			t.Error("ui8slc property length mismatch")
-		} else {
-			if uints.UI8Slc[0] != 5 {
-				t.Error("uints.ui8slc[0] element value mismatch")
-			}
-			if uints.UI8Slc[1] != 85 {
-				t.Error("uints.ui8slc[1] element value mismatch")
-			}
+		} else if string(uints.UI8Slc) != string([]uint8{0x01, 0xBE, 0x76, 0x81, 0xD1, 0x00}) {
+			t.Error("ui8slc property value mismatch")
 		}
 		if uints.UI8Ptr == nil || *uints.UI8Ptr != 2 {
 			t.Error("ui8ptr property value mismatch")
@@ -269,7 +264,7 @@ func Test_UnmarshalUnsignedIntegers(t *testing.T) {
 		if uints.UI64Dat != 7 {
 			t.Error("ui64dat property value mismatch")
 		}
-		if len(uints.UI8Slc) != 2 {
+		if len(uints.UI64Slc) != 2 {
 			t.Error("ui64slc property length mismatch")
 		} else {
 			if uints.UI64Slc[0] != 8 {
