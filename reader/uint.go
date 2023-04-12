@@ -1,5 +1,9 @@
 package reader
 
+import (
+	"encoding/base64"
+)
+
 func (r *Reader) getUInt() (uint64, error) {
 	intg := uint64(0)
 
@@ -91,29 +95,41 @@ func (r *Reader) GetUIntPtr() (res *uint, err error) {
 	return
 }
 
-func (r *Reader) uint8Seq(idx int) (res []uint8, err error) {
-	var n uint8
-	if n, err = r.GetUInt8(); err == nil {
-		if r.Next() {
-			res, err = r.uint8Seq(idx + 1)
-		} else {
-			res = make([]uint8, idx+1)
-		}
-
-		if err == nil {
-			res[idx] = n
-		}
-	}
-	return
-}
-
 func (r *Reader) GetUInt8s() (res []uint8, err error) {
-	if err = r.OpenArray(); err == nil {
-		if res, err = r.uint8Seq(0); err == nil {
-			err = r.CloseArray()
+	dat := r.dat[r.pos:]
+
+	if len(dat) < 2 {
+		return nil, NewEndOfFileError()
+	} else if dat[0] != '"' {
+		return nil, NewInvalidCharacterError(dat[0], r.pos)
+	}
+
+	beg, end, c := 1, 1, dat[1]
+	for dat[end] != '"' {
+		if end == len(dat)-1 {
+			return nil, NewEndOfFileError()
+		}
+		if c-'A' < 26 || c-'a' < 26 || c-'0' < 10 ||
+			c == '+' || c == '/' || c == '=' {
+			end++
+			c = dat[end]
+		} else {
+			return nil, NewInvalidCharacterError(c, r.pos+end)
 		}
 	}
-	return
+
+	if (end-beg)%4 != 0 {
+		return nil, NewBase64PaddingError(r.pos + end)
+	}
+
+	dst := make([]byte, (end-beg)/4*3)
+	if _, err := base64.StdEncoding.Decode(dst, dat[beg:end]); err != nil {
+		return nil, err
+	}
+
+	r.pos += end + 1
+	r.SkipWhiteSpace()
+	return dst, nil
 }
 
 func (r *Reader) GetUInt8() (uint8, error) {

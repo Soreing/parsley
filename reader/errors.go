@@ -13,3 +13,7 @@ func NewInvalidCharacterError(b byte, pos int) error {
 func NewUnknownTimeFormatError(s string, pos int) error {
 	return fmt.Errorf("unknown time format \"%s\" at offset %d", s, pos)
 }
+
+func NewBase64PaddingError(pos int) error {
+	return fmt.Errorf("invalid base64 padding at offset %d", pos)
+}
