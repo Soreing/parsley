@@ -22,7 +22,7 @@ func Unmarshal(data []byte, v any) error {
 	}
 }
 
-func Decode(data []byte, val Unmarshaller, cfgs ...config) error {
+func Decode(data []byte, val Unmarshaller, cfgs ...Config) error {
 	if val == nil {
 		return fmt.Errorf("object is nil")
 	}

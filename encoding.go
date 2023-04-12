@@ -24,7 +24,7 @@ func Marshal(v any) ([]byte, error) {
 	}
 }
 
-func Encode(val Marshaller, cfgs ...config) ([]byte, error) {
+func Encode(val Marshaller, cfgs ...Config) ([]byte, error) {
 	if val == nil {
 		return nil, fmt.Errorf("object is nil")
 	}
@@ -34,14 +34,14 @@ func Encode(val Marshaller, cfgs ...config) ([]byte, error) {
 
 	switch cfg.btype {
 	case fixed:
-		if cfg.bsize > volatile*4 {
-			bytes += volatile * 4
+		if cfg.bsize > volatile*5 {
+			bytes += volatile * 5
 		} else if cfg.bsize > 0 {
 			bytes += cfg.bsize
 		}
 	case relative:
-		if cfg.bsize > 400 {
-			bytes += volatile * 4
+		if cfg.bsize > 500 {
+			bytes += volatile * 5
 		} else if cfg.bsize > 0 {
 			bytes += volatile * cfg.bsize / 100
 		}
