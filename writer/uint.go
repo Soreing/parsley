@@ -88,13 +88,45 @@ func (w *Writer) UInt8s(ns []uint8) {
 		}
 		return
 	} else if vln <= ln-cr {
-		dst := bf[cr+1:]
-		base64.StdEncoding.Encode(dst, ns)
+		base64.StdEncoding.Encode(bf[cr+1:], ns)
 		bf[cr], bf[cr+vln-1] = '"', '"'
 		w.Cursor += vln
 		return
+	} else if vln-1 == ln-cr {
+		bf[cr] = '"'
+		base64.StdEncoding.Encode(bf[cr+1:], ns)
+		w.Storage = append(w.Storage, bf)
+		bf = make([]byte, CHUNK_SIZE)
+		bf[0] = '"'
+		w.Buffer, w.Cursor = bf, 1
+		return
+	} else if ln == cr {
+		w.Storage = append(w.Storage, bf)
+		bf = make([]byte, vln+CHUNK_SIZE)
+		base64.StdEncoding.Encode(bf[1:], ns)
+		bf[0], bf[vln-1] = '"', '"'
+		w.Buffer, w.Cursor = bf, vln
+		return
+	} else if ln == cr+1 {
+		bf[cr] = '"'
+		w.Storage = append(w.Storage, bf)
+		bf = make([]byte, vln+CHUNK_SIZE)
+		base64.StdEncoding.Encode(bf, ns)
+		bf[vln-2] = '"'
+		w.Buffer, w.Cursor = bf, vln
+		return
 	} else {
-		// TODO
+		cap := (ln - cr) / 4
+		bcap, dcap := cap*3, cap*4
+		ovf := (len(ns) - bcap) * 4
+
+		bf[cr] = '"'
+		base64.StdEncoding.Encode(bf[cr+1:], ns[:bcap])
+		w.Storage = append(w.Storage, bf[:cr+1+dcap])
+		bf = make([]byte, ovf+CHUNK_SIZE)
+		base64.StdEncoding.Encode(bf, ns[bcap:])
+		bf[ovf] = '"'
+		w.Buffer, w.Cursor = bf, ovf+1
 		return
 	}
 }
