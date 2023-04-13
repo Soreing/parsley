@@ -173,7 +173,7 @@ func Test_MarshalEmptyIntegers(t *testing.T) {
 
 const UnsignedIntegersJSON = `{
 	"ui8dat": 4,
-	"ui8slc": "Ab52gdH=",
+	"ui8slc": "Ab52gdE=",
 	"ui8ptr": 2,
 	"ui16dat": 5,
 	"ui16slc": [6, 86],
@@ -218,9 +218,9 @@ func Test_UnmarshalUnsignedIntegers(t *testing.T) {
 		if uints.UI8Dat != 4 {
 			t.Error("ui8dat property value mismatch")
 		}
-		if len(uints.UI8Slc) != 6 {
+		if len(uints.UI8Slc) != 5 {
 			t.Error("ui8slc property length mismatch")
-		} else if string(uints.UI8Slc) != string([]uint8{0x01, 0xBE, 0x76, 0x81, 0xD1, 0x00}) {
+		} else if string(uints.UI8Slc) != string([]uint8{0x01, 0xBE, 0x76, 0x81, 0xD1}) {
 			t.Error("ui8slc property value mismatch")
 		}
 		if uints.UI8Ptr == nil || *uints.UI8Ptr != 2 {

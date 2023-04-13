@@ -122,7 +122,15 @@ func (r *Reader) GetUInt8s() (res []uint8, err error) {
 		return nil, NewBase64PaddingError(r.pos + end)
 	}
 
-	dst := make([]byte, (end-beg)/4*3)
+	bytes := (end - beg) / 4 * 3
+	if bytes > 2 && dat[end-1] == '=' {
+		bytes--
+	}
+	if bytes > 1 && dat[end-2] == '=' {
+		bytes--
+	}
+
+	dst := make([]byte, bytes)
 	if _, err := base64.StdEncoding.Decode(dst, dat[beg:end]); err != nil {
 		return nil, err
 	}
