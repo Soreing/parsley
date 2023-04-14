@@ -40,7 +40,7 @@ Run the generator with the path to the file or folder to the module. Assuming th
 ```
 parsley tests/models/box.go
 ```
-### Sctuct Flags
+### Struct Flags
 | Flag | Description |
 |------|-------------|
 | json   | Process the struct or type define in the generator |
