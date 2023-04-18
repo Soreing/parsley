@@ -17,3 +17,7 @@ func NewUnknownTimeFormatError(s string, pos int) error {
 func NewBase64PaddingError(pos int) error {
 	return fmt.Errorf("invalid base64 padding at offset %d", pos)
 }
+
+func NewNumberOutOfRangeError(num []byte, pos int) error {
+	return fmt.Errorf("number %s out of range at offset %d", num, pos)
+}

@@ -2,7 +2,7 @@ package reader
 
 func (r *Reader) skipArray() (err error) {
 	if err = r.OpenArray(); err == nil {
-		if r.GetType() != TerminatorToken {
+		if r.Token() != TerminatorToken {
 			for err == nil {
 				if err = r.Skip(); err != nil || !r.Next() {
 					break
@@ -10,7 +10,14 @@ func (r *Reader) skipArray() (err error) {
 			}
 		}
 		if err == nil {
-			err = r.CloseArray()
+			dat, pos := r.dat, r.pos
+			if pos == len(dat) {
+				return NewEndOfFileError()
+			} else if dat[pos] != ']' {
+				return NewInvalidCharacterError(dat[pos], pos)
+			} else {
+				r.pos++
+			}
 		}
 	}
 	return

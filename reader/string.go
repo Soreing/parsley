@@ -1,70 +1,55 @@
 package reader
 
-func (r *Reader) skipString() error {
-	pos, dat := r.pos+1, r.dat
-	esc, unc, dgt := false, false, 0
+//golang:noinline
+func skipEscape(dat []byte, off int) (int, error) {
+	if 1 >= len(dat) {
+		return 0, NewEndOfFileError()
+	}
 
-	for {
-		if pos >= len(dat) {
-			return NewEndOfFileError()
-		} else if c := dat[pos]; unc {
-			if !(c-'0' < 10) && !(c-'7' < 16) && !(c-'W' < 16) {
-				return NewInvalidCharacterError(c, pos)
-			} else if dgt == 3 {
-				esc, unc, dgt = false, false, 0
-			} else {
-				dgt++
-			}
-		} else if esc {
-			switch c {
-			case '"', '\\', '/', 'b',
-				'f', 'n', 'r', 't':
-				esc = false
-			case 'u':
-				unc = true
-			default:
-				return NewInvalidCharacterError(c, pos)
-			}
-		} else if c == '\\' {
-			esc = true
-		} else if c == '"' {
-			r.pos = pos + 1
-			return nil
+	switch c := dat[1]; c {
+	case '"', '\\', '/', 'b',
+		'f', 'n', 'r', 't':
+		return 1, nil
+	case 'u':
+		if 5 >= len(dat) {
+			return 0, NewEndOfFileError()
+		} else if b, i := isuseq(dat[2:6]); b != 0 {
+			return 0, NewInvalidCharacterError(b, off+i)
 		}
-		pos++
+		return 4, nil
+	default:
+		return 0, NewInvalidCharacterError(c, off)
 	}
 }
 
-func Utf8(dst, src []byte) (ln int) {
-	if len(src) == 4 {
-		n := uint(0)
-		for i, c := range src {
-			if c-'0' < 10 {
-				n = n<<4 | uint(c-'0')
-			} else if c-'7' < 16 {
-				n = n<<4 | uint(c-'7')
-			} else if c-'W' < 16 {
-				n = n<<4 | uint(c-'W')
-			} else {
-				return -i
-			}
-		}
+func (r *Reader) skipString() error {
+	dat, pos := r.dat[r.pos+1:], 1
+	for i, e := range dat {
+		if e == '"' {
+			r.pos += i + 2
+			return nil
 
-		if n < 0x80 {
-			dst[0] = byte(n)
-			return 1
-		} else if n < 0x800 {
-			dst[1] = 0x80 | (byte(n) & 0x3F)
-			dst[0] = 0xC0 | (byte(n>>6) & 0x3F)
-			return 2
-		} else {
-			dst[2] = 0x80 | (byte(n) & 0x3F)
-			dst[1] = 0x80 | (byte(n>>6) & 0x3F)
-			dst[0] = 0xE0 | (byte(n>>12) & 0x3F)
-			return 3
+		} else if e == '\\' {
+			pos = i
+			break
 		}
-	} else {
-		return 0
+	}
+
+	for ; ; pos++ {
+		if pos >= len(dat) {
+			return NewEndOfFileError()
+
+		} else if dat[pos] == '"' {
+			r.pos += pos + 2
+			return nil
+
+		} else if dat[pos] == '\\' {
+			s, err := skipEscape(dat[pos:], r.pos+pos+2)
+			if err != nil {
+				return err
+			}
+			pos += s
+		}
 	}
 }
 
@@ -79,7 +64,7 @@ func useq(src []byte) (n int, ln int) {
 		} else if c-'W' < 16 {
 			n = n<<4 | int(c-'W')
 		} else {
-			return int(c), -i
+			return int(c), -(i + 1)
 		}
 	}
 
@@ -90,6 +75,17 @@ func useq(src []byte) (n int, ln int) {
 	} else {
 		return n, 3
 	}
+}
+
+// Checks if the following 4 bytes are hexadecimal digits. Returns the byte
+// which is not a hexadecimal digit and its index in the slice
+func isuseq(src []byte) (b byte, i int) {
+	for i, c := range src {
+		if c-'0' > 9 && c-'7' > 15 && c-'W' > 15 {
+			return c, i + 1
+		}
+	}
+	return 0, 0
 }
 
 func bytesTillEnd(dat []byte) int {
@@ -117,7 +113,7 @@ func bytesTillEnd(dat []byte) int {
 	return -1
 }
 
-func (r *Reader) GetByteArray() ([]byte, error) {
+func (r *Reader) Bytes() ([]byte, error) {
 	dat, pos := r.dat[r.pos:], 1
 	buf, bi := r.buf, 0
 	esc := false
@@ -125,7 +121,7 @@ func (r *Reader) GetByteArray() ([]byte, error) {
 	if len(dat) == 0 {
 		return nil, NewEndOfFileError()
 	} else if dat[0] != '"' {
-		return nil, NewInvalidCharacterError(dat[0], r.pos+pos)
+		return nil, NewInvalidCharacterError(dat[0], r.pos)
 	}
 
 	for ; ; pos++ {
@@ -208,6 +204,8 @@ func (r *Reader) GetByteArray() ([]byte, error) {
 					bi += rl - 1
 					pos += 4
 				}
+			default:
+				return nil, NewInvalidCharacterError(dat[pos], r.pos+pos)
 			}
 			bi++
 
@@ -239,7 +237,7 @@ func (r *Reader) GetByteArray() ([]byte, error) {
 
 func (r *Reader) stringSeq(idx int) (res []string, err error) {
 	var bs []byte
-	if bs, err = r.GetByteArray(); err == nil {
+	if bs, err = r.Bytes(); err == nil {
 		s := string(bs)
 		if !r.Next() {
 			res = make([]string, idx+1)
@@ -251,25 +249,28 @@ func (r *Reader) stringSeq(idx int) (res []string, err error) {
 	return
 }
 
-func (r *Reader) GetStrings() (res []string, err error) {
+func (r *Reader) Strings() (res []string, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = r.stringSeq(0); err == nil {
+		if r.Token() == TerminatorToken {
+			res = []string{}
+			err = r.CloseArray()
+		} else if res, err = r.stringSeq(0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (r *Reader) GetString() (string, error) {
-	if bs, err := r.GetByteArray(); err != nil {
+func (r *Reader) String() (string, error) {
+	if bs, err := r.Bytes(); err != nil {
 		return "", err
 	} else {
 		return string(bs), nil
 	}
 }
 
-func (r *Reader) GetStringPtr() (res *string, err error) {
-	if v, err := r.GetString(); err == nil {
+func (r *Reader) Stringp() (res *string, err error) {
+	if v, err := r.String(); err == nil {
 		res = &v
 	}
 	return

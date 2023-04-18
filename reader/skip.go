@@ -1,22 +1,34 @@
 package reader
 
 func (r *Reader) SkipWhiteSpace() {
-	for {
-		if r.pos >= len(r.dat) {
-			return
+	dat, pos, c := r.dat, r.pos, byte(0)
+	for pos < len(dat) {
+		c = dat[pos]
+		if c == ' ' || c == '\t' || c == '\n' || c == '\r' {
+			pos++
 		} else {
-			switch r.dat[r.pos] {
-			case '\t', '\n', '\r', ' ':
-				r.pos++
-			default:
-				return
-			}
+			break
 		}
 	}
+	r.pos = pos
+}
+
+func (r *Reader) Next() bool {
+	if r.pos < len(r.dat) && r.dat[r.pos] == ',' {
+		r.pos++
+		r.SkipWhiteSpace()
+		return true
+	}
+	return false
 }
 
 func (r *Reader) Skip() error {
-	switch r.dat[r.pos] {
+	dat, pos := r.dat, r.pos
+	if pos == len(dat) {
+		return NewEndOfFileError()
+	}
+
+	switch dat[pos] {
 	case '{':
 		if err := r.skipObject(); err != nil {
 			return err
@@ -34,45 +46,45 @@ func (r *Reader) Skip() error {
 			return err
 		}
 	case 't':
-		if r.pos+3 >= len(r.dat) {
+		if pos+3 >= len(dat) {
 			return NewEndOfFileError()
-		} else if r.dat[r.pos+1] != 'r' {
-			return NewInvalidCharacterError(r.dat[r.pos+1], r.pos+1)
-		} else if r.dat[r.pos+2] != 'u' {
-			return NewInvalidCharacterError(r.dat[r.pos+2], r.pos+2)
-		} else if r.dat[r.pos+3] != 'e' {
-			return NewInvalidCharacterError(r.dat[r.pos+3], r.pos+3)
+		} else if dat[pos+1] != 'r' {
+			return NewInvalidCharacterError(dat[pos+1], pos+1)
+		} else if dat[pos+2] != 'u' {
+			return NewInvalidCharacterError(dat[pos+2], pos+2)
+		} else if dat[pos+3] != 'e' {
+			return NewInvalidCharacterError(dat[pos+3], pos+3)
 		} else {
 			r.pos += 4
 		}
 	case 'f':
-		if r.pos+4 >= len(r.dat) {
+		if pos+4 >= len(dat) {
 			return NewEndOfFileError()
-		} else if r.dat[r.pos+1] != 'a' {
-			return NewInvalidCharacterError(r.dat[r.pos+1], r.pos+1)
-		} else if r.dat[r.pos+2] != 'l' {
-			return NewInvalidCharacterError(r.dat[r.pos+2], r.pos+2)
-		} else if r.dat[r.pos+3] != 's' {
-			return NewInvalidCharacterError(r.dat[r.pos+3], r.pos+3)
-		} else if r.dat[r.pos+4] != 'e' {
-			return NewInvalidCharacterError(r.dat[r.pos+4], r.pos+4)
+		} else if dat[pos+1] != 'a' {
+			return NewInvalidCharacterError(dat[pos+1], pos+1)
+		} else if dat[pos+2] != 'l' {
+			return NewInvalidCharacterError(dat[pos+2], pos+2)
+		} else if dat[pos+3] != 's' {
+			return NewInvalidCharacterError(dat[pos+3], pos+3)
+		} else if dat[pos+4] != 'e' {
+			return NewInvalidCharacterError(dat[pos+4], pos+4)
 		} else {
 			r.pos += 5
 		}
 	case 'n':
-		if r.pos+3 >= len(r.dat) {
+		if pos+3 >= len(dat) {
 			return NewEndOfFileError()
-		} else if r.dat[r.pos+1] != 'u' {
-			return NewInvalidCharacterError(r.dat[r.pos+1], r.pos+1)
-		} else if r.dat[r.pos+2] != 'l' {
-			return NewInvalidCharacterError(r.dat[r.pos+2], r.pos+2)
-		} else if r.dat[r.pos+3] != 'l' {
-			return NewInvalidCharacterError(r.dat[r.pos+3], r.pos+3)
+		} else if dat[pos+1] != 'u' {
+			return NewInvalidCharacterError(dat[pos+1], pos+1)
+		} else if dat[pos+2] != 'l' {
+			return NewInvalidCharacterError(dat[pos+2], pos+2)
+		} else if dat[pos+3] != 'l' {
+			return NewInvalidCharacterError(dat[pos+3], pos+3)
 		} else {
 			r.pos += 4
 		}
 	default:
-		return NewInvalidCharacterError(r.dat[r.pos], r.pos)
+		return NewInvalidCharacterError(dat[pos], pos)
 	}
 
 	r.SkipWhiteSpace()

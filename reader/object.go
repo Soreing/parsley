@@ -2,9 +2,9 @@ package reader
 
 func (r *Reader) skipObject() (err error) {
 	if err = r.OpenObject(); err == nil {
-		if r.GetType() != TerminatorToken {
+		if r.Token() != TerminatorToken {
 			for err == nil {
-				if _, err = r.GetKey(); err == nil {
+				if _, err = r.Key(); err == nil {
 					if err = r.Skip(); err != nil || !r.Next() {
 						break
 					}
@@ -12,7 +12,14 @@ func (r *Reader) skipObject() (err error) {
 			}
 		}
 		if err == nil {
-			err = r.CloseObject()
+			dat, pos := r.dat, r.pos
+			if pos == len(dat) {
+				return NewEndOfFileError()
+			} else if dat[pos] != '}' {
+				return NewInvalidCharacterError(dat[pos], pos)
+			} else {
+				r.pos++
+			}
 		}
 	}
 	return
@@ -43,11 +50,13 @@ func (r *Reader) CloseObject() error {
 	return nil
 }
 
-func (r *Reader) GetKey() ([]byte, error) {
-	if key, err := r.GetByteArray(); err != nil {
+func (r *Reader) Key() ([]byte, error) {
+	if key, err := r.Bytes(); err != nil {
 		return nil, err
 	} else {
-		if r.dat[r.pos] != ':' {
+		if r.pos == len(r.dat) {
+			return nil, NewEndOfFileError()
+		} else if r.dat[r.pos] != ':' {
 			return nil, NewInvalidCharacterError(r.dat[r.pos], r.pos)
 		}
 

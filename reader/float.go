@@ -1,127 +1,14 @@
 package reader
 
-// TODO: Exponents are not implemented and making float64 could do with work
-func (r *Reader) skipNumber() error {
-	// Reading the sign
-	if r.pos >= len(r.dat) {
-		return NewEndOfFileError()
-	} else if r.dat[r.pos] == '-' {
-		r.pos++
-	}
+import (
+	"math"
 
-	// Reading the integer part
-	if r.pos >= len(r.dat) {
-		return NewEndOfFileError()
-	} else if r.dat[r.pos] == '0' {
-		r.pos++
-	} else if r.dat[r.pos] >= '1' && r.dat[r.pos] <= '9' {
-		for r.pos < len(r.dat) &&
-			r.dat[r.pos] >= '0' &&
-			r.dat[r.pos] <= '9' {
-			r.pos++
-		}
-	} else {
-		return NewInvalidCharacterError(r.dat[r.pos], r.pos)
-	}
-
-	// Reading the fraction part
-	if r.pos >= len(r.dat) {
-		return nil
-	} else {
-		switch r.dat[r.pos] {
-		case '.':
-			r.pos++
-			dgt := 0
-			for r.pos < len(r.dat) &&
-				r.dat[r.pos] >= '0' &&
-				r.dat[r.pos] <= '9' {
-				r.pos++
-				dgt++
-			}
-			if dgt == 0 {
-				if r.pos < len(r.dat) {
-					return NewInvalidCharacterError(r.dat[r.pos], r.pos)
-				} else {
-					return NewEndOfFileError()
-				}
-			}
-		case '}', ']', ',', ' ', '\t', '\n', '\r':
-			// Empty //
-		default:
-			return NewInvalidCharacterError(r.dat[r.pos], r.pos)
-		}
-	}
-
-	return nil
-}
-
-func (r *Reader) getFloat() (float64, error) {
-	sig, intg, frc := 1.0, 0.0, 0.0
-
-	// Reading the sign
-	if r.pos >= len(r.dat) {
-		return 0, NewEndOfFileError()
-	} else if r.dat[r.pos] == '-' {
-		sig = -1.0
-		r.pos++
-	}
-
-	// Reading the integer part
-	if r.pos >= len(r.dat) {
-		return 0, NewEndOfFileError()
-	} else if r.dat[r.pos] == '0' {
-		r.pos++
-	} else if r.dat[r.pos] >= '1' && r.dat[r.pos] <= '9' {
-		for r.pos < len(r.dat) &&
-			r.dat[r.pos] >= '0' &&
-			r.dat[r.pos] <= '9' {
-			intg = intg*10 + float64(r.dat[r.pos]-'0')
-			r.pos++
-		}
-	} else {
-		return 0, NewInvalidCharacterError(r.dat[r.pos], r.pos)
-	}
-
-	// Reading the fraction part
-	if r.pos >= len(r.dat) {
-		return sig * intg, nil
-	} else {
-		switch r.dat[r.pos] {
-		case '.':
-			r.pos++
-			dgt := 0
-			for r.pos < len(r.dat) &&
-				r.dat[r.pos] >= '0' &&
-				r.dat[r.pos] <= '9' {
-				frc = frc*10 + float64(r.dat[r.pos]-'0')
-				r.pos++
-				dgt++
-			}
-			if dgt == 0 {
-				if r.pos < len(r.dat) {
-					return 0, NewInvalidCharacterError(r.dat[r.pos], r.pos)
-				} else {
-					return 0, NewEndOfFileError()
-				}
-			}
-			for dgt > 0 {
-				frc = frc / 10
-				dgt--
-			}
-		case '}', ']', ',', ' ', '\t', '\n', '\r':
-			// Empty //
-		default:
-			return 0, NewInvalidCharacterError(r.dat[r.pos], r.pos)
-		}
-	}
-
-	r.SkipWhiteSpace()
-	return sig * (intg + frc), nil
-}
+	"github.com/Soreing/parsley/reader/floatconv"
+)
 
 func (r *Reader) float32Seq(idx int) (res []float32, err error) {
 	var n float32
-	if n, err = r.GetFloat32(); err == nil {
+	if n, err = r.Float32(); err == nil {
 		if r.Next() {
 			res, err = r.float32Seq(idx + 1)
 		} else {
@@ -135,25 +22,72 @@ func (r *Reader) float32Seq(idx int) (res []float32, err error) {
 	return
 }
 
-func (r *Reader) GetFloat32s() (res []float32, err error) {
+func (r *Reader) Float32s() (res []float32, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = r.float32Seq(0); err == nil {
+		if r.Token() == TerminatorToken {
+			res = []float32{}
+			err = r.CloseArray()
+		} else if res, err = r.float32Seq(0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (r *Reader) GetFloat32() (float32, error) {
-	if n, err := r.getFloat(); err != nil {
-		return 0, err
-	} else {
-		return float32(n), nil
+func (r *Reader) Float32() (flt float32, err error) {
+	dat, ok, done := r.dat[r.pos:], true, false
+
+	m, d, e, n, t, dp, sp, i, ok := readFloat(dat)
+	if !ok {
+		if i == len(dat) {
+			return 0, NewEndOfFileError()
+		} else {
+			return 0, NewInvalidCharacterError(dat[i], r.pos+i)
+		}
 	}
+
+	// adjusting exponent
+	ae := e + dotExp(d, dp, sp, t)
+
+	if d == 0 {
+		flt, done = 0, true
+	} else if !t {
+		if f, ok := floatconv.Atof32exact(m, ae, n); ok {
+			flt, done = f, true
+		}
+	}
+
+	if !done {
+		f, ok := floatconv.EiselLemire32(m, ae, n)
+		if ok {
+			if !t {
+				flt, done = f, true
+			}
+			fu, ok := floatconv.EiselLemire32(m, ae, n)
+			if ok && f == fu {
+				flt, done = f, true
+			}
+		}
+	}
+
+	if !done {
+		var dec floatconv.Decimal
+		dec.Set(dat[sp:i], e, n, t, dp)
+
+		b, ovf := dec.FloatBits(&floatconv.Float32info)
+		flt = math.Float32frombits(uint32(b))
+		if ovf {
+			return flt, NewNumberOutOfRangeError(dat[sp:i], r.pos)
+		}
+	}
+
+	r.pos += i
+	r.SkipWhiteSpace()
+	return
 }
 
-func (r *Reader) GetFloat32Ptr() (res *float32, err error) {
-	if v, err := r.GetFloat32(); err == nil {
+func (r *Reader) Float32p() (res *float32, err error) {
+	if v, err := r.Float32(); err == nil {
 		res = &v
 	}
 	return
@@ -161,7 +95,7 @@ func (r *Reader) GetFloat32Ptr() (res *float32, err error) {
 
 func (r *Reader) float64Seq(idx int) (res []float64, err error) {
 	var n float64
-	if n, err = r.GetFloat64(); err == nil {
+	if n, err = r.Float64(); err == nil {
 		if r.Next() {
 			res, err = r.float64Seq(idx + 1)
 		} else {
@@ -175,21 +109,72 @@ func (r *Reader) float64Seq(idx int) (res []float64, err error) {
 	return
 }
 
-func (r *Reader) GetFloat64s() (res []float64, err error) {
+func (r *Reader) Float64s() (res []float64, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = r.float64Seq(0); err == nil {
+		if r.Token() == TerminatorToken {
+			res = []float64{}
+			err = r.CloseArray()
+		} else if res, err = r.float64Seq(0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (r *Reader) GetFloat64() (float64, error) {
-	return r.getFloat()
+func (r *Reader) Float64() (flt float64, err error) {
+	dat, ok, done := r.dat[r.pos:], true, false
+
+	m, d, e, n, t, dp, sp, i, ok := readFloat(dat)
+	if !ok {
+		if i == len(dat) {
+			return 0, NewEndOfFileError()
+		} else {
+			return 0, NewInvalidCharacterError(dat[i], r.pos+i)
+		}
+	}
+
+	// adjusting exponent
+	ae := e + dotExp(d, dp, sp, t)
+
+	if d == 0 {
+		flt, done = 0, true
+	} else if !t {
+		if f, ok := floatconv.Atof64exact(m, ae, n); ok {
+			flt, done = f, true
+		}
+	}
+
+	if !done {
+		f, ok := floatconv.EiselLemire64(m, ae, n)
+		if ok {
+			if !t {
+				flt, done = f, true
+			}
+			fu, ok := floatconv.EiselLemire64(m, ae, n)
+			if ok && f == fu {
+				flt, done = f, true
+			}
+		}
+	}
+
+	if !done {
+		var dec floatconv.Decimal
+		dec.Set(dat[sp:i], e, n, t, dp)
+
+		b, ovf := dec.FloatBits(&floatconv.Float64info)
+		flt = math.Float64frombits(b)
+		if ovf {
+			return flt, NewNumberOutOfRangeError(dat[sp:i], r.pos)
+		}
+	}
+
+	r.pos += i
+	r.SkipWhiteSpace()
+	return
 }
 
-func (r *Reader) GetFloat64Ptr() (res *float64, err error) {
-	if v, err := r.GetFloat64(); err == nil {
+func (r *Reader) Float64p() (res *float64, err error) {
+	if v, err := r.Float64(); err == nil {
 		res = &v
 	}
 	return

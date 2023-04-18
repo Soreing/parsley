@@ -1,67 +1,12 @@
 package reader
 
-func (r *Reader) getInt() (int64, error) {
-	sig, intg := int64(1), int64(0)
-
-	// Reading the sign
-	if r.pos >= len(r.dat) {
-		return 0, NewEndOfFileError()
-	} else if r.dat[r.pos] == '-' {
-		sig = -1
-		r.pos++
-	}
-
-	// Reading the integer part
-	if r.pos >= len(r.dat) {
-		return 0, NewEndOfFileError()
-	} else if r.dat[r.pos] == '0' {
-		r.pos++
-	} else if r.dat[r.pos] >= '1' && r.dat[r.pos] <= '9' {
-		for r.pos < len(r.dat) &&
-			r.dat[r.pos] >= '0' &&
-			r.dat[r.pos] <= '9' {
-			intg = intg*10 + int64(r.dat[r.pos]-'0')
-			r.pos++
-		}
-	} else {
-		return 0, NewInvalidCharacterError(r.dat[r.pos], r.pos)
-	}
-
-	// Reading the fraction part
-	if r.pos >= len(r.dat) {
-		return sig * intg, nil
-	} else {
-		switch r.dat[r.pos] {
-		case '.':
-			r.pos++
-			dgt := 0
-			for r.pos < len(r.dat) &&
-				r.dat[r.pos] >= '0' &&
-				r.dat[r.pos] <= '9' {
-				r.pos++
-				dgt++
-			}
-			if dgt == 0 {
-				if r.pos < len(r.dat) {
-					return 0, NewInvalidCharacterError(r.dat[r.pos], r.pos)
-				} else {
-					return 0, NewEndOfFileError()
-				}
-			}
-		case '}', ']', ',', ' ', '\t', '\n', '\r':
-			// Empty //
-		default:
-			return 0, NewInvalidCharacterError(r.dat[r.pos], r.pos)
-		}
-	}
-
-	r.SkipWhiteSpace()
-	return sig * intg, nil
-}
+import (
+	"math"
+)
 
 func (r *Reader) intSeq(idx int) (res []int, err error) {
 	var n int
-	if n, err = r.GetInt(); err == nil {
+	if n, err = r.Int(); err == nil {
 		if r.Next() {
 			res, err = r.intSeq(idx + 1)
 		} else {
@@ -75,25 +20,44 @@ func (r *Reader) intSeq(idx int) (res []int, err error) {
 	return
 }
 
-func (r *Reader) GetInts() (res []int, err error) {
+func (r *Reader) Ints() (res []int, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = r.intSeq(0); err == nil {
+		if r.Token() == TerminatorToken {
+			res = []int{}
+			err = r.CloseArray()
+		} else if res, err = r.intSeq(0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (r *Reader) GetInt() (int, error) {
-	if n, err := r.getInt(); err != nil {
-		return 0, err
+func (r *Reader) Int() (n int, err error) {
+	dat := r.dat[r.pos:]
+	num, neg, pos, ok := readInteger(dat)
+	if !ok {
+		if num == 0 && neg {
+			return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+		} else if pos == len(dat) {
+			return 0, NewEndOfFileError()
+		} else {
+			return 0, NewInvalidCharacterError(dat[pos], r.pos+pos)
+		}
+	} else if !neg && num <= math.MaxInt32 {
+		n = int(num)
+	} else if neg && num <= math.MaxInt32+1 {
+		n = int(-int64(num))
 	} else {
-		return int(n), nil
+		return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
 	}
+
+	r.pos += pos
+	r.SkipWhiteSpace()
+	return
 }
 
-func (r *Reader) GetIntPtr() (res *int, err error) {
-	if v, err := r.GetInt(); err == nil {
+func (r *Reader) Intp() (res *int, err error) {
+	if v, err := r.Int(); err == nil {
 		res = &v
 	}
 	return
@@ -101,7 +65,7 @@ func (r *Reader) GetIntPtr() (res *int, err error) {
 
 func (r *Reader) int8Seq(idx int) (res []int8, err error) {
 	var n int8
-	if n, err = r.GetInt8(); err == nil {
+	if n, err = r.Int8(); err == nil {
 		if r.Next() {
 			res, err = r.int8Seq(idx + 1)
 		} else {
@@ -115,25 +79,44 @@ func (r *Reader) int8Seq(idx int) (res []int8, err error) {
 	return
 }
 
-func (r *Reader) GetInt8s() (res []int8, err error) {
+func (r *Reader) Int8s() (res []int8, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = r.int8Seq(0); err == nil {
+		if r.Token() == TerminatorToken {
+			res = []int8{}
+			err = r.CloseArray()
+		} else if res, err = r.int8Seq(0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (r *Reader) GetInt8() (int8, error) {
-	if n, err := r.getInt(); err != nil {
-		return 0, err
+func (r *Reader) Int8() (n int8, err error) {
+	dat := r.dat[r.pos:]
+	num, neg, pos, ok := readInteger(dat)
+	if !ok {
+		if num == 0 && neg {
+			return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+		} else if pos == len(dat) {
+			return 0, NewEndOfFileError()
+		} else {
+			return 0, NewInvalidCharacterError(dat[pos], r.pos+pos)
+		}
+	} else if !neg && num <= math.MaxInt8 {
+		n = int8(num)
+	} else if neg && num <= math.MaxInt8+1 {
+		n = int8(-int64(num))
 	} else {
-		return int8(n), nil
+		return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
 	}
+
+	r.pos += pos
+	r.SkipWhiteSpace()
+	return
 }
 
-func (r *Reader) GetInt8Ptr() (res *int8, err error) {
-	if v, err := r.GetInt8(); err == nil {
+func (r *Reader) Int8p() (res *int8, err error) {
+	if v, err := r.Int8(); err == nil {
 		res = &v
 	}
 	return
@@ -141,7 +124,7 @@ func (r *Reader) GetInt8Ptr() (res *int8, err error) {
 
 func (r *Reader) int16Seq(idx int) (res []int16, err error) {
 	var n int16
-	if n, err = r.GetInt16(); err == nil {
+	if n, err = r.Int16(); err == nil {
 		if r.Next() {
 			res, err = r.int16Seq(idx + 1)
 		} else {
@@ -155,25 +138,44 @@ func (r *Reader) int16Seq(idx int) (res []int16, err error) {
 	return
 }
 
-func (r *Reader) GetInt16s() (res []int16, err error) {
+func (r *Reader) Int16s() (res []int16, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = r.int16Seq(0); err == nil {
+		if r.Token() == TerminatorToken {
+			res = []int16{}
+			err = r.CloseArray()
+		} else if res, err = r.int16Seq(0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (r *Reader) GetInt16() (int16, error) {
-	if n, err := r.getInt(); err != nil {
-		return 0, err
+func (r *Reader) Int16() (n int16, err error) {
+	dat := r.dat[r.pos:]
+	num, neg, pos, ok := readInteger(dat)
+	if !ok {
+		if num == 0 && neg {
+			return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+		} else if pos == len(dat) {
+			return 0, NewEndOfFileError()
+		} else {
+			return 0, NewInvalidCharacterError(dat[pos], r.pos+pos)
+		}
+	} else if !neg && num <= math.MaxInt16 {
+		n = int16(num)
+	} else if neg && num <= math.MaxInt16+1 {
+		n = int16(-int64(num))
 	} else {
-		return int16(n), nil
+		return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
 	}
+
+	r.pos += pos
+	r.SkipWhiteSpace()
+	return
 }
 
-func (r *Reader) GetInt16Ptr() (res *int16, err error) {
-	if v, err := r.GetInt16(); err == nil {
+func (r *Reader) Int16p() (res *int16, err error) {
+	if v, err := r.Int16(); err == nil {
 		res = &v
 	}
 	return
@@ -181,7 +183,7 @@ func (r *Reader) GetInt16Ptr() (res *int16, err error) {
 
 func (r *Reader) int32Seq(idx int) (res []int32, err error) {
 	var n int32
-	if n, err = r.GetInt32(); err == nil {
+	if n, err = r.Int32(); err == nil {
 		if r.Next() {
 			res, err = r.int32Seq(idx + 1)
 		} else {
@@ -195,25 +197,44 @@ func (r *Reader) int32Seq(idx int) (res []int32, err error) {
 	return
 }
 
-func (r *Reader) GetInt32s() (res []int32, err error) {
+func (r *Reader) Int32s() (res []int32, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = r.int32Seq(0); err == nil {
+		if r.Token() == TerminatorToken {
+			res = []int32{}
+			err = r.CloseArray()
+		} else if res, err = r.int32Seq(0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (r *Reader) GetInt32() (int32, error) {
-	if n, err := r.getInt(); err != nil {
-		return 0, err
+func (r *Reader) Int32() (n int32, err error) {
+	dat := r.dat[r.pos:]
+	num, neg, pos, ok := readInteger(dat)
+	if !ok {
+		if num == 0 && neg {
+			return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+		} else if pos == len(dat) {
+			return 0, NewEndOfFileError()
+		} else {
+			return 0, NewInvalidCharacterError(dat[pos], r.pos+pos)
+		}
+	} else if !neg && num <= math.MaxInt32 {
+		n = int32(num)
+	} else if neg && num <= math.MaxInt32+1 {
+		n = int32(-int64(num))
 	} else {
-		return int32(n), nil
+		return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
 	}
+
+	r.pos += pos
+	r.SkipWhiteSpace()
+	return
 }
 
-func (r *Reader) GetInt32Ptr() (res *int32, err error) {
-	if v, err := r.GetInt32(); err == nil {
+func (r *Reader) Int32p() (res *int32, err error) {
+	if v, err := r.Int32(); err == nil {
 		res = &v
 	}
 	return
@@ -221,7 +242,7 @@ func (r *Reader) GetInt32Ptr() (res *int32, err error) {
 
 func (r *Reader) int64Seq(idx int) (res []int64, err error) {
 	var n int64
-	if n, err = r.GetInt64(); err == nil {
+	if n, err = r.Int64(); err == nil {
 		if r.Next() {
 			res, err = r.int64Seq(idx + 1)
 		} else {
@@ -235,21 +256,46 @@ func (r *Reader) int64Seq(idx int) (res []int64, err error) {
 	return
 }
 
-func (r *Reader) GetInt64s() (res []int64, err error) {
+func (r *Reader) Int64s() (res []int64, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = r.int64Seq(0); err == nil {
+		if r.Token() == TerminatorToken {
+			res = []int64{}
+			err = r.CloseArray()
+		} else if res, err = r.int64Seq(0); err == nil {
 			err = r.CloseArray()
 		}
 	}
 	return
 }
 
-func (r *Reader) GetInt64() (int64, error) {
-	return r.getInt()
+func (r *Reader) Int64() (n int64, err error) {
+	dat := r.dat[r.pos:]
+	num, neg, pos, ok := readInteger(dat)
+	if !ok {
+		if num == 0 && neg {
+			return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+		} else if pos == len(dat) {
+			return 0, NewEndOfFileError()
+		} else {
+			return 0, NewInvalidCharacterError(dat[pos], r.pos+pos)
+		}
+	} else if !neg && num <= math.MaxInt64 {
+		n = int64(num)
+	} else if neg && num <= math.MaxInt64 {
+		n = -int64(num)
+	} else if neg && num == math.MaxInt64+1 {
+		n = math.MinInt64
+	} else {
+		return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+	}
+
+	r.pos += pos
+	r.SkipWhiteSpace()
+	return
 }
 
-func (r *Reader) GetInt64Ptr() (res *int64, err error) {
-	if v, err := r.GetInt64(); err == nil {
+func (r *Reader) Int64p() (res *int64, err error) {
+	if v, err := r.Int64(); err == nil {
 		res = &v
 	}
 	return

@@ -15,16 +15,12 @@ const (
 )
 
 func (r *Reader) IsNull() bool {
-	if r.pos+3 < len(r.dat) &&
-		r.dat[r.pos+1] == 'u' &&
-		r.dat[r.pos+2] == 'l' &&
-		r.dat[r.pos+3] == 'l' {
-		return true
-	}
-	return false
+	dat := r.dat[r.pos:]
+	return len(dat) >= 4 &&
+		dat[0] == 'n' && dat[1] == 'u' && dat[2] == 'l' && dat[3] == 'l'
 }
 
-func (r *Reader) GetType() TokenKind {
+func (r *Reader) Token() TokenKind {
 	if r.pos < len(r.dat) {
 		switch (r.dat)[r.pos] {
 		case ',', ':':
