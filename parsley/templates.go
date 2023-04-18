@@ -98,35 +98,35 @@ func getLengthTypeFormat(typename string) (tmpl string, unknown bool) {
 func getReaderTypeFormat(typename string) (tmpl string, unknown bool) {
 	switch typename {
 	case "int":
-		tmpl = "r.GetInt%s()"
+		tmpl = "r.Int%s()"
 	case "int8":
-		tmpl = "r.GetInt8%s()"
+		tmpl = "r.Int8%s()"
 	case "int16":
-		tmpl = "r.GetInt16%s()"
+		tmpl = "r.Int16%s()"
 	case "int32":
-		tmpl = "r.GetInt32%s()"
+		tmpl = "r.Int32%s()"
 	case "int64":
-		tmpl = "r.GetInt64%s()"
+		tmpl = "r.Int64%s()"
 	case "uint":
-		tmpl = "r.GetUInt%s()"
+		tmpl = "r.UInt%s()"
 	case "uint8":
-		tmpl = "r.GetUInt8%s()"
+		tmpl = "r.UInt8%s()"
 	case "uint16":
-		tmpl = "r.GetUInt16%s()"
+		tmpl = "r.UInt16%s()"
 	case "uint32":
-		tmpl = "r.GetUInt32%s()"
+		tmpl = "r.UInt32%s()"
 	case "uint64":
-		tmpl = "r.GetUInt64%s()"
+		tmpl = "r.UInt64%s()"
 	case "float32":
-		tmpl = "r.GetFloat32%s()"
+		tmpl = "r.Float32%s()"
 	case "float64":
-		tmpl = "r.GetFloat64%s()"
+		tmpl = "r.Float64%s()"
 	case "bool":
-		tmpl = "r.GetBool%s()"
+		tmpl = "r.Bool%s()"
 	case "string":
-		tmpl = "r.GetString%s()"
+		tmpl = "r.String%s()"
 	case "time.Time":
-		tmpl = "r.GetTime%s()"
+		tmpl = "r.Time%s()"
 	default:
 		unknown = true
 	}
@@ -272,7 +272,7 @@ func createDecodeObjectBody(fis []FieldInfo) (code string) {
 			if fi.Array {
 				subs[i] += fmt.Sprintf(fn, "s") + "\n"
 			} else if fi.Pointer {
-				subs[i] += fmt.Sprintf(fn, "Ptr") + "\n"
+				subs[i] += fmt.Sprintf(fn, "p") + "\n"
 			} else {
 				subs[i] += fmt.Sprintf(fn, "") + "\n"
 			}

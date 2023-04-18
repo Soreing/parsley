@@ -41,7 +41,10 @@ func (g *Generator) WriteDefine(df Define) {
 		"}\n\n" +
 		"func (o *" + name + ") DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []" + name + ", err error) {\n" +
 		"    if err = r.OpenArray(); err == nil {\n" +
-		"        if res, err = o.sequencePJSON(r, filter, 0); err == nil {\n" +
+		"        if r.Token() == reader.TerminatorToken { \n" +
+		"            res = []" + name + "{}\n" +
+		"            err = r.CloseArray()\n" +
+		"        } else if res, err = o.sequencePJSON(r, filter, 0); err == nil {\n" +
 		"            err = r.CloseArray()\n" +
 		"        }\n" +
 		"    }\n" +
@@ -101,9 +104,9 @@ func (g *Generator) WriteStruct(st Struct) {
 		"    var key []byte\n" +
 		"    _ = key\n" +
 		"    err = r.OpenObject()\n" +
-		"    if r.GetType() != reader.TerminatorToken {\n" +
+		"    if r.Token() != reader.TerminatorToken {\n" +
 		"        for err == nil {\n" +
-		"            if key, err = r.GetKey(); err == nil {\n" +
+		"            if key, err = r.Key(); err == nil {\n" +
 		"                if r.IsNull() {\n" +
 		"                    r.SkipNull()\n" +
 		"                } else {\n" +
@@ -135,7 +138,10 @@ func (g *Generator) WriteStruct(st Struct) {
 		"}\n\n" +
 		"func (o *" + name + ") DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []" + name + ", err error) {\n" +
 		"    if err = r.OpenArray(); err == nil {\n" +
-		"        if res, err = o.sequencePJSON(r, filter, 0); err == nil {\n" +
+		"        if r.Token() == reader.TerminatorToken { \n" +
+		"            res = []" + name + "{}\n" +
+		"            err = r.CloseArray()\n" +
+		"        } else if res, err = o.sequencePJSON(r, filter, 0); err == nil {\n" +
 		"            err = r.CloseArray()\n" +
 		"        }\n" +
 		"    }\n" +
