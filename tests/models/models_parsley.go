@@ -41,27 +41,27 @@ func (o *Employee) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (e
 	var key []byte
 	_ = key
 	err = r.OpenObject()
-	if r.GetType() != reader.TerminatorToken {
+	if r.Token() != reader.TerminatorToken {
 		for err == nil {
-			if key, err = r.GetKey(); err == nil {
+			if key, err = r.Key(); err == nil {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
 					if string(key) == "id" && c[0] {
-						o.Id, err = r.GetString()
+						o.Id, err = r.String()
 					} else if string(key) == "person" && c[1] {
 						err = o.Person.DecodeObjectPJSON(r, f[1])
 					} else if string(key) == "devices" && c[2] {
 						o.Devices, err = (*externals.Device)(nil).DecodeSlicePJSON(r, f[2])
 					} else if string(key) == "isActive" && c[3] {
-						o.IsActive, err = r.GetBool()
+						o.IsActive, err = r.Bool()
 					} else if string(key) == "rating" && c[4] {
-						o.Rating, err = r.GetFloat64()
+						o.Rating, err = r.Float64()
 					} else if string(key) == "lineManager" && c[5] {
 						o.LineManager = &Employee{}
 						err = o.LineManager.DecodeObjectPJSON(r, f[5])
 					} else if string(key) == "tags" && c[6] {
-						o.Tags, err = r.GetStrings()
+						o.Tags, err = r.Strings()
 					} else {
 						err = r.Skip()
 					}
@@ -94,7 +94,10 @@ func (o *Employee) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx in
 
 func (o *Employee) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []Employee, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
+		if r.Token() == reader.TerminatorToken {
+			res = []Employee{}
+			err = r.CloseArray()
+		} else if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
@@ -285,18 +288,18 @@ func (o *Person) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err
 	var key []byte
 	_ = key
 	err = r.OpenObject()
-	if r.GetType() != reader.TerminatorToken {
+	if r.Token() != reader.TerminatorToken {
 		for err == nil {
-			if key, err = r.GetKey(); err == nil {
+			if key, err = r.Key(); err == nil {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
 					if string(key) == "fname" && c[0] {
-						o.Fname, err = r.GetString()
+						o.Fname, err = r.String()
 					} else if string(key) == "lname" && c[1] {
-						o.Lname, err = r.GetString()
+						o.Lname, err = r.String()
 					} else if string(key) == "dob" && c[2] {
-						o.DOB, err = r.GetTime()
+						o.DOB, err = r.Time()
 					} else {
 						err = r.Skip()
 					}
@@ -329,7 +332,10 @@ func (o *Person) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx int)
 
 func (o *Person) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []Person, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
+		if r.Token() == reader.TerminatorToken {
+			res = []Person{}
+			err = r.CloseArray()
+		} else if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
@@ -467,7 +473,10 @@ func (o *EmployeeList) sequencePJSON(r *reader.Reader, filter []parse.Filter, id
 
 func (o *EmployeeList) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []EmployeeList, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
+		if r.Token() == reader.TerminatorToken {
+			res = []EmployeeList{}
+			err = r.CloseArray()
+		} else if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}

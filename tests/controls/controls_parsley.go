@@ -14,9 +14,9 @@ func (o *EmptyObject) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter)
 	var key []byte
 	_ = key
 	err = r.OpenObject()
-	if r.GetType() != reader.TerminatorToken {
+	if r.Token() != reader.TerminatorToken {
 		for err == nil {
-			if key, err = r.GetKey(); err == nil {
+			if key, err = r.Key(); err == nil {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
@@ -50,7 +50,10 @@ func (o *EmptyObject) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx
 
 func (o *EmptyObject) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []EmptyObject, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
+		if r.Token() == reader.TerminatorToken {
+			res = []EmptyObject{}
+			err = r.CloseArray()
+		} else if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
@@ -123,14 +126,14 @@ func (o *EscapedField) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter
 	var key []byte
 	_ = key
 	err = r.OpenObject()
-	if r.GetType() != reader.TerminatorToken {
+	if r.Token() != reader.TerminatorToken {
 		for err == nil {
-			if key, err = r.GetKey(); err == nil {
+			if key, err = r.Key(); err == nil {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
 					if string(key) == "soɯə \"value\"" && c[0] {
-						o.Value, err = r.GetString()
+						o.Value, err = r.String()
 					} else {
 						err = r.Skip()
 					}
@@ -163,7 +166,10 @@ func (o *EscapedField) sequencePJSON(r *reader.Reader, filter []parse.Filter, id
 
 func (o *EscapedField) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []EscapedField, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
+		if r.Token() == reader.TerminatorToken {
+			res = []EscapedField{}
+			err = r.CloseArray()
+		} else if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
@@ -259,9 +265,9 @@ func (o *PrivateField) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter
 	var key []byte
 	_ = key
 	err = r.OpenObject()
-	if r.GetType() != reader.TerminatorToken {
+	if r.Token() != reader.TerminatorToken {
 		for err == nil {
-			if key, err = r.GetKey(); err == nil {
+			if key, err = r.Key(); err == nil {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
@@ -295,7 +301,10 @@ func (o *PrivateField) sequencePJSON(r *reader.Reader, filter []parse.Filter, id
 
 func (o *PrivateField) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []PrivateField, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
+		if r.Token() == reader.TerminatorToken {
+			res = []PrivateField{}
+			err = r.CloseArray()
+		} else if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
@@ -368,14 +377,14 @@ func (o *PublicField) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter)
 	var key []byte
 	_ = key
 	err = r.OpenObject()
-	if r.GetType() != reader.TerminatorToken {
+	if r.Token() != reader.TerminatorToken {
 		for err == nil {
-			if key, err = r.GetKey(); err == nil {
+			if key, err = r.Key(); err == nil {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
 					if string(key) == "field" && c[0] {
-						o.field, err = r.GetString()
+						o.field, err = r.String()
 					} else {
 						err = r.Skip()
 					}
@@ -408,7 +417,10 @@ func (o *PublicField) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx
 
 func (o *PublicField) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []PublicField, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
+		if r.Token() == reader.TerminatorToken {
+			res = []PublicField{}
+			err = r.CloseArray()
+		} else if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
@@ -492,6 +504,80 @@ func (o *PublicField) SliceLengthPJSON(filter []parse.Filter, slc []PublicField)
 	for _, obj := range slc {
 		b, v := obj.ObjectLengthPJSON(filter)
 		bytes, volatile = bytes+b+1, volatile+v
+	}
+	if bytes == 0 {
+		return 2, 0
+	} else {
+		return bytes + 1, volatile
+	}
+}
+
+func (o *EmptyObjectList) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
+	*o, err = (*EmptyObject)(nil).DecodeSlicePJSON(r, filter)
+	return
+}
+
+func (o *EmptyObjectList) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx int) (res []EmptyObjectList, err error) {
+	var e EmptyObjectList
+	if err = e.DecodeObjectPJSON(r, filter); err == nil {
+		if !r.Next() {
+			res = make([]EmptyObjectList, idx+1)
+			res[idx] = e
+			return
+		} else if res, err = o.sequencePJSON(r, filter, idx+1); err == nil {
+			res[idx] = e
+		}
+	}
+	return
+}
+
+func (o *EmptyObjectList) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []EmptyObjectList, err error) {
+	if err = r.OpenArray(); err == nil {
+		if r.Token() == reader.TerminatorToken {
+			res = []EmptyObjectList{}
+			err = r.CloseArray()
+		} else if res, err = o.sequencePJSON(r, filter, 0); err == nil {
+			err = r.CloseArray()
+		}
+	}
+	return
+}
+
+func (o *EmptyObjectList) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
+	if o == nil {
+		w.Raw("null")
+	}
+	(*EmptyObject)(nil).EncodeSlicePJSON(w, filter, *o)
+
+}
+
+func (o *EmptyObjectList) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []EmptyObjectList) {
+	if slc == nil {
+		w.Raw("null")
+	}
+	w.Byte('[')
+	if len(slc) > 0 {
+		slc[0].EncodeObjectPJSON(w, filter)
+		for i := 1; i < len(slc); i++ {
+			w.Byte(',')
+			slc[i].EncodeObjectPJSON(w, filter)
+		}
+	}
+	w.Byte(']')
+}
+
+func (o *EmptyObjectList) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
+	if o == nil {
+		return 4, 0
+	}
+	return (*EmptyObject)(nil).SliceLengthPJSON(filter, *o)
+}
+
+func (o *EmptyObjectList) SliceLengthPJSON(filter []parse.Filter, slc []EmptyObjectList) (bytes int, volatile int) {
+	for _, obj := range slc {
+		b, v := obj.ObjectLengthPJSON(filter)
+		bytes += b + 1
+		volatile += v
 	}
 	if bytes == 0 {
 		return 2, 0

@@ -132,6 +132,14 @@ func Test_EncodeEmpty(t *testing.T) {
 	}
 }
 
+func Test_DecodeEmptySlice(t *testing.T) {
+	slc := controls.EmptyObjectList{}
+	dat := []byte("[]")
+	if err := parsley.Unmarshal(dat, &slc); err != nil {
+		t.Error("unmarshal not expected to fail")
+	}
+}
+
 func Test_DecodeNil(t *testing.T) {
 	dat := []byte(WhitespaceJSON)
 	if err := parsley.Unmarshal(dat, nil); err == nil {

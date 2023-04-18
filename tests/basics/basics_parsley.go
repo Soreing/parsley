@@ -31,18 +31,18 @@ func (o *BooleansColl) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter
 	var key []byte
 	_ = key
 	err = r.OpenObject()
-	if r.GetType() != reader.TerminatorToken {
+	if r.Token() != reader.TerminatorToken {
 		for err == nil {
-			if key, err = r.GetKey(); err == nil {
+			if key, err = r.Key(); err == nil {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
 					if string(key) == "bdat" && c[0] {
-						o.BDat, err = r.GetBool()
+						o.BDat, err = r.Bool()
 					} else if string(key) == "bslc" && c[1] {
-						o.BSlc, err = r.GetBools()
+						o.BSlc, err = r.Bools()
 					} else if string(key) == "bptr" && c[2] {
-						o.BPtr, err = r.GetBoolPtr()
+						o.BPtr, err = r.Boolp()
 					} else {
 						err = r.Skip()
 					}
@@ -75,7 +75,10 @@ func (o *BooleansColl) sequencePJSON(r *reader.Reader, filter []parse.Filter, id
 
 func (o *BooleansColl) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []BooleansColl, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
+		if r.Token() == reader.TerminatorToken {
+			res = []BooleansColl{}
+			err = r.CloseArray()
+		} else if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
@@ -217,24 +220,24 @@ func (o *FloatingPointColl) DecodeObjectPJSON(r *reader.Reader, filter []parse.F
 	var key []byte
 	_ = key
 	err = r.OpenObject()
-	if r.GetType() != reader.TerminatorToken {
+	if r.Token() != reader.TerminatorToken {
 		for err == nil {
-			if key, err = r.GetKey(); err == nil {
+			if key, err = r.Key(); err == nil {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
 					if string(key) == "f32dat" && c[0] {
-						o.F32Dat, err = r.GetFloat32()
+						o.F32Dat, err = r.Float32()
 					} else if string(key) == "f32slc" && c[1] {
-						o.F32Slc, err = r.GetFloat32s()
+						o.F32Slc, err = r.Float32s()
 					} else if string(key) == "f32ptr" && c[2] {
-						o.F32Ptr, err = r.GetFloat32Ptr()
+						o.F32Ptr, err = r.Float32p()
 					} else if string(key) == "f64dat" && c[3] {
-						o.F64Dat, err = r.GetFloat64()
+						o.F64Dat, err = r.Float64()
 					} else if string(key) == "f64slc" && c[4] {
-						o.F64Slc, err = r.GetFloat64s()
+						o.F64Slc, err = r.Float64s()
 					} else if string(key) == "f64ptr" && c[5] {
-						o.F64Ptr, err = r.GetFloat64Ptr()
+						o.F64Ptr, err = r.Float64p()
 					} else {
 						err = r.Skip()
 					}
@@ -267,7 +270,10 @@ func (o *FloatingPointColl) sequencePJSON(r *reader.Reader, filter []parse.Filte
 
 func (o *FloatingPointColl) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []FloatingPointColl, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
+		if r.Token() == reader.TerminatorToken {
+			res = []FloatingPointColl{}
+			err = r.CloseArray()
+		} else if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
@@ -463,42 +469,42 @@ func (o *IntegersColl) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter
 	var key []byte
 	_ = key
 	err = r.OpenObject()
-	if r.GetType() != reader.TerminatorToken {
+	if r.Token() != reader.TerminatorToken {
 		for err == nil {
-			if key, err = r.GetKey(); err == nil {
+			if key, err = r.Key(); err == nil {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
 					if string(key) == "i8dat" && c[0] {
-						o.I8Dat, err = r.GetInt8()
+						o.I8Dat, err = r.Int8()
 					} else if string(key) == "i8slc" && c[1] {
-						o.I8Slc, err = r.GetInt8s()
+						o.I8Slc, err = r.Int8s()
 					} else if string(key) == "i8ptr" && c[2] {
-						o.I8Ptr, err = r.GetInt8Ptr()
+						o.I8Ptr, err = r.Int8p()
 					} else if string(key) == "i16dat" && c[3] {
-						o.I16Dat, err = r.GetInt16()
+						o.I16Dat, err = r.Int16()
 					} else if string(key) == "i16slc" && c[4] {
-						o.I16Slc, err = r.GetInt16s()
+						o.I16Slc, err = r.Int16s()
 					} else if string(key) == "i16ptr" && c[5] {
-						o.I16Ptr, err = r.GetInt16Ptr()
+						o.I16Ptr, err = r.Int16p()
 					} else if string(key) == "i32dat" && c[6] {
-						o.I32Dat, err = r.GetInt32()
+						o.I32Dat, err = r.Int32()
 					} else if string(key) == "i32slc" && c[7] {
-						o.I32Slc, err = r.GetInt32s()
+						o.I32Slc, err = r.Int32s()
 					} else if string(key) == "i32ptr" && c[8] {
-						o.I32Ptr, err = r.GetInt32Ptr()
+						o.I32Ptr, err = r.Int32p()
 					} else if string(key) == "i64dat" && c[9] {
-						o.I64Dat, err = r.GetInt64()
+						o.I64Dat, err = r.Int64()
 					} else if string(key) == "i64slc" && c[10] {
-						o.I64Slc, err = r.GetInt64s()
+						o.I64Slc, err = r.Int64s()
 					} else if string(key) == "i64ptr" && c[11] {
-						o.I64Ptr, err = r.GetInt64Ptr()
+						o.I64Ptr, err = r.Int64p()
 					} else if string(key) == "idat" && c[12] {
-						o.IDat, err = r.GetInt()
+						o.IDat, err = r.Int()
 					} else if string(key) == "islc" && c[13] {
-						o.ISlc, err = r.GetInts()
+						o.ISlc, err = r.Ints()
 					} else if string(key) == "iptr" && c[14] {
-						o.IPtr, err = r.GetIntPtr()
+						o.IPtr, err = r.Intp()
 					} else {
 						err = r.Skip()
 					}
@@ -531,7 +537,10 @@ func (o *IntegersColl) sequencePJSON(r *reader.Reader, filter []parse.Filter, id
 
 func (o *IntegersColl) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []IntegersColl, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
+		if r.Token() == reader.TerminatorToken {
+			res = []IntegersColl{}
+			err = r.CloseArray()
+		} else if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
@@ -817,24 +826,24 @@ func (o *StringsColl) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter)
 	var key []byte
 	_ = key
 	err = r.OpenObject()
-	if r.GetType() != reader.TerminatorToken {
+	if r.Token() != reader.TerminatorToken {
 		for err == nil {
-			if key, err = r.GetKey(); err == nil {
+			if key, err = r.Key(); err == nil {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
 					if string(key) == "sdat" && c[0] {
-						o.SDat, err = r.GetString()
+						o.SDat, err = r.String()
 					} else if string(key) == "sslc" && c[1] {
-						o.SSlc, err = r.GetStrings()
+						o.SSlc, err = r.Strings()
 					} else if string(key) == "sptr" && c[2] {
-						o.SPtr, err = r.GetStringPtr()
+						o.SPtr, err = r.Stringp()
 					} else if string(key) == "tdat" && c[3] {
-						o.TDat, err = r.GetTime()
+						o.TDat, err = r.Time()
 					} else if string(key) == "tslc" && c[4] {
-						o.TSlc, err = r.GetTimes()
+						o.TSlc, err = r.Times()
 					} else if string(key) == "tptr" && c[5] {
-						o.TPtr, err = r.GetTimePtr()
+						o.TPtr, err = r.Timep()
 					} else {
 						err = r.Skip()
 					}
@@ -867,7 +876,10 @@ func (o *StringsColl) sequencePJSON(r *reader.Reader, filter []parse.Filter, idx
 
 func (o *StringsColl) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []StringsColl, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
+		if r.Token() == reader.TerminatorToken {
+			res = []StringsColl{}
+			err = r.CloseArray()
+		} else if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
@@ -1066,42 +1078,42 @@ func (o *UnsignedIntegersColl) DecodeObjectPJSON(r *reader.Reader, filter []pars
 	var key []byte
 	_ = key
 	err = r.OpenObject()
-	if r.GetType() != reader.TerminatorToken {
+	if r.Token() != reader.TerminatorToken {
 		for err == nil {
-			if key, err = r.GetKey(); err == nil {
+			if key, err = r.Key(); err == nil {
 				if r.IsNull() {
 					r.SkipNull()
 				} else {
 					if string(key) == "ui8dat" && c[0] {
-						o.UI8Dat, err = r.GetUInt8()
+						o.UI8Dat, err = r.UInt8()
 					} else if string(key) == "ui8slc" && c[1] {
-						o.UI8Slc, err = r.GetUInt8s()
+						o.UI8Slc, err = r.UInt8s()
 					} else if string(key) == "ui8ptr" && c[2] {
-						o.UI8Ptr, err = r.GetUInt8Ptr()
+						o.UI8Ptr, err = r.UInt8p()
 					} else if string(key) == "ui16dat" && c[3] {
-						o.UI16Dat, err = r.GetUInt16()
+						o.UI16Dat, err = r.UInt16()
 					} else if string(key) == "ui16slc" && c[4] {
-						o.UI16Slc, err = r.GetUInt16s()
+						o.UI16Slc, err = r.UInt16s()
 					} else if string(key) == "ui16ptr" && c[5] {
-						o.UI16Ptr, err = r.GetUInt16Ptr()
+						o.UI16Ptr, err = r.UInt16p()
 					} else if string(key) == "ui32dat" && c[6] {
-						o.UI32Dat, err = r.GetUInt32()
+						o.UI32Dat, err = r.UInt32()
 					} else if string(key) == "ui32slc" && c[7] {
-						o.UI32Slc, err = r.GetUInt32s()
+						o.UI32Slc, err = r.UInt32s()
 					} else if string(key) == "ui32ptr" && c[8] {
-						o.UI32Ptr, err = r.GetUInt32Ptr()
+						o.UI32Ptr, err = r.UInt32p()
 					} else if string(key) == "ui64dat" && c[9] {
-						o.UI64Dat, err = r.GetUInt64()
+						o.UI64Dat, err = r.UInt64()
 					} else if string(key) == "ui64slc" && c[10] {
-						o.UI64Slc, err = r.GetUInt64s()
+						o.UI64Slc, err = r.UInt64s()
 					} else if string(key) == "ui64ptr" && c[11] {
-						o.UI64Ptr, err = r.GetUInt64Ptr()
+						o.UI64Ptr, err = r.UInt64p()
 					} else if string(key) == "uidat" && c[12] {
-						o.UIDat, err = r.GetUInt()
+						o.UIDat, err = r.UInt()
 					} else if string(key) == "uislc" && c[13] {
-						o.UISlc, err = r.GetUInts()
+						o.UISlc, err = r.UInts()
 					} else if string(key) == "uiptr" && c[14] {
-						o.UIPtr, err = r.GetUIntPtr()
+						o.UIPtr, err = r.UIntp()
 					} else {
 						err = r.Skip()
 					}
@@ -1134,7 +1146,10 @@ func (o *UnsignedIntegersColl) sequencePJSON(r *reader.Reader, filter []parse.Fi
 
 func (o *UnsignedIntegersColl) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res []UnsignedIntegersColl, err error) {
 	if err = r.OpenArray(); err == nil {
-		if res, err = o.sequencePJSON(r, filter, 0); err == nil {
+		if r.Token() == reader.TerminatorToken {
+			res = []UnsignedIntegersColl{}
+			err = r.CloseArray()
+		} else if res, err = o.sequencePJSON(r, filter, 0); err == nil {
 			err = r.CloseArray()
 		}
 	}
