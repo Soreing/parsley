@@ -117,7 +117,7 @@ func Test_Skip(t *testing.T) {
 		{
 			Name: "Invalid Character",
 			In:   []byte(`abcdefg`),
-			Pos:  0, Err: NewInvalidCharacterError('a', 0),
+			Pos:  0, Err: newInvalidCharacterError('a', 0),
 		},
 	}
 

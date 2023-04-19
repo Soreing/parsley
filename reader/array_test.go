@@ -25,7 +25,7 @@ func Test_OpenArray(t *testing.T) {
 		{
 			Name: "Missing Opening Bracket",
 			In:   []byte(`value`),
-			Pos:  0, Err: NewInvalidCharacterError('v', 0),
+			Pos:  0, Err: newInvalidCharacterError('v', 0),
 		},
 	}
 
@@ -63,7 +63,7 @@ func Test_CloseArray(t *testing.T) {
 		{
 			Name: "Missing Closing Bracket",
 			In:   []byte(`,key`),
-			Pos:  0, Err: NewInvalidCharacterError(',', 0),
+			Pos:  0, Err: newInvalidCharacterError(',', 0),
 		},
 	}
 
@@ -111,17 +111,17 @@ func Test_SkipArray(t *testing.T) {
 		{
 			Name: "Missing Opening Bracket",
 			In:   []byte(`"string",123,false]`),
-			Pos:  0, Err: NewInvalidCharacterError('"', 0),
+			Pos:  0, Err: newInvalidCharacterError('"', 0),
 		},
 		{
 			Name: "Missing Closing Bracket",
 			In:   []byte(`["string",123,false`),
-			Pos:  19, Err: NewEndOfFileError(),
+			Pos:  19, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Incomplete Array",
 			In:   []byte(`["string",123,false,`),
-			Pos:  20, Err: NewEndOfFileError(),
+			Pos:  20, Err: newEndOfFileError(),
 		},
 	}
 

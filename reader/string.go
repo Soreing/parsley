@@ -3,7 +3,7 @@ package reader
 //golang:noinline
 func skipEscape(dat []byte, off int) (int, error) {
 	if 1 >= len(dat) {
-		return 0, NewEndOfFileError()
+		return 0, newEndOfFileError()
 	}
 
 	switch c := dat[1]; c {
@@ -12,16 +12,17 @@ func skipEscape(dat []byte, off int) (int, error) {
 		return 1, nil
 	case 'u':
 		if 5 >= len(dat) {
-			return 0, NewEndOfFileError()
+			return 0, newEndOfFileError()
 		} else if b, i := isuseq(dat[2:6]); b != 0 {
-			return 0, NewInvalidCharacterError(b, off+i)
+			return 0, newInvalidCharacterError(b, off+i)
 		}
 		return 4, nil
 	default:
-		return 0, NewInvalidCharacterError(c, off)
+		return 0, newInvalidCharacterError(c, off)
 	}
 }
 
+// skipObject skips a string enclosed by quotes and the whitespace following it.
 func (r *Reader) skipString() error {
 	dat, pos := r.dat[r.pos+1:], 1
 	for i, e := range dat {
@@ -37,7 +38,7 @@ func (r *Reader) skipString() error {
 
 	for ; ; pos++ {
 		if pos >= len(dat) {
-			return NewEndOfFileError()
+			return newEndOfFileError()
 
 		} else if dat[pos] == '"' {
 			r.pos += pos + 2
@@ -53,8 +54,8 @@ func (r *Reader) skipString() error {
 	}
 }
 
-// Converts 4 hexadecimal digits of a unicode sequence. Returns the integer
-// and the byte length of the unicode character.
+// useq converts 4 hexadecimal digits of a unicode sequence to an integer and
+// the byte length of the unicode character it represents.
 func useq(src []byte) (n int, ln int) {
 	for i, c := range src {
 		if c-'0' < 10 {
@@ -77,17 +78,19 @@ func useq(src []byte) (n int, ln int) {
 	}
 }
 
-// Checks if the following 4 bytes are hexadecimal digits. Returns the byte
-// which is not a hexadecimal digit and its index in the slice
+// isuseq checks if the given data contains only hexadecimal digits. it returns
+// the character and the position of the character that fails the test.
 func isuseq(src []byte) (b byte, i int) {
 	for i, c := range src {
-		if c-'0' > 9 && c-'7' > 15 && c-'W' > 15 {
+		if c-'0' > 9 && c|0x20-'a' > 5 {
 			return c, i + 1
 		}
 	}
 	return 0, 0
 }
 
+// bytesTillEnd checks the number of bytes required to contain the characters
+// till the next closing quote mark. Used to reduce allocations during decoding.
 func bytesTillEnd(dat []byte) int {
 	esc, cnt, e := false, 0, byte(0)
 	for i := 0; i < len(dat); i++ {
@@ -113,20 +116,24 @@ func bytesTillEnd(dat []byte) int {
 	return -1
 }
 
+// Bytes returns a byte array containing the next string enclosed by quotes.
+// If the string does not contain escaped characters, it returns data from the
+// source directly, otherwise it allocates a temporary buffer that can be
+// recycled between calls to the function
 func (r *Reader) Bytes() ([]byte, error) {
 	dat, pos := r.dat[r.pos:], 1
 	buf, bi := r.buf, 0
 	esc := false
 
 	if len(dat) == 0 {
-		return nil, NewEndOfFileError()
+		return nil, newEndOfFileError()
 	} else if dat[0] != '"' {
-		return nil, NewInvalidCharacterError(dat[0], r.pos)
+		return nil, newInvalidCharacterError(dat[0], r.pos)
 	}
 
 	for ; ; pos++ {
 		if pos >= len(dat) {
-			return nil, NewEndOfFileError()
+			return nil, newEndOfFileError()
 
 		} else if dat[pos] == '"' {
 			r.pos += pos + 1
@@ -136,7 +143,7 @@ func (r *Reader) Bytes() ([]byte, error) {
 		} else if dat[pos] == '\\' {
 			if len(buf) < pos {
 				if rb := bytesTillEnd(dat[pos:]); rb == -1 {
-					return nil, NewEndOfFileError()
+					return nil, newEndOfFileError()
 				} else {
 					// Total length is pos-1 + rb
 					// Buffer size should be the next multiple of 256
@@ -152,7 +159,7 @@ func (r *Reader) Bytes() ([]byte, error) {
 
 	for {
 		if pos >= len(dat) {
-			return nil, NewEndOfFileError()
+			return nil, newEndOfFileError()
 
 		} else if esc {
 			esc = false
@@ -175,13 +182,13 @@ func (r *Reader) Bytes() ([]byte, error) {
 				buf[bi] = '\t'
 			case 'u':
 				if pos+4 >= len(dat) {
-					return nil, NewEndOfFileError()
+					return nil, newEndOfFileError()
 				} else if rn, rl := useq(dat[pos+1 : pos+5]); rl < 0 {
-					return nil, NewInvalidCharacterError(byte(rn), r.pos+pos-rl)
+					return nil, newInvalidCharacterError(byte(rn), r.pos+pos-rl)
 				} else {
 					if len(buf) < bi+rl {
 						if rb := bytesTillEnd(dat[pos+5:]); rb == -1 {
-							return nil, NewEndOfFileError()
+							return nil, newEndOfFileError()
 						} else {
 							r.buf = make([]byte, ((bi+rl+rb+256)>>8)<<8)
 							copy(r.buf, buf[:bi])
@@ -205,7 +212,7 @@ func (r *Reader) Bytes() ([]byte, error) {
 					pos += 4
 				}
 			default:
-				return nil, NewInvalidCharacterError(dat[pos], r.pos+pos)
+				return nil, newInvalidCharacterError(dat[pos], r.pos+pos)
 			}
 			bi++
 
@@ -216,7 +223,7 @@ func (r *Reader) Bytes() ([]byte, error) {
 
 		} else if bi == len(buf) {
 			if tlen := bytesTillEnd(dat[pos:]); tlen == -1 {
-				return nil, NewEndOfFileError()
+				return nil, newEndOfFileError()
 			} else {
 				r.buf = make([]byte, bi+tlen)
 				copy(r.buf, buf[:bi])
@@ -235,6 +242,8 @@ func (r *Reader) Bytes() ([]byte, error) {
 	}
 }
 
+// stringSeq extracts string values recursively untill the closing bracket
+// is found, then assigns the elements to the allocated slice.
 func (r *Reader) stringSeq(idx int) (res []string, err error) {
 	var bs []byte
 	if bs, err = r.Bytes(); err == nil {
@@ -249,6 +258,9 @@ func (r *Reader) stringSeq(idx int) (res []string, err error) {
 	return
 }
 
+// Ints extracts an array of string values from the data and skips all
+// whitespace after it. The values must be enclosed in square brackets "[...]"
+// and the values must be separated by commas.
 func (r *Reader) Strings() (res []string, err error) {
 	if err = r.OpenArray(); err == nil {
 		if r.Token() == TerminatorToken {
@@ -261,6 +273,8 @@ func (r *Reader) Strings() (res []string, err error) {
 	return
 }
 
+// String extracts the next string value from the data and skips all
+// whitespace after it.
 func (r *Reader) String() (string, error) {
 	if bs, err := r.Bytes(); err != nil {
 		return "", err
@@ -269,6 +283,7 @@ func (r *Reader) String() (string, error) {
 	}
 }
 
+// Stringp extracts the next string value and returns a pointer variable.
 func (r *Reader) Stringp() (res *string, err error) {
 	if v, err := r.String(); err == nil {
 		res = &v

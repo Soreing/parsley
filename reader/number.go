@@ -10,6 +10,8 @@ var eTab = []uint64{
 	1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
 }
 
+// skipNumber skips the next number and the whitespace after it.
+// The number is evaluated to make sure that the JSON is valid.
 func (r *Reader) skipNumber() error {
 	dat, i := r.dat[r.pos:], 0
 	dp, ln := 0, len(dat)
@@ -21,11 +23,11 @@ func (r *Reader) skipNumber() error {
 
 	// digits
 	if i >= ln {
-		return NewEndOfFileError()
+		return newEndOfFileError()
 
 	} else if dat[i] == '0' {
 		if i++; i < ln && dat[i]-'0' <= 9 {
-			return NewInvalidCharacterError(dat[i], r.pos+i)
+			return newInvalidCharacterError(dat[i], r.pos+i)
 		}
 
 	} else if dat[i]-'0' <= 9 {
@@ -33,7 +35,7 @@ func (r *Reader) skipNumber() error {
 			/* do nothing */
 		}
 	} else {
-		return NewInvalidCharacterError(dat[i], r.pos+i)
+		return newInvalidCharacterError(dat[i], r.pos+i)
 	}
 
 	if i < ln && dat[i] == '.' {
@@ -43,9 +45,9 @@ func (r *Reader) skipNumber() error {
 		}
 		if dp+1 == i {
 			if i == ln {
-				return NewEndOfFileError()
+				return newEndOfFileError()
 			} else {
-				return NewInvalidCharacterError(dat[i], r.pos+i)
+				return newInvalidCharacterError(dat[i], r.pos+i)
 			}
 		}
 	}
@@ -53,15 +55,15 @@ func (r *Reader) skipNumber() error {
 	// exponent
 	if i < ln && dat[i]|0x20 == 'e' {
 		if i++; i >= ln {
-			return NewEndOfFileError()
+			return newEndOfFileError()
 		} else if dat[i] != '-' && dat[i] != '+' {
-			return NewInvalidCharacterError(dat[i], r.pos+i)
+			return newInvalidCharacterError(dat[i], r.pos+i)
 		}
 
 		if i++; i >= ln {
-			return NewEndOfFileError()
+			return newEndOfFileError()
 		} else if dat[i]-'0' > 9 {
-			return NewInvalidCharacterError(dat[i], r.pos+i)
+			return newInvalidCharacterError(dat[i], r.pos+i)
 		}
 
 		for ; i < ln && dat[i]-'0' <= 9; i++ {
@@ -73,6 +75,7 @@ func (r *Reader) skipNumber() error {
 	return nil
 }
 
+// readInteger reads the next number and returns a truncated integer
 func readInteger(dat []byte) (integer uint64, negative bool, i int, ok bool) {
 	var intg uint64
 	var dig, exp, dp, sp int
@@ -193,6 +196,8 @@ func readInteger(dat []byte) (integer uint64, negative bool, i int, ok bool) {
 	}
 }
 
+// readFloat reads the next number and returns details that can be used to
+// create a float variable.
 func readFloat(dat []byte) (
 	man uint64, dig int, exp int, neg bool, trc bool, dp int, sp int, i int, ok bool,
 ) {
@@ -288,6 +293,8 @@ func readFloat(dat []byte) (
 	return
 }
 
+// dotExp creates an exponent modifier from the dot position in relation to the
+// starting position, number of digits and whether the digits were truncated.
 func dotExp(d int, dp int, sp int, trc bool) int {
 	if trc && sp+d < dp {
 		// dp - (sp+d)

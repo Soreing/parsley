@@ -41,7 +41,7 @@ func Test_ReadInt(t *testing.T) {
 		{
 			Name: "Int Max +1",
 			In:   []byte(`2147483648`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`2147483648`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`2147483648`), 0),
 		},
 		{
 			Name: "Int Min",
@@ -51,17 +51,17 @@ func Test_ReadInt(t *testing.T) {
 		{
 			Name: "Int Min -1",
 			In:   []byte(`-2147483649`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`-2147483649`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`-2147483649`), 0),
 		},
 		{
 			Name: "Syntax Error",
 			In:   []byte(`01`),
-			Out:  0, Pos: 0, Err: NewInvalidCharacterError('1', 1),
+			Out:  0, Pos: 0, Err: newInvalidCharacterError('1', 1),
 		},
 		{
 			Name: "End of Input",
 			In:   []byte(`12e`),
-			Out:  0, Pos: 0, Err: NewEndOfFileError(),
+			Out:  0, Pos: 0, Err: newEndOfFileError(),
 		},
 	}
 
@@ -118,7 +118,7 @@ func Test_ReadInt64(t *testing.T) {
 		{
 			Name: "Int64 Max +1",
 			In:   []byte(`9223372036854775808`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`9223372036854775808`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`9223372036854775808`), 0),
 		},
 		{
 			Name: "Int64 Min",
@@ -128,17 +128,17 @@ func Test_ReadInt64(t *testing.T) {
 		{
 			Name: "Int64 Min -1",
 			In:   []byte(`-9223372036854775809`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`-9223372036854775809`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`-9223372036854775809`), 0),
 		},
 		{
 			Name: "Syntax Error",
 			In:   []byte(`01`),
-			Out:  0, Pos: 0, Err: NewInvalidCharacterError('1', 1),
+			Out:  0, Pos: 0, Err: newInvalidCharacterError('1', 1),
 		},
 		{
 			Name: "End of Input",
 			In:   []byte(`12e`),
-			Out:  0, Pos: 0, Err: NewEndOfFileError(),
+			Out:  0, Pos: 0, Err: newEndOfFileError(),
 		},
 	}
 
@@ -195,7 +195,7 @@ func Test_ReadInt32(t *testing.T) {
 		{
 			Name: "Int32 Max +1",
 			In:   []byte(`2147483648`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`2147483648`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`2147483648`), 0),
 		},
 		{
 			Name: "Int32 Min",
@@ -205,17 +205,17 @@ func Test_ReadInt32(t *testing.T) {
 		{
 			Name: "Int32 Min -1",
 			In:   []byte(`-2147483649`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`-2147483649`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`-2147483649`), 0),
 		},
 		{
 			Name: "Syntax Error",
 			In:   []byte(`01`),
-			Out:  0, Pos: 0, Err: NewInvalidCharacterError('1', 1),
+			Out:  0, Pos: 0, Err: newInvalidCharacterError('1', 1),
 		},
 		{
 			Name: "End of Input",
 			In:   []byte(`12e`),
-			Out:  0, Pos: 0, Err: NewEndOfFileError(),
+			Out:  0, Pos: 0, Err: newEndOfFileError(),
 		},
 	}
 
@@ -272,7 +272,7 @@ func Test_ReadInt16(t *testing.T) {
 		{
 			Name: "Int16 Max +1",
 			In:   []byte(`32768`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`32768`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`32768`), 0),
 		},
 		{
 			Name: "Int16 Min",
@@ -282,17 +282,17 @@ func Test_ReadInt16(t *testing.T) {
 		{
 			Name: "Int16 Min -1",
 			In:   []byte(`-32769`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`-32769`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`-32769`), 0),
 		},
 		{
 			Name: "Syntax Error",
 			In:   []byte(`01`),
-			Out:  0, Pos: 0, Err: NewInvalidCharacterError('1', 1),
+			Out:  0, Pos: 0, Err: newInvalidCharacterError('1', 1),
 		},
 		{
 			Name: "End of Input",
 			In:   []byte(`12e`),
-			Out:  0, Pos: 0, Err: NewEndOfFileError(),
+			Out:  0, Pos: 0, Err: newEndOfFileError(),
 		},
 	}
 
@@ -349,7 +349,7 @@ func Test_ReadInt8(t *testing.T) {
 		{
 			Name: "Int8 Max +1",
 			In:   []byte(`128`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`128`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`128`), 0),
 		},
 		{
 			Name: "Int8 Min",
@@ -359,17 +359,17 @@ func Test_ReadInt8(t *testing.T) {
 		{
 			Name: "Int8 Min -1",
 			In:   []byte(`-129`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`-129`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`-129`), 0),
 		},
 		{
 			Name: "Syntax Error",
 			In:   []byte(`01`),
-			Out:  0, Pos: 0, Err: NewInvalidCharacterError('1', 1),
+			Out:  0, Pos: 0, Err: newInvalidCharacterError('1', 1),
 		},
 		{
 			Name: "End of Input",
 			In:   []byte(`12e`),
-			Out:  0, Pos: 0, Err: NewEndOfFileError(),
+			Out:  0, Pos: 0, Err: newEndOfFileError(),
 		},
 	}
 

@@ -89,14 +89,14 @@ func Test_ReadTime(t *testing.T) {
 			Time: "Friday the 14th, April 2023, 10:00:00 -07:30",
 			Fmt:  time.Kitchen,
 			In:   []byte(`"Friday the 14th, April 2023, 10:00:00 -07:30"`),
-			Pos:  46, Err: NewUnknownTimeFormatError("Friday the 14th, April 2023, 10:00:00 -07:30", 0),
+			Pos:  46, Err: newUnknownTimeFormatError("Friday the 14th, April 2023, 10:00:00 -07:30", 0),
 		},
 		{
 			Name: "Reading Nothing",
 			Time: "",
 			Fmt:  time.Kitchen,
 			In:   []byte(`""`),
-			Pos:  2, Err: NewUnknownTimeFormatError("", 0),
+			Pos:  2, Err: newUnknownTimeFormatError("", 0),
 		},
 	}
 
@@ -157,25 +157,25 @@ func Test_ReadTimes(t *testing.T) {
 			Name: "Missing Opening Bracket",
 			In:   []byte(`"2023-04-14T10:00:00Z","2023-05-15T15:25:45Z"]`),
 			Out:  nil,
-			Pos:  0, Err: NewInvalidCharacterError('"', 0),
+			Pos:  0, Err: newInvalidCharacterError('"', 0),
 		},
 		{
 			Name: "Missing Closing Bracket",
 			In:   []byte(`["2023-04-14T10:00:00Z","2023-05-15T15:25:45Z"`),
 			Out:  []time.Time{t1, t2},
-			Pos:  46, Err: NewEndOfFileError(),
+			Pos:  46, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Incomplete Slice",
 			In:   []byte(`["2023-04-14T10:00:00Z","2023-05-15T15:25:45Z",`),
 			Out:  nil,
-			Pos:  47, Err: NewEndOfFileError(),
+			Pos:  47, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Missing Comma Between Elements",
 			In:   []byte(`["2023-04-14T10:00:00Z""2023-05-15T15:25:45Z"]`),
 			Out:  []time.Time{t1},
-			Pos:  23, Err: NewInvalidCharacterError('"', 23),
+			Pos:  23, Err: newInvalidCharacterError('"', 23),
 		},
 	}
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// List of escape sequences for control characters.
 var control = []string{
 	"u0000", "u0001", "u0002", "u0003", "u0004", "u0005", "u0006", "u0007",
 	"u0008", "t", "n", "u000B", "u000C", "r", "u000E", "u000F",
@@ -13,6 +14,7 @@ var control = []string{
 	"u0018", "u0019", "u001A", "u001B", "u001C", "u001D", "u001E", "u001F",
 }
 
+// isBasicType checks if the datatype is a basic type supported by the library.
 func isBasicType(typename string) (basic bool) {
 	switch typename {
 	case "int", "int8", "int16", "int32", "int64",
@@ -23,6 +25,7 @@ func isBasicType(typename string) (basic bool) {
 	return false
 }
 
+// isVolatile checks if the datatype can have volatile space.
 func isVolatile(typename string) (volatile bool) {
 	switch typename {
 	case "int", "int8", "int16", "int32", "int64",
@@ -33,9 +36,9 @@ func isVolatile(typename string) (volatile bool) {
 	return true
 }
 
-// Returns the code/value used to compare types against their default values.
-// If the type is unknown, empty string is returned.
-func getValueCheck(fi FieldInfo) (zv string) {
+// getValueCheck returns the code used to compare values against their
+// default values. If the type is unknown, empty string is returned.
+func getValueCheck(fi fieldInfo) (zv string) {
 	if fi.Array || fi.Pointer {
 		return " != nil"
 	}
@@ -55,7 +58,7 @@ func getValueCheck(fi FieldInfo) (zv string) {
 	}
 }
 
-// Returns the code template for reading defined datatypes.
+// getLengthTypeFormat returns the code for finding the byte length of values.
 func getLengthTypeFormat(typename string) (tmpl string, unknown bool) {
 	switch typename {
 	case "int":
@@ -94,7 +97,7 @@ func getLengthTypeFormat(typename string) (tmpl string, unknown bool) {
 	return
 }
 
-// Returns the code template for reading defined datatypes.
+// getReaderTypeFormat returns the code for decoding basic type values.
 func getReaderTypeFormat(typename string) (tmpl string, unknown bool) {
 	switch typename {
 	case "int":
@@ -133,7 +136,7 @@ func getReaderTypeFormat(typename string) (tmpl string, unknown bool) {
 	return
 }
 
-// Returns the code template for writing defined datatypes.
+// getWriterTypeFormat returns the code for encoding basic type values.
 func getWriterTypeFormat(typename string) (tmpl string, unknown bool) {
 	switch typename {
 	case "int":
@@ -172,7 +175,8 @@ func getWriterTypeFormat(typename string) (tmpl string, unknown bool) {
 	return
 }
 
-func createFilterHeader(fis []FieldInfo) (code string) {
+// createFilterHeader creates a filter header for encoding/decoding functions
+func createFilterHeader(fis []fieldInfo) (code string) {
 	if len(fis) == 0 {
 		return ""
 	}
@@ -214,7 +218,7 @@ func createFilterHeader(fis []FieldInfo) (code string) {
 	return
 }
 
-func createObjectLengthBody(fis []FieldInfo) (code string) {
+func createObjectLengthBody(fis []fieldInfo) (code string) {
 	subs := make([]string, len(fis))
 	for i, fi := range fis {
 		is := strconv.Itoa(i)
@@ -257,7 +261,7 @@ func createObjectLengthBody(fis []FieldInfo) (code string) {
 	return strings.Join(subs, "")
 }
 
-func createDecodeObjectBody(fis []FieldInfo) (code string) {
+func createDecodeObjectBody(fis []fieldInfo) (code string) {
 	if len(fis) == 0 {
 		return "err = r.Skip()"
 	}
@@ -292,7 +296,7 @@ func createDecodeObjectBody(fis []FieldInfo) (code string) {
 	return strings.Join(subs, "")
 }
 
-func createEncodeObjectBody(fis []FieldInfo) (code string) {
+func createEncodeObjectBody(fis []fieldInfo) (code string) {
 	if len(fis) == 0 {
 		return ""
 	}
@@ -331,7 +335,7 @@ func createEncodeObjectBody(fis []FieldInfo) (code string) {
 	return "off := 1\n" + strings.Join(subs, "")
 }
 
-func createDefineLengthBody(di DefineInfo) (code string) {
+func createDefineLengthBody(di defineInfo) (code string) {
 	vlt := ""
 	if !isVolatile(di.TypeName) {
 		vlt = ", 0"
@@ -352,7 +356,7 @@ func createDefineLengthBody(di DefineInfo) (code string) {
 	}
 }
 
-func createDecodeDefineBody(di DefineInfo) (code string) {
+func createDecodeDefineBody(di defineInfo) (code string) {
 	if fn, unknown := getReaderTypeFormat(di.TypeName); !unknown {
 		if di.Array {
 			return "*o, err = " + fmt.Sprintf(fn, "s") + "\n"
@@ -368,7 +372,7 @@ func createDecodeDefineBody(di DefineInfo) (code string) {
 	}
 }
 
-func createEncodeDefineBody(di DefineInfo) (code string) {
+func createEncodeDefineBody(di defineInfo) (code string) {
 	if fn, unknown := getWriterTypeFormat(di.TypeName); !unknown {
 		if di.Array {
 			return fmt.Sprintf(fn, "s", "*o") + "\n"

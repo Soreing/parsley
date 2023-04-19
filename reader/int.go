@@ -4,6 +4,8 @@ import (
 	"math"
 )
 
+// intSeq extracts int values recursively untill the closing bracket
+// is found, then assigns the elements to the allocated slice.
 func (r *Reader) intSeq(idx int) (res []int, err error) {
 	var n int
 	if n, err = r.Int(); err == nil {
@@ -20,6 +22,9 @@ func (r *Reader) intSeq(idx int) (res []int, err error) {
 	return
 }
 
+// Ints extracts an array of int values from the data and skips all whitespace
+// after it. The values must be enclosed in square brackets "[...]" and the
+// values must be separated by commas.
 func (r *Reader) Ints() (res []int, err error) {
 	if err = r.OpenArray(); err == nil {
 		if r.Token() == TerminatorToken {
@@ -32,23 +37,25 @@ func (r *Reader) Ints() (res []int, err error) {
 	return
 }
 
+// Int extracts the next int value from the data and skips all
+// whitespace after it.
 func (r *Reader) Int() (n int, err error) {
 	dat := r.dat[r.pos:]
 	num, neg, pos, ok := readInteger(dat)
 	if !ok {
 		if num == 0 && neg {
-			return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+			return 0, newNumberOutOfRangeError(dat[:pos], r.pos)
 		} else if pos == len(dat) {
-			return 0, NewEndOfFileError()
+			return 0, newEndOfFileError()
 		} else {
-			return 0, NewInvalidCharacterError(dat[pos], r.pos+pos)
+			return 0, newInvalidCharacterError(dat[pos], r.pos+pos)
 		}
 	} else if !neg && num <= math.MaxInt32 {
 		n = int(num)
 	} else if neg && num <= math.MaxInt32+1 {
 		n = int(-int64(num))
 	} else {
-		return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+		return 0, newNumberOutOfRangeError(dat[:pos], r.pos)
 	}
 
 	r.pos += pos
@@ -56,6 +63,7 @@ func (r *Reader) Int() (n int, err error) {
 	return
 }
 
+// Intp extracts the next int value and returns a pointer variable.
 func (r *Reader) Intp() (res *int, err error) {
 	if v, err := r.Int(); err == nil {
 		res = &v
@@ -63,6 +71,8 @@ func (r *Reader) Intp() (res *int, err error) {
 	return
 }
 
+// int8Seq extracts int8 values recursively untill the closing bracket
+// is found, then assigns the elements to the allocated slice.
 func (r *Reader) int8Seq(idx int) (res []int8, err error) {
 	var n int8
 	if n, err = r.Int8(); err == nil {
@@ -79,6 +89,9 @@ func (r *Reader) int8Seq(idx int) (res []int8, err error) {
 	return
 }
 
+// Int8s extracts an array of int8 values from the data and skips all
+// whitespace after it. The values must be enclosed in square brackets "[...]"
+// and the values must be separated by commas.
 func (r *Reader) Int8s() (res []int8, err error) {
 	if err = r.OpenArray(); err == nil {
 		if r.Token() == TerminatorToken {
@@ -91,23 +104,25 @@ func (r *Reader) Int8s() (res []int8, err error) {
 	return
 }
 
+// Int8 extracts the next int8 value from the data and skips all
+// whitespace after it.
 func (r *Reader) Int8() (n int8, err error) {
 	dat := r.dat[r.pos:]
 	num, neg, pos, ok := readInteger(dat)
 	if !ok {
 		if num == 0 && neg {
-			return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+			return 0, newNumberOutOfRangeError(dat[:pos], r.pos)
 		} else if pos == len(dat) {
-			return 0, NewEndOfFileError()
+			return 0, newEndOfFileError()
 		} else {
-			return 0, NewInvalidCharacterError(dat[pos], r.pos+pos)
+			return 0, newInvalidCharacterError(dat[pos], r.pos+pos)
 		}
 	} else if !neg && num <= math.MaxInt8 {
 		n = int8(num)
 	} else if neg && num <= math.MaxInt8+1 {
 		n = int8(-int64(num))
 	} else {
-		return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+		return 0, newNumberOutOfRangeError(dat[:pos], r.pos)
 	}
 
 	r.pos += pos
@@ -115,6 +130,7 @@ func (r *Reader) Int8() (n int8, err error) {
 	return
 }
 
+// Int8p extracts the next int8 value and returns a pointer variable.
 func (r *Reader) Int8p() (res *int8, err error) {
 	if v, err := r.Int8(); err == nil {
 		res = &v
@@ -122,6 +138,8 @@ func (r *Reader) Int8p() (res *int8, err error) {
 	return
 }
 
+// int16Seq extracts int16 values recursively untill the closing bracket
+// is found, then assigns the elements to the allocated slice.
 func (r *Reader) int16Seq(idx int) (res []int16, err error) {
 	var n int16
 	if n, err = r.Int16(); err == nil {
@@ -138,6 +156,9 @@ func (r *Reader) int16Seq(idx int) (res []int16, err error) {
 	return
 }
 
+// Int16s extracts an array of int16 values from the data and skips all
+// whitespace after it. The values must be enclosed in square brackets "[...]"
+// and the values must be separated by commas.
 func (r *Reader) Int16s() (res []int16, err error) {
 	if err = r.OpenArray(); err == nil {
 		if r.Token() == TerminatorToken {
@@ -150,23 +171,25 @@ func (r *Reader) Int16s() (res []int16, err error) {
 	return
 }
 
+// Int16 extracts the next int16 value from the data and skips all
+// whitespace after it.
 func (r *Reader) Int16() (n int16, err error) {
 	dat := r.dat[r.pos:]
 	num, neg, pos, ok := readInteger(dat)
 	if !ok {
 		if num == 0 && neg {
-			return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+			return 0, newNumberOutOfRangeError(dat[:pos], r.pos)
 		} else if pos == len(dat) {
-			return 0, NewEndOfFileError()
+			return 0, newEndOfFileError()
 		} else {
-			return 0, NewInvalidCharacterError(dat[pos], r.pos+pos)
+			return 0, newInvalidCharacterError(dat[pos], r.pos+pos)
 		}
 	} else if !neg && num <= math.MaxInt16 {
 		n = int16(num)
 	} else if neg && num <= math.MaxInt16+1 {
 		n = int16(-int64(num))
 	} else {
-		return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+		return 0, newNumberOutOfRangeError(dat[:pos], r.pos)
 	}
 
 	r.pos += pos
@@ -174,6 +197,7 @@ func (r *Reader) Int16() (n int16, err error) {
 	return
 }
 
+// Int16p extracts the next int16 value and returns a pointer variable.
 func (r *Reader) Int16p() (res *int16, err error) {
 	if v, err := r.Int16(); err == nil {
 		res = &v
@@ -181,6 +205,8 @@ func (r *Reader) Int16p() (res *int16, err error) {
 	return
 }
 
+// int32Seq extracts int32 values recursively untill the closing bracket
+// is found, then assigns the elements to the allocated slice.
 func (r *Reader) int32Seq(idx int) (res []int32, err error) {
 	var n int32
 	if n, err = r.Int32(); err == nil {
@@ -197,6 +223,9 @@ func (r *Reader) int32Seq(idx int) (res []int32, err error) {
 	return
 }
 
+// Int32s extracts an array of int32 values from the data and skips all
+// whitespace after it. The values must be enclosed in square brackets "[...]"
+// and the values must be separated by commas.
 func (r *Reader) Int32s() (res []int32, err error) {
 	if err = r.OpenArray(); err == nil {
 		if r.Token() == TerminatorToken {
@@ -209,23 +238,25 @@ func (r *Reader) Int32s() (res []int32, err error) {
 	return
 }
 
+// Int32 extracts the next int32 value from the data and skips all
+// whitespace after it.
 func (r *Reader) Int32() (n int32, err error) {
 	dat := r.dat[r.pos:]
 	num, neg, pos, ok := readInteger(dat)
 	if !ok {
 		if num == 0 && neg {
-			return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+			return 0, newNumberOutOfRangeError(dat[:pos], r.pos)
 		} else if pos == len(dat) {
-			return 0, NewEndOfFileError()
+			return 0, newEndOfFileError()
 		} else {
-			return 0, NewInvalidCharacterError(dat[pos], r.pos+pos)
+			return 0, newInvalidCharacterError(dat[pos], r.pos+pos)
 		}
 	} else if !neg && num <= math.MaxInt32 {
 		n = int32(num)
 	} else if neg && num <= math.MaxInt32+1 {
 		n = int32(-int64(num))
 	} else {
-		return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+		return 0, newNumberOutOfRangeError(dat[:pos], r.pos)
 	}
 
 	r.pos += pos
@@ -233,6 +264,7 @@ func (r *Reader) Int32() (n int32, err error) {
 	return
 }
 
+// Int32p extracts the next int32 value and returns a pointer variable.
 func (r *Reader) Int32p() (res *int32, err error) {
 	if v, err := r.Int32(); err == nil {
 		res = &v
@@ -240,6 +272,8 @@ func (r *Reader) Int32p() (res *int32, err error) {
 	return
 }
 
+// int64Seq extracts int64 values recursively untill the closing bracket
+// is found, then assigns the elements to the allocated slice.
 func (r *Reader) int64Seq(idx int) (res []int64, err error) {
 	var n int64
 	if n, err = r.Int64(); err == nil {
@@ -256,6 +290,9 @@ func (r *Reader) int64Seq(idx int) (res []int64, err error) {
 	return
 }
 
+// Int64s extracts an array of int64 values from the data and skips all
+// whitespace after it. The values must be enclosed in square brackets "[...]"
+// and the values must be separated by commas.
 func (r *Reader) Int64s() (res []int64, err error) {
 	if err = r.OpenArray(); err == nil {
 		if r.Token() == TerminatorToken {
@@ -268,16 +305,18 @@ func (r *Reader) Int64s() (res []int64, err error) {
 	return
 }
 
+// Int64 extracts the next int64 value from the data and skips all
+// whitespace after it.
 func (r *Reader) Int64() (n int64, err error) {
 	dat := r.dat[r.pos:]
 	num, neg, pos, ok := readInteger(dat)
 	if !ok {
 		if num == 0 && neg {
-			return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+			return 0, newNumberOutOfRangeError(dat[:pos], r.pos)
 		} else if pos == len(dat) {
-			return 0, NewEndOfFileError()
+			return 0, newEndOfFileError()
 		} else {
-			return 0, NewInvalidCharacterError(dat[pos], r.pos+pos)
+			return 0, newInvalidCharacterError(dat[pos], r.pos+pos)
 		}
 	} else if !neg && num <= math.MaxInt64 {
 		n = int64(num)
@@ -286,7 +325,7 @@ func (r *Reader) Int64() (n int64, err error) {
 	} else if neg && num == math.MaxInt64+1 {
 		n = math.MinInt64
 	} else {
-		return 0, NewNumberOutOfRangeError(dat[:pos], r.pos)
+		return 0, newNumberOutOfRangeError(dat[:pos], r.pos)
 	}
 
 	r.pos += pos
@@ -294,6 +333,7 @@ func (r *Reader) Int64() (n int64, err error) {
 	return
 }
 
+// Int64p extracts the next int64 value and returns a pointer variable.
 func (r *Reader) Int64p() (res *int64, err error) {
 	if v, err := r.Int64(); err == nil {
 		res = &v

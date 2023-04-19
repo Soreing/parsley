@@ -60,69 +60,69 @@ func Test_SkipNumber(t *testing.T) {
 		{
 			Name: "Leading Zero",
 			In:   []byte(`0123`),
-			Pos:  0, Err: NewInvalidCharacterError('1', 1),
+			Pos:  0, Err: newInvalidCharacterError('1', 1),
 		},
 		{
 			Name: "Trailing Sign",
 			In:   []byte(`-,`),
-			Pos:  0, Err: NewInvalidCharacterError(',', 1),
+			Pos:  0, Err: newInvalidCharacterError(',', 1),
 		},
 		{
 			Name: "Trailing Sign End of Input",
 			In:   []byte(`-`),
-			Pos:  0, Err: NewEndOfFileError(),
+			Pos:  0, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Leading Dot",
 			In:   []byte(`.5`),
-			Pos:  0, Err: NewInvalidCharacterError('.', 0),
+			Pos:  0, Err: newInvalidCharacterError('.', 0),
 		},
 		{
 			Name: "Trailing Dot",
 			In:   []byte(`2.,`),
-			Pos:  0, Err: NewInvalidCharacterError(',', 2),
+			Pos:  0, Err: newInvalidCharacterError(',', 2),
 		},
 		{
 			Name: "Trailing Dot End of Input",
 			In:   []byte(`2.`),
-			Pos:  0, Err: NewEndOfFileError(),
+			Pos:  0, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Trailing Exponent End of Input",
 			In:   []byte(`2.0e`),
-			Pos:  0, Err: NewEndOfFileError(),
+			Pos:  0, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Trailing Exponent",
 			In:   []byte(`2.0e,`),
-			Pos:  0, Err: NewInvalidCharacterError(',', 4),
+			Pos:  0, Err: newInvalidCharacterError(',', 4),
 		},
 		{
 			Name: "Trailing Positive Exponent End of Input",
 			In:   []byte(`2.0e+`),
-			Pos:  0, Err: NewEndOfFileError(),
+			Pos:  0, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Trailing Negative Exponent End of Input",
 			In:   []byte(`2.0e-`),
-			Pos:  0, Err: NewEndOfFileError(),
+			Pos:  0, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Trailing Positive Exponent",
 			In:   []byte(`2.0e+,`),
-			Pos:  0, Err: NewInvalidCharacterError(',', 5),
+			Pos:  0, Err: newInvalidCharacterError(',', 5),
 		},
 		{
 			Name: "Trailing Negative Exponent",
 			In:   []byte(`2.0e-,`),
 			Pos:  0,
-			Err:  NewInvalidCharacterError(',', 5),
+			Err:  newInvalidCharacterError(',', 5),
 		},
 		{
 			Name: "Exponent No Sign",
 			In:   []byte(`2.0e2`),
 			Pos:  0,
-			Err:  NewInvalidCharacterError('2', 4),
+			Err:  newInvalidCharacterError('2', 4),
 		},
 	}
 

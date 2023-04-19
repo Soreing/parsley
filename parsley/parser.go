@@ -13,35 +13,35 @@ import (
 	"strings"
 )
 
-type Import struct {
+type import_ struct {
 	name string
 	path string
 }
 
-type Type struct {
+type type_ struct {
 	arr bool
 	ptr bool
 	pkg string
 	typ string
 }
 
-type Struct struct {
+type struct_ struct {
 	name   string
-	fields []Field
+	fields []field_
 }
 
-type Field struct {
+type field_ struct {
 	name string
 	tag  string
-	typ  Type
+	typ  type_
 }
 
-type Define struct {
+type define_ struct {
 	name string
-	typ  Type
+	typ  type_
 }
 
-func newImport(at *ast.ImportSpec) Import {
+func newImport(at *ast.ImportSpec) import_ {
 	n, p := "", at.Path.Value
 	if at.Name != nil {
 		n = at.Name.Name
@@ -49,13 +49,13 @@ func newImport(at *ast.ImportSpec) Import {
 		toks := strings.Split(strings.Trim(at.Path.Value, "\""), "/")
 		n = toks[len(toks)-1]
 	}
-	return Import{
+	return import_{
 		name: n,
 		path: p,
 	}
 }
 
-func getType(e ast.Expr) (t Type, err error) {
+func getType(e ast.Expr) (t type_, err error) {
 	if arr, ok := e.(*ast.ArrayType); ok {
 		t.arr = true
 		e = arr.Elt
@@ -80,29 +80,29 @@ func getType(e ast.Expr) (t Type, err error) {
 	return
 }
 
-func newField(f *ast.Field) (Field, error) {
+func newField(f *ast.Field) (field_, error) {
 	if len(f.Names) == 0 || f.Names[0].Name == "" {
-		return Field{}, errors.New("field has no name")
+		return field_{}, errors.New("field has no name")
 	}
 
 	ts, err := getType(f.Type)
 	if err != nil {
-		return Field{}, err
+		return field_{}, err
 	}
 
 	tag := ""
 	if f.Tag != nil {
 		tag = f.Tag.Value
 	}
-	return Field{
+	return field_{
 		name: f.Names[0].Name,
 		tag:  tag,
 		typ:  ts,
 	}, nil
 }
 
-func newStruct(name string, public bool, st *ast.StructType) Struct {
-	flds := []Field{}
+func newStruct(name string, public bool, st *ast.StructType) struct_ {
+	flds := []field_{}
 	for _, f := range st.Fields.List {
 		if fl, err := newField(f); err == nil {
 			if ast.IsExported(fl.name) || public {
@@ -112,24 +112,24 @@ func newStruct(name string, public bool, st *ast.StructType) Struct {
 			fmt.Println(err.Error())
 		}
 	}
-	return Struct{
+	return struct_{
 		name:   name,
 		fields: flds,
 	}
 }
 
-type Parser struct {
+type parser_ struct {
 	PkgDir    string
 	PkgName   string
-	Structs   []Struct
-	Defines   []Define
-	Imports   []Import
+	Structs   []struct_
+	Defines   []define_
+	Imports   []import_
 	AllTypes  bool
 	AllPublic bool
 }
 
-type visitor struct {
-	*Parser
+type visitor_ struct {
+	*parser_
 
 	skip bool
 	json bool
@@ -143,7 +143,7 @@ const (
 	publicTag = "public"
 )
 
-func (v *visitor) handleComment(comments *ast.CommentGroup) {
+func (v *visitor_) handleComment(comments *ast.CommentGroup) {
 	if comments == nil {
 		return
 	}
@@ -181,7 +181,7 @@ func (v *visitor) handleComment(comments *ast.CommentGroup) {
 	}
 }
 
-func (v *visitor) Visit(n ast.Node) (w ast.Visitor) {
+func (v *visitor_) Visit(n ast.Node) (w ast.Visitor) {
 	switch n := n.(type) {
 	case *ast.Package:
 		return v
@@ -219,7 +219,7 @@ func (v *visitor) Visit(n ast.Node) (w ast.Visitor) {
 				v.Structs = append(v.Structs, st)
 			case *ast.Ident, *ast.SelectorExpr, *ast.ArrayType:
 				if ts, err := getType(n.Type); err == nil {
-					v.Defines = append(v.Defines, Define{
+					v.Defines = append(v.Defines, define_{
 						name: name,
 						typ:  ts,
 					})
@@ -233,7 +233,7 @@ func (v *visitor) Visit(n ast.Node) (w ast.Visitor) {
 	return nil
 }
 
-func (p *Parser) Parse(fname string, isDir bool) (err error) {
+func (p *parser_) Parse(fname string, isDir bool) (err error) {
 	info, err := os.Stat(fname)
 	if err != nil {
 		log.Fatal(err)
@@ -256,7 +256,7 @@ func (p *Parser) Parse(fname string, isDir bool) (err error) {
 			return err
 		}
 		for _, pckg := range packages {
-			ast.Walk(&visitor{Parser: p}, pckg)
+			ast.Walk(&visitor_{parser_: p}, pckg)
 		}
 	} else {
 		f, err := parser.ParseFile(
@@ -268,7 +268,7 @@ func (p *Parser) Parse(fname string, isDir bool) (err error) {
 		if err != nil {
 			return err
 		}
-		ast.Walk(&visitor{Parser: p}, f)
+		ast.Walk(&visitor_{parser_: p}, f)
 	}
 
 	// Sort structs for consistent code generation

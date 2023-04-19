@@ -25,7 +25,7 @@ func Test_OpenObject(t *testing.T) {
 		{
 			Name: "Missing Opening Brace",
 			In:   []byte(`key`),
-			Pos:  0, Err: NewInvalidCharacterError('k', 0),
+			Pos:  0, Err: newInvalidCharacterError('k', 0),
 		},
 	}
 
@@ -63,7 +63,7 @@ func Test_CloseObject(t *testing.T) {
 		{
 			Name: "Missing Closing Brace",
 			In:   []byte(`,key`),
-			Pos:  0, Err: NewInvalidCharacterError(',', 0),
+			Pos:  0, Err: newInvalidCharacterError(',', 0),
 		},
 	}
 
@@ -104,13 +104,13 @@ func Test_ReadKey(t *testing.T) {
 			Name: "Missing Colon",
 			In:   []byte(`"key""value"`),
 			Out:  nil,
-			Pos:  5, Err: NewInvalidCharacterError('"', 5),
+			Pos:  5, Err: newInvalidCharacterError('"', 5),
 		},
 		{
 			Name: "Missing Colon End of Input",
 			In:   []byte(`"key"`),
 			Out:  nil,
-			Pos:  5, Err: NewEndOfFileError(),
+			Pos:  5, Err: newEndOfFileError(),
 		},
 	}
 
@@ -161,17 +161,17 @@ func Test_SkipObject(t *testing.T) {
 		{
 			Name: "Missing Opening Brace",
 			In:   []byte(`"key":"value","key":"value"}`),
-			Pos:  0, Err: NewInvalidCharacterError('"', 0),
+			Pos:  0, Err: newInvalidCharacterError('"', 0),
 		},
 		{
 			Name: "Missing Closing Brace",
 			In:   []byte(`{"key":"value","key":"value"`),
-			Pos:  28, Err: NewEndOfFileError(),
+			Pos:  28, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Incomplete Object",
 			In:   []byte(`{"key":"value","key":"value",`),
-			Pos:  29, Err: NewEndOfFileError(),
+			Pos:  29, Err: newEndOfFileError(),
 		},
 	}
 

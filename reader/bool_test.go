@@ -23,13 +23,13 @@ func Test_ReadBool(t *testing.T) {
 			Name: "Not True",
 			In:   []byte(`trale`),
 			Out:  false,
-			Pos:  0, Err: NewInvalidCharacterError('a', 2),
+			Pos:  0, Err: newInvalidCharacterError('a', 2),
 		},
 		{
 			Name: "Short True",
 			In:   []byte(`tr`),
 			Out:  false,
-			Pos:  0, Err: NewEndOfFileError(),
+			Pos:  0, Err: newEndOfFileError(),
 		},
 		{
 			Name: "False",
@@ -41,13 +41,13 @@ func Test_ReadBool(t *testing.T) {
 			Name: "Wrong False",
 			In:   []byte(`faulse`),
 			Out:  false,
-			Pos:  0, Err: NewInvalidCharacterError('u', 2),
+			Pos:  0, Err: newInvalidCharacterError('u', 2),
 		},
 		{
 			Name: "Short False",
 			In:   []byte(`fa`),
 			Out:  false,
-			Pos:  0, Err: NewEndOfFileError(),
+			Pos:  0, Err: newEndOfFileError(),
 		},
 	}
 
@@ -104,25 +104,25 @@ func Test_ReadBools(t *testing.T) {
 			Name: "Missing Opening Bracket",
 			In:   []byte(`true,false]`),
 			Out:  nil,
-			Pos:  0, Err: NewInvalidCharacterError('t', 0),
+			Pos:  0, Err: newInvalidCharacterError('t', 0),
 		},
 		{
 			Name: "Missing Closing Bracket",
 			In:   []byte(`[true,false`),
 			Out:  []bool{true, false},
-			Pos:  11, Err: NewEndOfFileError(),
+			Pos:  11, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Incomplete Slice",
 			In:   []byte(`[true,false,`),
 			Out:  nil,
-			Pos:  12, Err: NewEndOfFileError(),
+			Pos:  12, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Missing Comma Between Elements",
 			In:   []byte(`[truefalse]`),
 			Out:  []bool{true},
-			Pos:  5, Err: NewInvalidCharacterError('f', 5),
+			Pos:  5, Err: newInvalidCharacterError('f', 5),
 		},
 	}
 

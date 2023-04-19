@@ -1,5 +1,7 @@
 package reader
 
+// skipObject skips an entire object enclosed by curly braces "{...}" and the
+// whitespace after the object.
 func (r *Reader) skipObject() (err error) {
 	if err = r.OpenObject(); err == nil {
 		if r.Token() != TerminatorToken {
@@ -14,9 +16,9 @@ func (r *Reader) skipObject() (err error) {
 		if err == nil {
 			dat, pos := r.dat, r.pos
 			if pos == len(dat) {
-				return NewEndOfFileError()
+				return newEndOfFileError()
 			} else if dat[pos] != '}' {
-				return NewInvalidCharacterError(dat[pos], pos)
+				return newInvalidCharacterError(dat[pos], pos)
 			} else {
 				r.pos++
 			}
@@ -25,12 +27,14 @@ func (r *Reader) skipObject() (err error) {
 	return
 }
 
+// OpenObject consumes an opening curly brace '{' character and skips all
+// whitespaces after it.
 func (r *Reader) OpenObject() error {
 	if r.pos >= len(r.dat) {
-		return NewEndOfFileError()
+		return newEndOfFileError()
 	}
 	if r.dat[r.pos] != '{' {
-		return NewInvalidCharacterError(r.dat[r.pos], r.pos)
+		return newInvalidCharacterError(r.dat[r.pos], r.pos)
 	}
 
 	r.pos++
@@ -38,11 +42,13 @@ func (r *Reader) OpenObject() error {
 	return nil
 }
 
+// CloseObject consumes a closing curly brace '}' character and skips all
+// whitespaces after it.
 func (r *Reader) CloseObject() error {
 	if r.pos >= len(r.dat) {
-		return NewEndOfFileError()
+		return newEndOfFileError()
 	} else if r.dat[r.pos] != '}' {
-		return NewInvalidCharacterError(r.dat[r.pos], r.pos)
+		return newInvalidCharacterError(r.dat[r.pos], r.pos)
 	}
 
 	r.pos++
@@ -50,14 +56,16 @@ func (r *Reader) CloseObject() error {
 	return nil
 }
 
+// Key extracts the next string and checks if it is followed by a colon ':'
+// character. It returns the key if successful.
 func (r *Reader) Key() ([]byte, error) {
 	if key, err := r.Bytes(); err != nil {
 		return nil, err
 	} else {
 		if r.pos == len(r.dat) {
-			return nil, NewEndOfFileError()
+			return nil, newEndOfFileError()
 		} else if r.dat[r.pos] != ':' {
-			return nil, NewInvalidCharacterError(r.dat[r.pos], r.pos)
+			return nil, newInvalidCharacterError(r.dat[r.pos], r.pos)
 		}
 
 		r.pos++

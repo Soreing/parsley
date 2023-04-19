@@ -42,7 +42,7 @@ func generate(fname string) error {
 		return err
 	}
 
-	p := Parser{
+	p := parser_{
 		AllTypes:  *allTypes,
 		AllPublic: *allPublic,
 	}
@@ -59,38 +59,38 @@ func generate(fname string) error {
 		outName = strings.TrimSuffix(fname, ".go") + "_parsley.go"
 	}
 
-	g := NewGenerator()
+	g := newGenerator()
 
-	g.SetPackage(p.PkgName)
+	g.setPackage(p.PkgName)
 
 	if *lowerCase {
-		g.SetDefaultCase(LOWER_CASE)
+		g.setDefaultCase(LOWER_CASE)
 	} else if *camelCase {
-		g.SetDefaultCase(CAMEL_CASE)
+		g.setDefaultCase(CAMEL_CASE)
 	} else if *kebabCase {
-		g.SetDefaultCase(KEBAB_CASE)
+		g.setDefaultCase(KEBAB_CASE)
 	} else if *snakeCase {
-		g.SetDefaultCase(SNAKE_CASE)
+		g.setDefaultCase(SNAKE_CASE)
 	} else if *pascalCase {
-		g.SetDefaultCase(PASCAL_CASE)
+		g.setDefaultCase(PASCAL_CASE)
 	} else {
-		g.SetDefaultCase(LOWER_CASE)
+		g.setDefaultCase(LOWER_CASE)
 	}
 
-	g.WriteHeader()
+	g.writeHeader()
 
-	pkgs := g.GetRequiredPackages(p.Imports, p.Defines, p.Structs)
-	g.WriteImports(pkgs)
+	pkgs := g.getRequiredPackages(p.Imports, p.Defines, p.Structs)
+	g.writeImports(pkgs)
 
 	for _, st := range p.Structs {
-		g.WriteStruct(st)
+		g.writeStruct(st)
 	}
 
 	for _, df := range p.Defines {
-		g.WriteDefine(df)
+		g.writeDefine(df)
 	}
 
-	fmtd, err := g.Format(g.ReadAll())
+	fmtd, err := g.format(g.readAll())
 	if err != nil {
 		log.Fatalf("formating output: %s", err)
 	}

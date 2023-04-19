@@ -26,7 +26,7 @@ func Test_ReadUInt(t *testing.T) {
 		{
 			Name: "Negative Integer",
 			In:   []byte(`-123`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`-123`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`-123`), 0),
 		},
 		{
 			Name: "Integer With Whitespace",
@@ -41,17 +41,17 @@ func Test_ReadUInt(t *testing.T) {
 		{
 			Name: "UInt Max +1",
 			In:   []byte(`4294967296`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`4294967296`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`4294967296`), 0),
 		},
 		{
 			Name: "Syntax Error",
 			In:   []byte(`01`),
-			Out:  0, Pos: 0, Err: NewInvalidCharacterError('1', 1),
+			Out:  0, Pos: 0, Err: newInvalidCharacterError('1', 1),
 		},
 		{
 			Name: "End of Input",
 			In:   []byte(`12e`),
-			Out:  0, Pos: 0, Err: NewEndOfFileError(),
+			Out:  0, Pos: 0, Err: newEndOfFileError(),
 		},
 	}
 
@@ -93,7 +93,7 @@ func Test_ReadUInt64(t *testing.T) {
 		{
 			Name: "Negative Integer",
 			In:   []byte(`-123`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`-123`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`-123`), 0),
 		},
 		{
 			Name: "Integer With Whitespace",
@@ -108,17 +108,17 @@ func Test_ReadUInt64(t *testing.T) {
 		{
 			Name: "UInt64 Max +1",
 			In:   []byte(`18446744073709551616`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`18446744073709551616`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`18446744073709551616`), 0),
 		},
 		{
 			Name: "Syntax Error",
 			In:   []byte(`01`),
-			Out:  0, Pos: 0, Err: NewInvalidCharacterError('1', 1),
+			Out:  0, Pos: 0, Err: newInvalidCharacterError('1', 1),
 		},
 		{
 			Name: "End of Input",
 			In:   []byte(`12e`),
-			Out:  0, Pos: 0, Err: NewEndOfFileError(),
+			Out:  0, Pos: 0, Err: newEndOfFileError(),
 		},
 	}
 
@@ -160,7 +160,7 @@ func Test_ReadUInt32(t *testing.T) {
 		{
 			Name: "Negative Integer",
 			In:   []byte(`-123`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`-123`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`-123`), 0),
 		},
 		{
 			Name: "Integer With Whitespace",
@@ -175,17 +175,17 @@ func Test_ReadUInt32(t *testing.T) {
 		{
 			Name: "UInt32 Max +1",
 			In:   []byte(`4294967296`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`4294967296`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`4294967296`), 0),
 		},
 		{
 			Name: "Syntax Error",
 			In:   []byte(`01`),
-			Out:  0, Pos: 0, Err: NewInvalidCharacterError('1', 1),
+			Out:  0, Pos: 0, Err: newInvalidCharacterError('1', 1),
 		},
 		{
 			Name: "End of Input",
 			In:   []byte(`12e`),
-			Out:  0, Pos: 0, Err: NewEndOfFileError(),
+			Out:  0, Pos: 0, Err: newEndOfFileError(),
 		},
 	}
 
@@ -227,7 +227,7 @@ func Test_ReadUInt16(t *testing.T) {
 		{
 			Name: "Negative Integer",
 			In:   []byte(`-123`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`-123`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`-123`), 0),
 		},
 		{
 			Name: "Integer With Whitespace",
@@ -242,17 +242,17 @@ func Test_ReadUInt16(t *testing.T) {
 		{
 			Name: "UInt16 Max +1",
 			In:   []byte(`65536`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`65536`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`65536`), 0),
 		},
 		{
 			Name: "Syntax Error",
 			In:   []byte(`01`),
-			Out:  0, Pos: 0, Err: NewInvalidCharacterError('1', 1),
+			Out:  0, Pos: 0, Err: newInvalidCharacterError('1', 1),
 		},
 		{
 			Name: "End of Input",
 			In:   []byte(`12e`),
-			Out:  0, Pos: 0, Err: NewEndOfFileError(),
+			Out:  0, Pos: 0, Err: newEndOfFileError(),
 		},
 	}
 
@@ -294,7 +294,7 @@ func Test_ReadUInt8(t *testing.T) {
 		{
 			Name: "Negative Integer",
 			In:   []byte(`-123`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`-123`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`-123`), 0),
 		},
 		{
 			Name: "Integer With Whitespace",
@@ -309,17 +309,17 @@ func Test_ReadUInt8(t *testing.T) {
 		{
 			Name: "UInt8 Max +1",
 			In:   []byte(`256`),
-			Out:  0, Pos: 0, Err: NewNumberOutOfRangeError([]byte(`256`), 0),
+			Out:  0, Pos: 0, Err: newNumberOutOfRangeError([]byte(`256`), 0),
 		},
 		{
 			Name: "Syntax Error",
 			In:   []byte(`01`),
-			Out:  0, Pos: 0, Err: NewInvalidCharacterError('1', 1),
+			Out:  0, Pos: 0, Err: newInvalidCharacterError('1', 1),
 		},
 		{
 			Name: "End of Input",
 			In:   []byte(`12e`),
-			Out:  0, Pos: 0, Err: NewEndOfFileError(),
+			Out:  0, Pos: 0, Err: newEndOfFileError(),
 		},
 	}
 
@@ -382,25 +382,25 @@ func Test_ReadBase64(t *testing.T) {
 			Name: "Missing Opening Quote",
 			In:   []byte(`PyOrTFVqms1X"`),
 			Out:  nil,
-			Pos:  0, Err: NewInvalidCharacterError('P', 0),
+			Pos:  0, Err: newInvalidCharacterError('P', 0),
 		},
 		{
 			Name: "Missing Closing Quote",
 			In:   []byte(`"PyOrTFVqms1X`),
 			Out:  nil,
-			Pos:  0, Err: NewEndOfFileError(),
+			Pos:  0, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Incomplete Group",
 			In:   []byte(`"PyOrTFVqm"`),
 			Out:  nil,
-			Pos:  0, Err: NewBase64PaddingError(10),
+			Pos:  0, Err: newBase64PaddingError(10),
 		},
 		{
 			Name: "Invalid Digit",
 			In:   []byte(`"PyOrTF,qms1X"`),
 			Out:  nil,
-			Pos:  0, Err: NewInvalidCharacterError(',', 7),
+			Pos:  0, Err: newInvalidCharacterError(',', 7),
 		},
 	}
 

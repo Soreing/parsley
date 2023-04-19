@@ -40,37 +40,37 @@ func Test_ReadBytes(t *testing.T) {
 			Name: "Missing Opening Quote",
 			In:   []byte(`Hello, World!"`),
 			Out:  nil,
-			Pos:  0, Err: NewInvalidCharacterError('H', 0),
+			Pos:  0, Err: newInvalidCharacterError('H', 0),
 		},
 		{
 			Name: "Missing Closing Quote",
 			In:   []byte(`"Hello, World!`),
 			Out:  nil,
-			Pos:  0, Err: NewEndOfFileError(),
+			Pos:  0, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Invalid Escape",
 			In:   []byte(`"Hello,\xWorld!"`),
 			Out:  nil,
-			Pos:  0, Err: NewInvalidCharacterError('x', 8),
+			Pos:  0, Err: newInvalidCharacterError('x', 8),
 		},
 		{
 			Name: "Invalid Unicode Sequence",
 			In:   []byte(`"Hello,\uBeeTWorld!"`),
 			Out:  nil,
-			Pos:  0, Err: NewInvalidCharacterError('T', 12),
+			Pos:  0, Err: newInvalidCharacterError('T', 12),
 		},
 		{
 			Name: "Incomplete Escape At End",
 			In:   []byte(`"Hello, World!\`),
 			Out:  nil,
-			Pos:  0, Err: NewEndOfFileError(),
+			Pos:  0, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Incomplete Unicode Sequence At End",
 			In:   []byte(`"Hello, World!\uA`),
 			Out:  nil,
-			Pos:  0, Err: NewEndOfFileError(),
+			Pos:  0, Err: newEndOfFileError(),
 		},
 	}
 
@@ -120,27 +120,27 @@ func Test_SkipString(t *testing.T) {
 		{
 			Name: "Missing Closing Quote",
 			In:   []byte(`"Hello, World!`),
-			Pos:  0, Err: NewEndOfFileError(),
+			Pos:  0, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Invalid Escape",
 			In:   []byte(`"Hello,\xWorld!"`),
-			Pos:  0, Err: NewInvalidCharacterError('x', 8),
+			Pos:  0, Err: newInvalidCharacterError('x', 8),
 		},
 		{
 			Name: "Invalid Unicode Sequence",
 			In:   []byte(`"Hello,\uBeeTWorld!"`),
-			Pos:  0, Err: NewInvalidCharacterError('T', 12),
+			Pos:  0, Err: newInvalidCharacterError('T', 12),
 		},
 		{
 			Name: "Incomplete Escape At End",
 			In:   []byte(`"Hello, World!\`),
-			Pos:  0, Err: NewEndOfFileError(),
+			Pos:  0, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Incomplete Unicode Sequence At End",
 			In:   []byte(`"Hello, World!\uA`),
-			Pos:  0, Err: NewEndOfFileError(),
+			Pos:  0, Err: newEndOfFileError(),
 		},
 	}
 
@@ -194,25 +194,25 @@ func Test_ReadStrings(t *testing.T) {
 			Name: "Missing Opening Bracket",
 			In:   []byte(`"Hello","World"]`),
 			Out:  nil,
-			Pos:  0, Err: NewInvalidCharacterError('"', 0),
+			Pos:  0, Err: newInvalidCharacterError('"', 0),
 		},
 		{
 			Name: "Missing Closing Bracket",
 			In:   []byte(`["Hello","World"`),
 			Out:  []string{"Hello", "World"},
-			Pos:  16, Err: NewEndOfFileError(),
+			Pos:  16, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Incomplete Slice",
 			In:   []byte(`["Hello","World",`),
 			Out:  nil,
-			Pos:  17, Err: NewEndOfFileError(),
+			Pos:  17, Err: newEndOfFileError(),
 		},
 		{
 			Name: "Missing Comma Between Elements",
 			In:   []byte(`["Hello""World"]`),
 			Out:  []string{"Hello"},
-			Pos:  8, Err: NewInvalidCharacterError('"', 8),
+			Pos:  8, Err: newInvalidCharacterError('"', 8),
 		},
 	}
 

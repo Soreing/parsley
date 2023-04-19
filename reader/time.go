@@ -2,6 +2,8 @@ package reader
 
 import "time"
 
+// timeSeq extracts time values recursively untill the closing bracket
+// is found, then assigns the elements to the allocated slice.
 func (r *Reader) timeSeq(idx int) (res []time.Time, err error) {
 	var bs []byte
 	if bs, err = r.Bytes(); err == nil {
@@ -17,6 +19,9 @@ func (r *Reader) timeSeq(idx int) (res []time.Time, err error) {
 	return
 }
 
+// Times extracts an array of time values from the data and skips all
+// whitespace after it. The values must be enclosed in square brackets "[...]"
+// and the values must be separated by commas.
 func (r *Reader) Times() (res []time.Time, err error) {
 	if err = r.OpenArray(); err == nil {
 		if r.Token() == TerminatorToken {
@@ -29,12 +34,15 @@ func (r *Reader) Times() (res []time.Time, err error) {
 	return
 }
 
+// Time extracts the next time value from the data and skips all
+// whitespace after it. All standard time formats are processed, but
+// RFC3339Nano is prioritized.
 func (r *Reader) Time() (time.Time, error) {
 	rpos := r.pos
 	if bs, err := r.Bytes(); err != nil {
 		return time.Time{}, err
 	} else if len(bs) == 0 {
-		return time.Time{}, NewUnknownTimeFormatError(string(bs), rpos)
+		return time.Time{}, newUnknownTimeFormatError(string(bs), rpos)
 	} else if bs[0]-'0' < 10 {
 		if tm, err := time.Parse(time.RFC3339Nano, string(bs)); err == nil {
 			return tm, nil
@@ -45,7 +53,7 @@ func (r *Reader) Time() (time.Time, error) {
 		} else if tm, err := time.Parse(time.Kitchen, string(bs)); err == nil {
 			return tm, nil
 		} else {
-			return tm, NewUnknownTimeFormatError(string(bs), rpos)
+			return tm, newUnknownTimeFormatError(string(bs), rpos)
 		}
 	} else {
 		if tm, err := time.Parse(time.ANSIC, string(bs)); err == nil {
@@ -61,11 +69,12 @@ func (r *Reader) Time() (time.Time, error) {
 		} else if tm, err := time.Parse(time.RFC1123Z, string(bs)); err == nil {
 			return tm, nil
 		} else {
-			return tm, NewUnknownTimeFormatError(string(bs), rpos)
+			return tm, newUnknownTimeFormatError(string(bs), rpos)
 		}
 	}
 }
 
+// Timep extracts the next time value and returns a pointer variable.
 func (r *Reader) Timep() (res *time.Time, err error) {
 	if v, err := r.Time(); err == nil {
 		res = &v

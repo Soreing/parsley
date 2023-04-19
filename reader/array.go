@@ -1,5 +1,8 @@
 package reader
 
+// skipArray skips an entire array enclosed by square brackets "[...]" and the
+// whitespace after the array. The content of the array is evaluated to make
+// sure that the JSON is valid.
 func (r *Reader) skipArray() (err error) {
 	if err = r.OpenArray(); err == nil {
 		if r.Token() != TerminatorToken {
@@ -12,9 +15,9 @@ func (r *Reader) skipArray() (err error) {
 		if err == nil {
 			dat, pos := r.dat, r.pos
 			if pos == len(dat) {
-				return NewEndOfFileError()
+				return newEndOfFileError()
 			} else if dat[pos] != ']' {
-				return NewInvalidCharacterError(dat[pos], pos)
+				return newInvalidCharacterError(dat[pos], pos)
 			} else {
 				r.pos++
 			}
@@ -23,12 +26,14 @@ func (r *Reader) skipArray() (err error) {
 	return
 }
 
+// OpenArray consumes an opening square bracket '[' character and skips all
+// whitespaces after it.
 func (r *Reader) OpenArray() error {
 	if r.pos >= len(r.dat) {
-		return NewEndOfFileError()
+		return newEndOfFileError()
 	}
 	if r.dat[r.pos] != '[' {
-		return NewInvalidCharacterError(r.dat[r.pos], r.pos)
+		return newInvalidCharacterError(r.dat[r.pos], r.pos)
 	}
 
 	r.pos++
@@ -36,12 +41,14 @@ func (r *Reader) OpenArray() error {
 	return nil
 }
 
+// CloseArray consumes a closing square bracket ']' character and skips all
+// whitespaces after it.
 func (r *Reader) CloseArray() error {
 	if r.pos >= len(r.dat) {
-		return NewEndOfFileError()
+		return newEndOfFileError()
 	}
 	if r.dat[r.pos] != ']' {
-		return NewInvalidCharacterError(r.dat[r.pos], r.pos)
+		return newInvalidCharacterError(r.dat[r.pos], r.pos)
 	}
 
 	r.pos++

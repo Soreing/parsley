@@ -9,25 +9,25 @@ import (
 	"strings"
 )
 
-type Case int
+type strcase int
 
 const (
-	LOWER_CASE Case = iota
+	LOWER_CASE strcase = iota
 	CAMEL_CASE
 	PASCAL_CASE
 	SNAKE_CASE
 	KEBAB_CASE
 )
 
-type Generator struct {
+type generator struct {
 	buf         bytes.Buffer
 	pkgName     string
-	defaultCase Case
+	defaultCase strcase
 }
 
 // Creates a new Generator
-func NewGenerator() *Generator {
-	return &Generator{
+func newGenerator() *generator {
+	return &generator{
 		buf:         bytes.Buffer{},
 		pkgName:     "",
 		defaultCase: LOWER_CASE,
@@ -35,34 +35,34 @@ func NewGenerator() *Generator {
 }
 
 // Sets target package name
-func (g *Generator) SetPackage(pkg string) {
+func (g *generator) setPackage(pkg string) {
 	g.pkgName = pkg
 }
 
 // Sets default casing of the column names
-func (g *Generator) SetDefaultCase(cs Case) {
+func (g *generator) setDefaultCase(cs strcase) {
 	g.defaultCase = cs
 }
 
 // Writes into the generator's buffer
-func (g *Generator) Printf(f string, v ...any) {
+func (g *generator) printf(f string, v ...any) {
 	g.buf.WriteString(fmt.Sprintf(f, v...))
 }
 
 // Gets the content of the generator's buffer
-func (g *Generator) ReadAll() []byte {
+func (g *generator) readAll() []byte {
 	return g.buf.Bytes()
 }
 
 // Formats a given source code
-func (g *Generator) Format(src []byte) ([]byte, error) {
+func (g *generator) format(src []byte) ([]byte, error) {
 	return format.Source(src)
 }
 
-func (g *Generator) GetRequiredPackages(
-	i []Import,
-	d []Define,
-	s []Struct,
+func (g *generator) getRequiredPackages(
+	i []import_,
+	d []define_,
+	s []struct_,
 ) (pkgs map[string]string) {
 	pkgs = map[string]string{
 		"parse":  "\"github.com/Soreing/parsley\"",
@@ -96,7 +96,7 @@ func (g *Generator) GetRequiredPackages(
 	return
 }
 
-type FieldInfo struct {
+type fieldInfo struct {
 	TypeName    string
 	OmitEmpty   bool
 	Name        string
@@ -107,7 +107,7 @@ type FieldInfo struct {
 	Pointer     bool
 }
 
-func NewFieldInfo(f Field, dcs Case) (fi FieldInfo) {
+func newFieldInfo(f field_, dcs strcase) (fi fieldInfo) {
 	fi.Alias, fi.OmitEmpty = parseTag(strings.Trim(f.tag, "`"))
 	fi.Array, fi.Pointer = f.typ.arr, f.typ.ptr
 	if fi.Alias == "" {
@@ -122,13 +122,13 @@ func NewFieldInfo(f Field, dcs Case) (fi FieldInfo) {
 	return
 }
 
-type DefineInfo struct {
+type defineInfo struct {
 	TypeName string
 	Array    bool
 	Pointer  bool
 }
 
-func NewDefineInfo(f Define) (di DefineInfo) {
+func newDefineInfo(f define_) (di defineInfo) {
 	di.Array, di.Pointer, di.TypeName = f.typ.arr, f.typ.ptr, f.typ.typ
 	if f.typ.pkg != "" {
 		di.TypeName = f.typ.pkg + "." + di.TypeName
@@ -138,7 +138,7 @@ func NewDefineInfo(f Define) (di DefineInfo) {
 
 // Changes a string's casing to the given format
 // The string must be in camel or pascal case
-func caseString(str string, cs Case) string {
+func caseString(str string, cs strcase) string {
 	if str == "" {
 		return str
 	}
