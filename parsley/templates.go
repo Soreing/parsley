@@ -14,6 +14,63 @@ var control = []string{
 	"u0018", "u0019", "u001A", "u001B", "u001C", "u001D", "u001E", "u001F",
 }
 
+// Code for finding the byte length of values
+var lengthTypeFormat = map[string]string{
+	"int":       "writer.Int%sLen(%s)",
+	"int8":      "writer.Int8%sLen(%s)",
+	"int16":     "writer.Int16%sLen(%s)",
+	"int32":     "writer.Int32%sLen(%s)",
+	"int64":     "writer.Int64%sLen(%s)",
+	"uint":      "writer.UInt%sLen(%s)",
+	"uint8":     "writer.UInt8%sLen(%s)",
+	"uint16":    "writer.UInt16%sLen(%s)",
+	"uint32":    "writer.UInt32%sLen(%s)",
+	"uint64":    "writer.UInt64%sLen(%s)",
+	"float32":   "writer.Float32%sLen(%s)",
+	"float64":   "writer.Float64%sLen(%s)",
+	"bool":      "writer.Bool%sLen(%s)",
+	"string":    "writer.String%sLen(%s)",
+	"time.Time": "writer.Time%sLen(%s)",
+}
+
+// Code for decoding basic type values.
+var readerTypeFormat = map[string]string{
+	"int":       "r.Int%s()",
+	"int8":      "r.Int8%s()",
+	"int16":     "r.Int16%s()",
+	"int32":     "r.Int32%s()",
+	"int64":     "r.Int64%s()",
+	"uint":      "r.UInt%s()",
+	"uint8":     "r.UInt8%s()",
+	"uint16":    "r.UInt16%s()",
+	"uint32":    "r.UInt32%s()",
+	"uint64":    "r.UInt64%s()",
+	"float32":   "r.Float32%s()",
+	"float64":   "r.Float64%s()",
+	"bool":      "r.Bool%s()",
+	"string":    "r.String%s()",
+	"time.Time": "r.Time%s()",
+}
+
+// Code for encoding basic type values.
+var writerTypeFormat = map[string]string{
+	"int":       "w.Int%s(%s)",
+	"int8":      "w.Int8%s(%s)",
+	"int16":     "w.Int16%s(%s)",
+	"int32":     "w.Int32%s(%s)",
+	"int64":     "w.Int64%s(%s)",
+	"uint":      "w.UInt%s(%s)",
+	"uint8":     "w.UInt8%s(%s)",
+	"uint16":    "w.UInt16%s(%s)",
+	"uint32":    "w.UInt32%s(%s)",
+	"uint64":    "w.UInt64%s(%s)",
+	"float32":   "w.Float32%s(%s)",
+	"float64":   "w.Float64%s(%s)",
+	"bool":      "w.Bool%s(%s)",
+	"string":    "w.String%s(%s)",
+	"time.Time": "w.Time%s(%s)",
+}
+
 // isBasicType checks if the datatype is a basic type supported by the library.
 func isBasicType(typename string) (basic bool) {
 	switch typename {
@@ -56,123 +113,6 @@ func getValueCheck(fi fieldInfo) (zv string) {
 	default:
 		return ""
 	}
-}
-
-// getLengthTypeFormat returns the code for finding the byte length of values.
-func getLengthTypeFormat(typename string) (tmpl string, unknown bool) {
-	switch typename {
-	case "int":
-		tmpl = "writer.Int%sLen(%s)"
-	case "int8":
-		tmpl = "writer.Int8%sLen(%s)"
-	case "int16":
-		tmpl = "writer.Int16%sLen(%s)"
-	case "int32":
-		tmpl = "writer.Int32%sLen(%s)"
-	case "int64":
-		tmpl = "writer.Int64%sLen(%s)"
-	case "uint":
-		tmpl = "writer.UInt%sLen(%s)"
-	case "uint8":
-		tmpl = "writer.UInt8%sLen(%s)"
-	case "uint16":
-		tmpl = "writer.UInt16%sLen(%s)"
-	case "uint32":
-		tmpl = "writer.UInt32%sLen(%s)"
-	case "uint64":
-		tmpl = "writer.UInt64%sLen(%s)"
-	case "float32":
-		tmpl = "writer.Float32%sLen(%s)"
-	case "float64":
-		tmpl = "writer.Float64%sLen(%s)"
-	case "bool":
-		tmpl = "writer.Bool%sLen(%s)"
-	case "string":
-		tmpl = "writer.String%sLen(%s)"
-	case "time.Time":
-		tmpl = "writer.Time%sLen(%s)"
-	default:
-		unknown = true
-	}
-	return
-}
-
-// getReaderTypeFormat returns the code for decoding basic type values.
-func getReaderTypeFormat(typename string) (tmpl string, unknown bool) {
-	switch typename {
-	case "int":
-		tmpl = "r.Int%s()"
-	case "int8":
-		tmpl = "r.Int8%s()"
-	case "int16":
-		tmpl = "r.Int16%s()"
-	case "int32":
-		tmpl = "r.Int32%s()"
-	case "int64":
-		tmpl = "r.Int64%s()"
-	case "uint":
-		tmpl = "r.UInt%s()"
-	case "uint8":
-		tmpl = "r.UInt8%s()"
-	case "uint16":
-		tmpl = "r.UInt16%s()"
-	case "uint32":
-		tmpl = "r.UInt32%s()"
-	case "uint64":
-		tmpl = "r.UInt64%s()"
-	case "float32":
-		tmpl = "r.Float32%s()"
-	case "float64":
-		tmpl = "r.Float64%s()"
-	case "bool":
-		tmpl = "r.Bool%s()"
-	case "string":
-		tmpl = "r.String%s()"
-	case "time.Time":
-		tmpl = "r.Time%s()"
-	default:
-		unknown = true
-	}
-	return
-}
-
-// getWriterTypeFormat returns the code for encoding basic type values.
-func getWriterTypeFormat(typename string) (tmpl string, unknown bool) {
-	switch typename {
-	case "int":
-		tmpl = "w.Int%s(%s)"
-	case "int8":
-		tmpl = "w.Int8%s(%s)"
-	case "int16":
-		tmpl = "w.Int16%s(%s)"
-	case "int32":
-		tmpl = "w.Int32%s(%s)"
-	case "int64":
-		tmpl = "w.Int64%s(%s)"
-	case "uint":
-		tmpl = "w.UInt%s(%s)"
-	case "uint8":
-		tmpl = "w.UInt8%s(%s)"
-	case "uint16":
-		tmpl = "w.UInt16%s(%s)"
-	case "uint32":
-		tmpl = "w.UInt32%s(%s)"
-	case "uint64":
-		tmpl = "w.UInt64%s(%s)"
-	case "float32":
-		tmpl = "w.Float32%s(%s)"
-	case "float64":
-		tmpl = "w.Float64%s(%s)"
-	case "bool":
-		tmpl = "w.Bool%s(%s)"
-	case "string":
-		tmpl = "w.String%s(%s)"
-	case "time.Time":
-		tmpl = "w.Time%s(%s)"
-	default:
-		unknown = true
-	}
-	return
 }
 
 // createFilterHeader creates a filter header for encoding/decoding functions
@@ -233,13 +173,13 @@ func createObjectLengthBody(fis []fieldInfo) (code string) {
 		}
 
 		lenFn := ""
-		if fn, unknown := getLengthTypeFormat(fi.TypeName); !unknown {
+		if tmpl, ok := lengthTypeFormat[fi.TypeName]; ok {
 			if fi.Array {
-				lenFn = fmt.Sprintf(fn, "s", "o."+fi.Name)
+				lenFn = fmt.Sprintf(tmpl, "s", "o."+fi.Name)
 			} else if fi.Pointer {
-				lenFn = fmt.Sprintf(fn, "p", "o."+fi.Name)
+				lenFn = fmt.Sprintf(tmpl, "p", "o."+fi.Name)
 			} else {
-				lenFn = fmt.Sprintf(fn, "", "o."+fi.Name)
+				lenFn = fmt.Sprintf(tmpl, "", "o."+fi.Name)
 			}
 		} else {
 			if fi.Array {
@@ -271,14 +211,14 @@ func createDecodeObjectBody(fis []fieldInfo) (code string) {
 		is := strconv.Itoa(i)
 		subs[i] = "} else if string(key) == \"" + fi.AliasEsc + "\" && c[" + is + "] {\n"
 
-		if fn, unknown := getReaderTypeFormat(fi.TypeName); !unknown {
+		if tmpl, ok := readerTypeFormat[fi.TypeName]; ok {
 			subs[i] += "o." + fi.Name + ", err = "
 			if fi.Array {
-				subs[i] += fmt.Sprintf(fn, "s") + "\n"
+				subs[i] += fmt.Sprintf(tmpl, "s") + "\n"
 			} else if fi.Pointer {
-				subs[i] += fmt.Sprintf(fn, "p") + "\n"
+				subs[i] += fmt.Sprintf(tmpl, "p") + "\n"
 			} else {
-				subs[i] += fmt.Sprintf(fn, "") + "\n"
+				subs[i] += fmt.Sprintf(tmpl, "") + "\n"
 			}
 		} else {
 			if fi.Array {
@@ -313,13 +253,13 @@ func createEncodeObjectBody(fis []fieldInfo) (code string) {
 		}
 
 		subs[i] += "w.Raw(\",\\\"" + fi.AliasEscEsc + "\\\":\"[off:])\n"
-		if fn, unknown := getWriterTypeFormat(fi.TypeName); !unknown {
+		if tmpl, ok := writerTypeFormat[fi.TypeName]; ok {
 			if fi.Array {
-				subs[i] += fmt.Sprintf(fn, "s", "o."+fi.Name) + "\n"
+				subs[i] += fmt.Sprintf(tmpl, "s", "o."+fi.Name) + "\n"
 			} else if fi.Pointer {
-				subs[i] += fmt.Sprintf(fn, "p", "o."+fi.Name) + "\n"
+				subs[i] += fmt.Sprintf(tmpl, "p", "o."+fi.Name) + "\n"
 			} else {
-				subs[i] += fmt.Sprintf(fn, "", "o."+fi.Name) + "\n"
+				subs[i] += fmt.Sprintf(tmpl, "", "o."+fi.Name) + "\n"
 			}
 		} else {
 			if fi.Array {
@@ -341,11 +281,11 @@ func createDefineLengthBody(di defineInfo) (code string) {
 		vlt = ", 0"
 	}
 
-	if fn, unknown := getLengthTypeFormat(di.TypeName); !unknown {
+	if tmpl, ok := lengthTypeFormat[di.TypeName]; ok {
 		if di.Array {
-			return fmt.Sprintf(fn, "s", "*o") + vlt
+			return fmt.Sprintf(tmpl, "s", "*o") + vlt
 		} else {
-			return fmt.Sprintf(fn, "", di.TypeName+"(*o)") + vlt + "\n"
+			return fmt.Sprintf(tmpl, "", di.TypeName+"(*o)") + vlt + "\n"
 		}
 	} else {
 		if di.Array {
@@ -357,11 +297,11 @@ func createDefineLengthBody(di defineInfo) (code string) {
 }
 
 func createDecodeDefineBody(di defineInfo) (code string) {
-	if fn, unknown := getReaderTypeFormat(di.TypeName); !unknown {
+	if tmpl, ok := readerTypeFormat[di.TypeName]; ok {
 		if di.Array {
-			return "*o, err = " + fmt.Sprintf(fn, "s") + "\n"
+			return "*o, err = " + fmt.Sprintf(tmpl, "s") + "\n"
 		} else {
-			return "*(*" + di.TypeName + ")(o), err = " + fmt.Sprintf(fn, "") + "\n"
+			return "*(*" + di.TypeName + ")(o), err = " + fmt.Sprintf(tmpl, "") + "\n"
 		}
 	} else {
 		if di.Array {
@@ -373,11 +313,11 @@ func createDecodeDefineBody(di defineInfo) (code string) {
 }
 
 func createEncodeDefineBody(di defineInfo) (code string) {
-	if fn, unknown := getWriterTypeFormat(di.TypeName); !unknown {
+	if tmpl, ok := writerTypeFormat[di.TypeName]; ok {
 		if di.Array {
-			return fmt.Sprintf(fn, "s", "*o") + "\n"
+			return fmt.Sprintf(tmpl, "s", "*o") + "\n"
 		} else {
-			return fmt.Sprintf(fn, "", di.TypeName+"(*o)") + "\n"
+			return fmt.Sprintf(tmpl, "", di.TypeName+"(*o)") + "\n"
 		}
 	} else {
 		if di.Array {

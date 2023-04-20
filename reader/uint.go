@@ -5,7 +5,7 @@ import (
 	"math"
 )
 
-// uintSeq extracts uint values recursively untill the closing bracket
+// uintSeq extracts uint values recursively until the closing bracket
 // is found, then assigns the elements to the allocated slice.
 func (r *Reader) uintSeq(idx int) (res []uint, err error) {
 	var n uint
@@ -148,7 +148,7 @@ func (r *Reader) UInt8p() (res *uint8, err error) {
 	return
 }
 
-// uint16Seq extracts uint16 values recursively untill the closing bracket
+// uint16Seq extracts uint16 values recursively until the closing bracket
 // is found, then assigns the elements to the allocated slice.
 func (r *Reader) uint16Seq(idx int) (res []uint16, err error) {
 	var n uint16
@@ -213,7 +213,7 @@ func (r *Reader) UInt16p() (res *uint16, err error) {
 	return
 }
 
-// uint32Seq extracts uint32 values recursively untill the closing bracket
+// uint32Seq extracts uint32 values recursively until the closing bracket
 // is found, then assigns the elements to the allocated slice.
 func (r *Reader) uint32Seq(idx int) (res []uint32, err error) {
 	var n uint32
@@ -278,7 +278,7 @@ func (r *Reader) UInt32p() (res *uint32, err error) {
 	return
 }
 
-// uint64Seq extracts uint64 values recursively untill the closing bracket
+// uint64Seq extracts uint64 values recursively  the closing bracket
 // is found, then assigns the elements to the allocated slice.
 func (r *Reader) uint64Seq(idx int) (res []uint64, err error) {
 	var n uint64

@@ -242,7 +242,7 @@ func (r *Reader) Bytes() ([]byte, error) {
 	}
 }
 
-// stringSeq extracts string values recursively untill the closing bracket
+// stringSeq extracts string values recursively until the closing bracket
 // is found, then assigns the elements to the allocated slice.
 func (r *Reader) stringSeq(idx int) (res []string, err error) {
 	var bs []byte

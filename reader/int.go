@@ -4,7 +4,7 @@ import (
 	"math"
 )
 
-// intSeq extracts int values recursively untill the closing bracket
+// intSeq extracts int values recursively until the closing bracket
 // is found, then assigns the elements to the allocated slice.
 func (r *Reader) intSeq(idx int) (res []int, err error) {
 	var n int
@@ -71,7 +71,7 @@ func (r *Reader) Intp() (res *int, err error) {
 	return
 }
 
-// int8Seq extracts int8 values recursively untill the closing bracket
+// int8Seq extracts int8 values recursively until the closing bracket
 // is found, then assigns the elements to the allocated slice.
 func (r *Reader) int8Seq(idx int) (res []int8, err error) {
 	var n int8
@@ -138,7 +138,7 @@ func (r *Reader) Int8p() (res *int8, err error) {
 	return
 }
 
-// int16Seq extracts int16 values recursively untill the closing bracket
+// int16Seq extracts int16 values recursively until the closing bracket
 // is found, then assigns the elements to the allocated slice.
 func (r *Reader) int16Seq(idx int) (res []int16, err error) {
 	var n int16
@@ -205,7 +205,7 @@ func (r *Reader) Int16p() (res *int16, err error) {
 	return
 }
 
-// int32Seq extracts int32 values recursively untill the closing bracket
+// int32Seq extracts int32 values recursively until the closing bracket
 // is found, then assigns the elements to the allocated slice.
 func (r *Reader) int32Seq(idx int) (res []int32, err error) {
 	var n int32
@@ -272,7 +272,7 @@ func (r *Reader) Int32p() (res *int32, err error) {
 	return
 }
 
-// int64Seq extracts int64 values recursively untill the closing bracket
+// int64Seq extracts int64 values recursively until the closing bracket
 // is found, then assigns the elements to the allocated slice.
 func (r *Reader) int64Seq(idx int) (res []int64, err error) {
 	var n int64

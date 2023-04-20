@@ -167,33 +167,10 @@ func (w *Writer) Strings(ss []string) {
 	cap := ln - cr
 
 	if ss == nil {
-		if 4 <= cap {
-			copy(bf[cr:], "null")
-			w.Cursor += 4
-		} else {
-			copy(bf[cr:], "null"[:cap])
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, 4-cap+CHUNK_SIZE)
-			w.Cursor = copy(bf, "null"[cap:])
-			w.Buffer = bf
-		}
+		w.Raw("null")
 		return
 	} else if len(ss) == 0 {
-		if 2 <= cap {
-			bf[cr], bf[cr+1] = '[', ']'
-			w.Cursor += 2
-		} else if cap == 1 {
-			bf[cr] = '['
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, CHUNK_SIZE)
-			bf[0] = ']'
-			w.Cursor, w.Buffer = 1, bf
-		} else {
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, CHUNK_SIZE)
-			bf[0], bf[1] = '[', ']'
-			w.Cursor, w.Buffer = 2, bf
-		}
+		w.Raw("[]")
 		return
 	} else {
 		if 2 <= cap {

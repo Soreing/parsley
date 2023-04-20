@@ -44,7 +44,7 @@ func (r *Reader) Bool() (bool, error) {
 	}
 }
 
-// boolSeq extracts booleans recursively untill the closing bracket is found,
+// boolSeq extracts booleans recursively until the closing bracket is found,
 // then assigns the elements to the allocated slice.
 func (r *Reader) boolSeq(idx int) (res []bool, err error) {
 	var tf bool

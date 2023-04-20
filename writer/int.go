@@ -77,33 +77,10 @@ func (w *Writer) Int8s(ns []int8) {
 	vln, cap := 0, ln-cr
 
 	if ns == nil {
-		if 4 <= cap {
-			copy(bf[cr:], "null")
-			w.Cursor += 4
-		} else {
-			copy(bf[cr:], "null"[:cap])
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, 4-cap+CHUNK_SIZE)
-			w.Cursor = copy(bf, "null"[cap:])
-			w.Buffer = bf
-		}
+		w.Raw("null")
 		return
 	} else if len(ns) == 0 {
-		if 2 <= cap {
-			bf[cr], bf[cr+1] = '[', ']'
-			w.Cursor += 2
-		} else if cap == 1 {
-			bf[cr] = '['
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, CHUNK_SIZE)
-			w.Cursor, bf[0] = 1, ']'
-			w.Buffer = bf
-		} else {
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, CHUNK_SIZE)
-			w.Cursor, bf[0], bf[1] = 2, '[', ']'
-			w.Buffer = bf
-		}
+		w.Raw("[]")
 		return
 	} else if 1+len(ns)*5 <= ln-cr {
 		bf[cr] = '['
@@ -230,33 +207,10 @@ func (w *Writer) Int16s(ns []int16) {
 	vln, cap := 0, ln-cr
 
 	if ns == nil {
-		if 4 <= cap {
-			copy(bf[cr:], "null")
-			w.Cursor += 4
-		} else {
-			copy(bf[cr:], "null"[:cap])
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, 4-cap+CHUNK_SIZE)
-			w.Cursor = copy(bf, "null"[cap:])
-			w.Buffer = bf
-		}
+		w.Raw("null")
 		return
 	} else if len(ns) == 0 {
-		if 2 <= cap {
-			bf[cr], bf[cr+1] = '[', ']'
-			w.Cursor += 2
-		} else if cap == 1 {
-			bf[cr] = '['
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, CHUNK_SIZE)
-			w.Cursor, bf[0] = 1, ']'
-			w.Buffer = bf
-		} else {
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, CHUNK_SIZE)
-			w.Cursor, bf[0], bf[1] = 2, '[', ']'
-			w.Buffer = bf
-		}
+		w.Raw("[]")
 		return
 	} else if 1+len(ns)*7 <= ln-cr {
 		bf[cr] = '['
@@ -383,33 +337,10 @@ func (w *Writer) Int32s(ns []int32) {
 	vln, cap := 0, ln-cr
 
 	if ns == nil {
-		if 4 <= cap {
-			copy(bf[cr:], "null")
-			w.Cursor += 4
-		} else {
-			copy(bf[cr:], "null"[:cap])
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, 4-cap+CHUNK_SIZE)
-			w.Cursor = copy(bf, "null"[cap:])
-			w.Buffer = bf
-		}
+		w.Raw("null")
 		return
 	} else if len(ns) == 0 {
-		if 2 <= cap {
-			bf[cr], bf[cr+1] = '[', ']'
-			w.Cursor += 2
-		} else if cap == 1 {
-			bf[cr] = '['
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, CHUNK_SIZE)
-			w.Cursor, bf[0] = 1, ']'
-			w.Buffer = bf
-		} else {
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, CHUNK_SIZE)
-			w.Cursor, bf[0], bf[1] = 2, '[', ']'
-			w.Buffer = bf
-		}
+		w.Raw("[]")
 		return
 	} else if 1+len(ns)*12 <= ln-cr {
 		bf[cr] = '['
@@ -536,33 +467,10 @@ func (w *Writer) Int64s(ns []int64) {
 	vln, cap := 0, ln-cr
 
 	if ns == nil {
-		if 4 <= cap {
-			copy(bf[cr:], "null")
-			w.Cursor += 4
-		} else {
-			copy(bf[cr:], "null"[:cap])
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, 4-cap+CHUNK_SIZE)
-			w.Cursor = copy(bf, "null"[cap:])
-			w.Buffer = bf
-		}
+		w.Raw("null")
 		return
 	} else if len(ns) == 0 {
-		if 2 <= cap {
-			bf[cr], bf[cr+1] = '[', ']'
-			w.Cursor += 2
-		} else if cap == 1 {
-			bf[cr] = '['
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, CHUNK_SIZE)
-			w.Cursor, bf[0] = 1, ']'
-			w.Buffer = bf
-		} else {
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, CHUNK_SIZE)
-			w.Cursor, bf[0], bf[1] = 2, '[', ']'
-			w.Buffer = bf
-		}
+		w.Raw("[]")
 		return
 	} else if 1+len(ns)*21 <= ln-cr {
 		bf[cr] = '['
@@ -689,33 +597,10 @@ func (w *Writer) Ints(ns []int) {
 	vln, cap := 0, ln-cr
 
 	if ns == nil {
-		if 4 <= cap {
-			copy(bf[cr:], "null")
-			w.Cursor += 4
-		} else {
-			copy(bf[cr:], "null"[:cap])
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, 4-cap+CHUNK_SIZE)
-			w.Cursor = copy(bf, "null"[cap:])
-			w.Buffer = bf
-		}
+		w.Raw("null")
 		return
 	} else if len(ns) == 0 {
-		if 2 <= cap {
-			bf[cr], bf[cr+1] = '[', ']'
-			w.Cursor += 2
-		} else if cap == 1 {
-			bf[cr] = '['
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, CHUNK_SIZE)
-			w.Cursor, bf[0] = 1, ']'
-			w.Buffer = bf
-		} else {
-			w.Storage = append(w.Storage, bf)
-			bf = make([]byte, CHUNK_SIZE)
-			w.Cursor, bf[0], bf[1] = 2, '[', ']'
-			w.Buffer = bf
-		}
+		w.Raw("[]")
 		return
 	} else if 1+len(ns)*12 <= ln-cr {
 		bf[cr] = '['

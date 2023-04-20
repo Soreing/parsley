@@ -2,7 +2,7 @@ package reader
 
 import "time"
 
-// timeSeq extracts time values recursively untill the closing bracket
+// timeSeq extracts time values recursively until the closing bracket
 // is found, then assigns the elements to the allocated slice.
 func (r *Reader) timeSeq(idx int) (res []time.Time, err error) {
 	var bs []byte

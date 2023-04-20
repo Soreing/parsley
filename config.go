@@ -27,17 +27,17 @@ type Config struct {
 // all elements get processed.
 //
 // Example:
-//  var filter = []parsley.Filter{
-//  	{"name": []parsley.Filter{
-//  		{"firstName": nil},
-//  		{"lastName": nil},
-//  	}},
-//  	{"address": []parsley.Filter{
-//  		{"country": nil},
-//  		{"city": nil},
-//  	}},
-//  	{"age": nil},
-//  }
+//    var filter = []parsley.Filter{
+//        {"name": []parsley.Filter{
+//            {"firstName": nil},
+//            {"lastName": nil},
+//        }},
+//        {"address": []parsley.Filter{
+//            {"country": nil},
+//            {"city": nil},
+//        }},
+//        {"age": nil},
+//    }
 func UseFilter(filter []Filter) Config {
 	return Config{
 		filter: filter,
@@ -71,7 +71,7 @@ func UseRelativeBuffer(percentage int) Config {
 	}
 }
 
-// MergeConfigs takes mutliple config options and merges them into a single object.
+// MergeConfigs takes multiple config options and merges them into a single object.
 func MergeConfigs(cfgs ...Config) Config {
 	cfg := Config{
 		btype:  fixed,

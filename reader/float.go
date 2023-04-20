@@ -6,7 +6,7 @@ import (
 	"github.com/Soreing/parsley/reader/floatconv"
 )
 
-// float32Seq extracts float32 values recursively untill the closing bracket
+// float32Seq extracts float32 values recursively until the closing bracket
 // is found, then assigns the elements to the allocated slice.
 func (r *Reader) float32Seq(idx int) (res []float32, err error) {
 	var n float32
@@ -42,7 +42,7 @@ func (r *Reader) Float32s() (res []float32, err error) {
 // Float32 extracts the next float32 value from the data and skips all
 // whitespace after it.
 func (r *Reader) Float32() (flt float32, err error) {
-	dat, ok, done := r.dat[r.pos:], true, false
+	dat, done := r.dat[r.pos:], false
 
 	m, d, e, n, t, dp, sp, i, ok := readFloat(dat)
 	if !ok {
@@ -101,7 +101,7 @@ func (r *Reader) Float32p() (res *float32, err error) {
 	return
 }
 
-// float64Seq extracts float64 values recursively untill the closing bracket
+// float64Seq extracts float64 values recursively until the closing bracket
 // is found, then assigns the elements to the allocated slice.
 func (r *Reader) float64Seq(idx int) (res []float64, err error) {
 	var n float64
@@ -137,7 +137,7 @@ func (r *Reader) Float64s() (res []float64, err error) {
 // Float64 extracts the next float64 value from the data and skips all
 // whitespace after it.
 func (r *Reader) Float64() (flt float64, err error) {
-	dat, ok, done := r.dat[r.pos:], true, false
+	dat, done := r.dat[r.pos:], false
 
 	m, d, e, n, t, dp, sp, i, ok := readFloat(dat)
 	if !ok {
