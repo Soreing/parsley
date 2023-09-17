@@ -67,7 +67,6 @@ func (g *generator) getRequiredPackages(
 	pkgs = map[string]string{
 		"parse":  "\"github.com/Soreing/parsley\"",
 		"reader": "\"github.com/Soreing/parsley/reader\"",
-		"writer": "\"github.com/Soreing/parsley/writer\"",
 	}
 
 	for _, e := range d {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"testing"
 	"time"
 
@@ -140,37 +139,6 @@ func Test_UnmarshalIntegers(t *testing.T) {
 	}
 }
 
-func Test_MarshalIntegers(t *testing.T) {
-	if buf, err := parsley.Marshal(&IntegersObject); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if jbuf, err := json.Marshal(IntegersObject); err != nil {
-			t.Error("standard library marshal failed", err)
-		} else if string(buf) != string(jbuf) {
-			t.Errorf(
-				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
-				string(buf), string(jbuf),
-			)
-		}
-	}
-}
-
-func Test_MarshalEmptyIntegers(t *testing.T) {
-	obj := basics.IntegersColl{}
-	if buf, err := parsley.Marshal(&obj); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if jbuf, err := json.Marshal(obj); err != nil {
-			t.Error("standard library marshal failed", err)
-		} else if string(buf) != string(jbuf) {
-			t.Errorf(
-				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
-				string(buf), string(jbuf),
-			)
-		}
-	}
-}
-
 const UnsignedIntegersJSON = `{
 	"ui8dat": 4,
 	"ui8slc": "Ab52gdE=",
@@ -297,37 +265,6 @@ func Test_UnmarshalUnsignedIntegers(t *testing.T) {
 	}
 }
 
-func Test_MarshalUnsignedIntegers(t *testing.T) {
-	if buf, err := parsley.Marshal(&UnsignedIntegersObject); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if jbuf, err := json.Marshal(UnsignedIntegersObject); err != nil {
-			t.Error("standard library marshal failed", err)
-		} else if string(buf) != string(jbuf) {
-			t.Errorf(
-				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
-				string(buf), string(jbuf),
-			)
-		}
-	}
-}
-
-func Test_MarshalEmptyUnsignedIntegers(t *testing.T) {
-	obj := basics.UnsignedIntegersColl{}
-	if buf, err := parsley.Marshal(&obj); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if jbuf, err := json.Marshal(obj); err != nil {
-			t.Error("standard library marshal failed", err)
-		} else if string(buf) != string(jbuf) {
-			t.Errorf(
-				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
-				string(buf), string(jbuf),
-			)
-		}
-	}
-}
-
 const FloatingPointJSON = `{
 	"f32dat": 2.56,
 	"f32slc": [0.4, 1.87],
@@ -390,37 +327,6 @@ func Test_UnmarshalFloatingPoints(t *testing.T) {
 	}
 }
 
-func Test_MarshalFloatingPoints(t *testing.T) {
-	if buf, err := parsley.Marshal(&FloatingPointsObject); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if jbuf, err := json.Marshal(FloatingPointsObject); err != nil {
-			t.Error("standard library marshal failed", err)
-		} else if string(buf) != string(jbuf) {
-			t.Errorf(
-				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
-				string(buf), string(jbuf),
-			)
-		}
-	}
-}
-
-func Test_MarshalEmptyFloatingPoints(t *testing.T) {
-	obj := basics.FloatingPointColl{}
-	if buf, err := parsley.Marshal(&obj); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if jbuf, err := json.Marshal(obj); err != nil {
-			t.Error("standard library marshal failed", err)
-		} else if string(buf) != string(jbuf) {
-			t.Errorf(
-				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
-				string(buf), string(jbuf),
-			)
-		}
-	}
-}
-
 const BoooleansJSON = `{
 	"bdat": true,
 	"bslc": [true, false],
@@ -456,37 +362,6 @@ func Test_UnmarshalBooleans(t *testing.T) {
 		}
 		if bools.BPtr == nil || *bools.BPtr != false {
 			t.Error("bptr property value mismatch")
-		}
-	}
-}
-
-func Test_MarshalBooleans(t *testing.T) {
-	if buf, err := parsley.Marshal(&BooleansObject); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if jbuf, err := json.Marshal(BooleansObject); err != nil {
-			t.Error("standard library marshal failed", err)
-		} else if string(buf) != string(jbuf) {
-			t.Errorf(
-				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
-				string(buf), string(jbuf),
-			)
-		}
-	}
-}
-
-func Test_MarshalEmptyBooleans(t *testing.T) {
-	obj := basics.BooleansColl{}
-	if buf, err := parsley.Marshal(&obj); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if jbuf, err := json.Marshal(obj); err != nil {
-			t.Error("standard library marshal failed", err)
-		} else if string(buf) != string(jbuf) {
-			t.Errorf(
-				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
-				string(buf), string(jbuf),
-			)
 		}
 	}
 }
@@ -552,37 +427,6 @@ func Test_UnmarshalStrings(t *testing.T) {
 		}
 		if strings.TPtr == nil || (*strings.TPtr).Format(time.RFC3339) != "1999-06-27T20:30:30Z" {
 			t.Error("tptr property value mismatch")
-		}
-	}
-}
-
-func Test_MarshalStrings(t *testing.T) {
-	if buf, err := parsley.Marshal(&StringsObject); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if jbuf, err := json.Marshal(StringsObject); err != nil {
-			t.Error("standard library marshal failed", err)
-		} else if string(buf) != string(jbuf) {
-			t.Errorf(
-				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
-				string(buf), string(jbuf),
-			)
-		}
-	}
-}
-
-func Test_MarshalEmptyStrings(t *testing.T) {
-	obj := basics.StringsColl{}
-	if buf, err := parsley.Marshal(&obj); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if jbuf, err := json.Marshal(obj); err != nil {
-			t.Error("standard library marshal failed", err)
-		} else if string(buf) != string(jbuf) {
-			t.Errorf(
-				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
-				string(buf), string(jbuf),
-			)
 		}
 	}
 }

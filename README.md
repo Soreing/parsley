@@ -1,5 +1,5 @@
 # Parsley JSON
-Parsley JSON is a JSON encoder/decoder that parses a JSON string into objects or prints objects into byte arrays. Parsley JSON uses the definition of a struct to generate code that is efficient and fast. This library is inspired by [easyjson](https://github.com/mailru/easyjson).
+Parsley JSON is a JSON decoder that parses a JSON string into objects. Parsley JSON uses the definition of a struct to generate code that is efficient and fast. This library is inspired by [easyjson](https://github.com/mailru/easyjson).
 
 ## Installation 
 ```
@@ -8,17 +8,12 @@ go get github.com/Soreing/parsley
 ```
 
 ## Usage
-Objects that implement the ParsleyJSON interfaces can be used in the Marshal/Unmarshal functions to encode or decode data. The interface can be implemented with the generator (or custom written for rare use cases).
+Objects that implement the ParsleyJSON interfaces can be used in the Unmarshal functions to encode or decode data. The interface can be implemented with the generator (or custom written for rare use cases).
 ```golang
 dat := []byte (`{"name": "A Box", "weight": 10.5}`)
 box := Box{}
 
 err := parsley.Unmarshal(dat, &box)
-if err != nil {
-	panic(err)
-}
-
-dst, err := parsley.Marshal(&box)
 if err != nil {
 	panic(err)
 }

@@ -32,19 +32,6 @@ func Test_UnmarshalEscapedField(t *testing.T) {
 	}
 }
 
-func Test_MarshalEscapedField(t *testing.T) {
-	if buf, err := parsley.Marshal(&EscapedFieldObject); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if string(buf) != EscapedFieldResult {
-			t.Errorf(
-				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
-				string(buf), EscapedFieldResult,
-			)
-		}
-	}
-}
-
 const WhitespaceJSON = ` {
 "key1":"value1"	,
 	"key2"	: 
@@ -89,46 +76,12 @@ func Test_FieldVisibilityDecoding(t *testing.T) {
 	}
 }
 
-func Test_FieldVisibilityEncoding(t *testing.T) {
-	pub := controls.PublicField{}
-	pub.SetFieldValue("value")
-	prv := controls.PrivateField{}
-	prv.SetFieldValue("value")
-
-	if res, err := parsley.Marshal(&pub); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if string(res) != PublicFieldJSON {
-			t.Errorf("public result mismatch")
-		}
-	}
-	if res, err := parsley.Marshal(&prv); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if string(res) != PrivateFieldJSON {
-			t.Errorf("private result mismatch")
-		}
-	}
-}
-
 func Test_DecodeEmpty(t *testing.T) {
 	dat := []byte(WhitespaceJSON)
 	emp := controls.EmptyObject{}
 
 	if err := parsley.Unmarshal(dat, &emp); err != nil {
 		t.Error("unmarshal failed", err)
-	}
-}
-
-func Test_EncodeEmpty(t *testing.T) {
-	emp := controls.EmptyObject{}
-
-	if res, err := parsley.Marshal(&emp); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if string(res) != "{}" {
-			t.Errorf("result mismatch")
-		}
 	}
 }
 
@@ -144,11 +97,5 @@ func Test_DecodeNil(t *testing.T) {
 	dat := []byte(WhitespaceJSON)
 	if err := parsley.Unmarshal(dat, nil); err == nil {
 		t.Error("unmarshal expected to fail")
-	}
-}
-
-func Test_EncodeNil(t *testing.T) {
-	if _, err := parsley.Marshal(nil); err == nil {
-		t.Error("marshal epected to fail")
 	}
 }

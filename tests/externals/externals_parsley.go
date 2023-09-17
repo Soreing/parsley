@@ -4,11 +4,9 @@ package externals
 import (
 	parse "github.com/Soreing/parsley"
 	reader "github.com/Soreing/parsley/reader"
-	writer "github.com/Soreing/parsley/writer"
 )
 
 var _ *reader.Reader
-var _ *writer.Writer
 
 func (o *Device) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
 	c := [2]bool{}
@@ -82,106 +80,6 @@ func (o *Device) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (res 
 	return
 }
 
-func (o *Device) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
-	if o == nil {
-		w.Raw("null")
-	} else {
-		c := [2]bool{}
-		f := [2][]parse.Filter{}
-		if filter == nil {
-			for i := range c {
-				c[i] = true
-			}
-		} else {
-			for i := range filter {
-				k := filter[i].Field
-				if k == "name" {
-					c[0] = true
-				} else if k == "type" {
-					c[1], f[1] = true, filter[i].Filter
-				}
-			}
-		}
-		w.Byte('{')
-		off := 1
-		if c[0] {
-			w.Raw(",\"name\":"[off:])
-			w.String(o.Name)
-			off = 0
-		}
-		if c[1] {
-			w.Raw(",\"type\":"[off:])
-			o.Type.EncodeObjectPJSON(w, f[1])
-			off = 0
-		}
-		w.Byte('}')
-	}
-}
-
-func (o *Device) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []Device) {
-	if slc == nil {
-		w.Raw("null")
-	} else if len(slc) == 0 {
-		w.Raw("[]")
-	} else {
-		w.Byte('[')
-		slc[0].EncodeObjectPJSON(w, filter)
-		for i := 1; i < len(slc); i++ {
-			w.Byte(',')
-			slc[i].EncodeObjectPJSON(w, filter)
-		}
-		w.Byte(']')
-	}
-}
-
-func (o *Device) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
-	if o == nil {
-		return 4, 0
-	} else {
-		c := [2]bool{}
-		f := [2][]parse.Filter{}
-		if filter == nil {
-			for i := range c {
-				c[i] = true
-			}
-		} else {
-			for i := range filter {
-				k := filter[i].Field
-				if k == "name" {
-					c[0] = true
-				} else if k == "type" {
-					c[1], f[1] = true, filter[i].Filter
-				}
-			}
-		}
-		if c[0] {
-			b, v := writer.StringLen(o.Name)
-			bytes, volatile = bytes+b+8, volatile+v
-		}
-		if c[1] {
-			b, v := o.Type.ObjectLengthPJSON(f[1])
-			bytes, volatile = bytes+b+8, volatile+v
-		}
-		if bytes == 0 {
-			return 2, 0
-		} else {
-			return bytes + 1, volatile
-		}
-	}
-}
-
-func (o *Device) SliceLengthPJSON(filter []parse.Filter, slc []Device) (bytes int, volatile int) {
-	for _, obj := range slc {
-		b, v := obj.ObjectLengthPJSON(filter)
-		bytes, volatile = bytes+b+1, volatile+v
-	}
-	if bytes == 0 {
-		return 2, 0
-	} else {
-		return bytes + 1, volatile
-	}
-}
-
 func (o *DeviceType) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
 	*(*int)(o), err = r.Int()
 	return
@@ -211,48 +109,4 @@ func (o *DeviceType) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) (
 		}
 	}
 	return
-}
-
-func (o *DeviceType) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
-	if o == nil {
-		w.Raw("null")
-	}
-	w.Int(int(*o))
-
-}
-
-func (o *DeviceType) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []DeviceType) {
-	if slc == nil {
-		w.Raw("null")
-	}
-	w.Byte('[')
-	if len(slc) > 0 {
-		slc[0].EncodeObjectPJSON(w, filter)
-		for i := 1; i < len(slc); i++ {
-			w.Byte(',')
-			slc[i].EncodeObjectPJSON(w, filter)
-		}
-	}
-	w.Byte(']')
-}
-
-func (o *DeviceType) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
-	if o == nil {
-		return 4, 0
-	}
-	return writer.IntLen(int(*o)), 0
-
-}
-
-func (o *DeviceType) SliceLengthPJSON(filter []parse.Filter, slc []DeviceType) (bytes int, volatile int) {
-	for _, obj := range slc {
-		b, v := obj.ObjectLengthPJSON(filter)
-		bytes += b + 1
-		volatile += v
-	}
-	if bytes == 0 {
-		return 2, 0
-	} else {
-		return bytes + 1, volatile
-	}
 }

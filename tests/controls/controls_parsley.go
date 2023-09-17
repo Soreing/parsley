@@ -4,11 +4,9 @@ package controls
 import (
 	parse "github.com/Soreing/parsley"
 	reader "github.com/Soreing/parsley/reader"
-	writer "github.com/Soreing/parsley/writer"
 )
 
 var _ *reader.Reader
-var _ *writer.Writer
 
 func (o *EmptyObject) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
 	var key []byte
@@ -58,55 +56,6 @@ func (o *EmptyObject) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) 
 		}
 	}
 	return
-}
-
-func (o *EmptyObject) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
-	if o == nil {
-		w.Raw("null")
-	} else {
-		w.Byte('{')
-		w.Byte('}')
-	}
-}
-
-func (o *EmptyObject) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []EmptyObject) {
-	if slc == nil {
-		w.Raw("null")
-	} else if len(slc) == 0 {
-		w.Raw("[]")
-	} else {
-		w.Byte('[')
-		slc[0].EncodeObjectPJSON(w, filter)
-		for i := 1; i < len(slc); i++ {
-			w.Byte(',')
-			slc[i].EncodeObjectPJSON(w, filter)
-		}
-		w.Byte(']')
-	}
-}
-
-func (o *EmptyObject) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
-	if o == nil {
-		return 4, 0
-	} else {
-		if bytes == 0 {
-			return 2, 0
-		} else {
-			return bytes + 1, volatile
-		}
-	}
-}
-
-func (o *EmptyObject) SliceLengthPJSON(filter []parse.Filter, slc []EmptyObject) (bytes int, volatile int) {
-	for _, obj := range slc {
-		b, v := obj.ObjectLengthPJSON(filter)
-		bytes, volatile = bytes+b+1, volatile+v
-	}
-	if bytes == 0 {
-		return 2, 0
-	} else {
-		return bytes + 1, volatile
-	}
 }
 
 func (o *EscapedField) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
@@ -176,91 +125,6 @@ func (o *EscapedField) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter)
 	return
 }
 
-func (o *EscapedField) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
-	if o == nil {
-		w.Raw("null")
-	} else {
-		c := [1]bool{}
-		if filter == nil {
-			for i := range c {
-				c[i] = true
-			}
-		} else {
-			for i := range filter {
-				k := filter[i].Field
-				if k == "soɯə \"value\"" {
-					c[0] = true
-				}
-			}
-		}
-		w.Byte('{')
-		off := 1
-		if c[0] {
-			w.Raw(",\"soɯə \\\"value\\\"\":"[off:])
-			w.String(o.Value)
-			off = 0
-		}
-		w.Byte('}')
-	}
-}
-
-func (o *EscapedField) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []EscapedField) {
-	if slc == nil {
-		w.Raw("null")
-	} else if len(slc) == 0 {
-		w.Raw("[]")
-	} else {
-		w.Byte('[')
-		slc[0].EncodeObjectPJSON(w, filter)
-		for i := 1; i < len(slc); i++ {
-			w.Byte(',')
-			slc[i].EncodeObjectPJSON(w, filter)
-		}
-		w.Byte(']')
-	}
-}
-
-func (o *EscapedField) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
-	if o == nil {
-		return 4, 0
-	} else {
-		c := [1]bool{}
-		if filter == nil {
-			for i := range c {
-				c[i] = true
-			}
-		} else {
-			for i := range filter {
-				k := filter[i].Field
-				if k == "soɯə \"value\"" {
-					c[0] = true
-				}
-			}
-		}
-		if c[0] {
-			b, v := writer.StringLen(o.Value)
-			bytes, volatile = bytes+b+20, volatile+v
-		}
-		if bytes == 0 {
-			return 2, 0
-		} else {
-			return bytes + 1, volatile
-		}
-	}
-}
-
-func (o *EscapedField) SliceLengthPJSON(filter []parse.Filter, slc []EscapedField) (bytes int, volatile int) {
-	for _, obj := range slc {
-		b, v := obj.ObjectLengthPJSON(filter)
-		bytes, volatile = bytes+b+1, volatile+v
-	}
-	if bytes == 0 {
-		return 2, 0
-	} else {
-		return bytes + 1, volatile
-	}
-}
-
 func (o *PrivateField) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
 	var key []byte
 	_ = key
@@ -309,55 +173,6 @@ func (o *PrivateField) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter)
 		}
 	}
 	return
-}
-
-func (o *PrivateField) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
-	if o == nil {
-		w.Raw("null")
-	} else {
-		w.Byte('{')
-		w.Byte('}')
-	}
-}
-
-func (o *PrivateField) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []PrivateField) {
-	if slc == nil {
-		w.Raw("null")
-	} else if len(slc) == 0 {
-		w.Raw("[]")
-	} else {
-		w.Byte('[')
-		slc[0].EncodeObjectPJSON(w, filter)
-		for i := 1; i < len(slc); i++ {
-			w.Byte(',')
-			slc[i].EncodeObjectPJSON(w, filter)
-		}
-		w.Byte(']')
-	}
-}
-
-func (o *PrivateField) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
-	if o == nil {
-		return 4, 0
-	} else {
-		if bytes == 0 {
-			return 2, 0
-		} else {
-			return bytes + 1, volatile
-		}
-	}
-}
-
-func (o *PrivateField) SliceLengthPJSON(filter []parse.Filter, slc []PrivateField) (bytes int, volatile int) {
-	for _, obj := range slc {
-		b, v := obj.ObjectLengthPJSON(filter)
-		bytes, volatile = bytes+b+1, volatile+v
-	}
-	if bytes == 0 {
-		return 2, 0
-	} else {
-		return bytes + 1, volatile
-	}
 }
 
 func (o *PublicField) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
@@ -427,91 +242,6 @@ func (o *PublicField) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filter) 
 	return
 }
 
-func (o *PublicField) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
-	if o == nil {
-		w.Raw("null")
-	} else {
-		c := [1]bool{}
-		if filter == nil {
-			for i := range c {
-				c[i] = true
-			}
-		} else {
-			for i := range filter {
-				k := filter[i].Field
-				if k == "field" {
-					c[0] = true
-				}
-			}
-		}
-		w.Byte('{')
-		off := 1
-		if c[0] {
-			w.Raw(",\"field\":"[off:])
-			w.String(o.field)
-			off = 0
-		}
-		w.Byte('}')
-	}
-}
-
-func (o *PublicField) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []PublicField) {
-	if slc == nil {
-		w.Raw("null")
-	} else if len(slc) == 0 {
-		w.Raw("[]")
-	} else {
-		w.Byte('[')
-		slc[0].EncodeObjectPJSON(w, filter)
-		for i := 1; i < len(slc); i++ {
-			w.Byte(',')
-			slc[i].EncodeObjectPJSON(w, filter)
-		}
-		w.Byte(']')
-	}
-}
-
-func (o *PublicField) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
-	if o == nil {
-		return 4, 0
-	} else {
-		c := [1]bool{}
-		if filter == nil {
-			for i := range c {
-				c[i] = true
-			}
-		} else {
-			for i := range filter {
-				k := filter[i].Field
-				if k == "field" {
-					c[0] = true
-				}
-			}
-		}
-		if c[0] {
-			b, v := writer.StringLen(o.field)
-			bytes, volatile = bytes+b+9, volatile+v
-		}
-		if bytes == 0 {
-			return 2, 0
-		} else {
-			return bytes + 1, volatile
-		}
-	}
-}
-
-func (o *PublicField) SliceLengthPJSON(filter []parse.Filter, slc []PublicField) (bytes int, volatile int) {
-	for _, obj := range slc {
-		b, v := obj.ObjectLengthPJSON(filter)
-		bytes, volatile = bytes+b+1, volatile+v
-	}
-	if bytes == 0 {
-		return 2, 0
-	} else {
-		return bytes + 1, volatile
-	}
-}
-
 func (o *EmptyObjectList) DecodeObjectPJSON(r *reader.Reader, filter []parse.Filter) (err error) {
 	*o, err = (*EmptyObject)(nil).DecodeSlicePJSON(r, filter)
 	return
@@ -541,47 +271,4 @@ func (o *EmptyObjectList) DecodeSlicePJSON(r *reader.Reader, filter []parse.Filt
 		}
 	}
 	return
-}
-
-func (o *EmptyObjectList) EncodeObjectPJSON(w *writer.Writer, filter []parse.Filter) {
-	if o == nil {
-		w.Raw("null")
-	}
-	(*EmptyObject)(nil).EncodeSlicePJSON(w, filter, *o)
-
-}
-
-func (o *EmptyObjectList) EncodeSlicePJSON(w *writer.Writer, filter []parse.Filter, slc []EmptyObjectList) {
-	if slc == nil {
-		w.Raw("null")
-	}
-	w.Byte('[')
-	if len(slc) > 0 {
-		slc[0].EncodeObjectPJSON(w, filter)
-		for i := 1; i < len(slc); i++ {
-			w.Byte(',')
-			slc[i].EncodeObjectPJSON(w, filter)
-		}
-	}
-	w.Byte(']')
-}
-
-func (o *EmptyObjectList) ObjectLengthPJSON(filter []parse.Filter) (bytes int, volatile int) {
-	if o == nil {
-		return 4, 0
-	}
-	return (*EmptyObject)(nil).SliceLengthPJSON(filter, *o)
-}
-
-func (o *EmptyObjectList) SliceLengthPJSON(filter []parse.Filter, slc []EmptyObjectList) (bytes int, volatile int) {
-	for _, obj := range slc {
-		b, v := obj.ObjectLengthPJSON(filter)
-		bytes += b + 1
-		volatile += v
-	}
-	if bytes == 0 {
-		return 2, 0
-	} else {
-		return bytes + 1, volatile
-	}
 }
