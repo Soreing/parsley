@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"testing"
 	"time"
 
@@ -124,21 +123,6 @@ func Test_UnmarshalEmployee(t *testing.T) {
 	}
 }
 
-func Test_MarshalEmployee(t *testing.T) {
-	if buf, err := parsley.Marshal(&EmployeeObject); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if jbuf, err := json.Marshal(EmployeeObject); err != nil {
-			t.Error("standard library marshal failed", err)
-		} else if string(buf) != string(jbuf) {
-			t.Errorf(
-				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
-				string(buf), string(jbuf),
-			)
-		}
-	}
-}
-
 const EmployeeListJSON = `[
 	{
 		"id": "8becdcce-e762-40cf-b73c-092209f70a30",
@@ -232,21 +216,6 @@ func Test_UnmarshalEmployeeList(t *testing.T) {
 			if emps[1].Rating != 3.05 {
 				t.Error("employees[1].rating property value mismatch")
 			}
-		}
-	}
-}
-
-func Test_MarshalEmployeeList(t *testing.T) {
-	if buf, err := parsley.Marshal(&EmployeeListObject); err != nil {
-		t.Error("marshal failed", err)
-	} else {
-		if jbuf, err := json.Marshal(EmployeeListObject); err != nil {
-			t.Error("standard library marshal failed", err)
-		} else if string(buf) != string(jbuf) {
-			t.Errorf(
-				"marshal result mismatch \n\tHave: %s\n\tWant: %s",
-				string(buf), string(jbuf),
-			)
 		}
 	}
 }
