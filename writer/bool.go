@@ -1,6 +1,6 @@
 package writer
 
-// Gets the encoded byte length of a boolean.
+// BoolLen returns the byte length of an encoded boolean
 func BoolLen(b bool) (bytes int) {
 	if b {
 		return 4
@@ -9,7 +9,7 @@ func BoolLen(b bool) (bytes int) {
 	}
 }
 
-// Gets the encoded byte length of a boolean pointer.
+// BoolpLen returns the byte length of an encoded boolean pointer
 func BoolpLen(b *bool) (bytes int) {
 	if b == nil {
 		return 4
@@ -20,7 +20,7 @@ func BoolpLen(b *bool) (bytes int) {
 	}
 }
 
-// Gets the encoded byte length of a boolean slice with brackets and commas.
+// BoolsLen returns the byte length of an encoded boolean slice
 func BoolsLen(bs []bool) (bytes int) {
 	if bs == nil {
 		return 4
@@ -37,16 +37,7 @@ func BoolsLen(bs []bool) (bytes int) {
 	}
 }
 
-// Writes "null" to the buffer when nil, otherwise writes a boolean.
-func (w *Writer) Boolp(b *bool) {
-	if b == nil {
-		w.Raw("null")
-	} else {
-		w.Bool(*b)
-	}
-}
-
-// Writes  "true" or "false" to the buffer.
+// Bool writes an encoded boolean to the buffer
 func (w *Writer) Bool(b bool) {
 	bf := w.Buffer
 	cr, ln := w.Cursor, len(bf)
@@ -67,8 +58,18 @@ func (w *Writer) Bool(b bool) {
 	}
 }
 
-// Writes an array of true / false values separated by commas and enclosed by
-// square brackets to the buffer. When the slice is nil, writes "null".
+// Boolp writes an encoded boolean pointer to the buffer. If the pointer is nil,
+// it writes null
+func (w *Writer) Boolp(b *bool) {
+	if b == nil {
+		w.Raw("null")
+	} else {
+		w.Bool(*b)
+	}
+}
+
+// Bools writes an encoded boolean slice to the buffer. The data includes
+// commas and brackets. If the pointer is nil, it writes null
 func (w *Writer) Bools(bs []bool) {
 	bf := w.Buffer
 	cr, ln := w.Cursor, len(bf)

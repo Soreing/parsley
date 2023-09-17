@@ -30,15 +30,6 @@ func Float32sLen(ns []float32) (bytes int) {
 	}
 }
 
-// Writes "null" to the buffer when nil, otherwise writes an 32 bit float.
-func (w *Writer) Float32p(n *float32) {
-	if n == nil {
-		w.Raw("null")
-	} else {
-		w.Float32(*n)
-	}
-}
-
 // Writes an 32 bit float to the buffer.
 func (w *Writer) Float32(n float32) {
 	var vln int
@@ -55,6 +46,15 @@ func (w *Writer) Float32(n float32) {
 		w.Cursor, w.Buffer = 0, dst
 	}
 	w.Cursor += len(strconv.AppendFloat(dst[:0], float64(n), 'g', -1, 32))
+}
+
+// Writes "null" to the buffer when nil, otherwise writes an 32 bit float.
+func (w *Writer) Float32p(n *float32) {
+	if n == nil {
+		w.Raw("null")
+	} else {
+		w.Float32(*n)
+	}
 }
 
 // Writes an array of 32 bit float values separated by commas and enclosed
@@ -96,13 +96,12 @@ func (w *Writer) Float32s(ns []float32) {
 		for _, n := range ns {
 			vln = Float32Len(n)
 			if cap = ln - cr; vln <= cap {
-				strconv.AppendFloat(bf[:cr], float64(n), 'g', -1, 32)
-				cr += vln
+				cr = len(strconv.AppendFloat(bf[:cr], float64(n), 'g', -1, 32))
 			} else {
 				w.Storage = append(w.Storage, bf[:cr])
-				cr, ln = vln-cap, vln-cap+CHUNK_SIZE
+				ln = vln - cap + CHUNK_SIZE
 				bf = make([]byte, ln)
-				strconv.AppendFloat(bf, float64(n), 'g', -1, 32)
+				cr = len(strconv.AppendFloat(bf[:0], float64(n), 'g', -1, 32))
 			}
 
 			if ln != cr {
@@ -148,15 +147,6 @@ func Float64sLen(ns []float64) (bytes int) {
 	}
 }
 
-// Writes "null" to the buffer when nil, otherwise writes an 64 bit float.
-func (w *Writer) Float64p(n *float64) {
-	if n == nil {
-		w.Raw("null")
-	} else {
-		w.Float64(*n)
-	}
-}
-
 // Writes an 64 bit float to the buffer.
 func (w *Writer) Float64(n float64) {
 	var vln int
@@ -173,6 +163,15 @@ func (w *Writer) Float64(n float64) {
 		w.Cursor, w.Buffer = 0, dst
 	}
 	w.Cursor += len(strconv.AppendFloat(dst[:0], float64(n), 'g', -1, 64))
+}
+
+// Writes "null" to the buffer when nil, otherwise writes an 64 bit float.
+func (w *Writer) Float64p(n *float64) {
+	if n == nil {
+		w.Raw("null")
+	} else {
+		w.Float64(*n)
+	}
 }
 
 // Writes an array of 64 bit float values separated by commas and enclosed
@@ -214,13 +213,12 @@ func (w *Writer) Float64s(ns []float64) {
 		for _, n := range ns {
 			vln = Float64Len(n)
 			if cap = ln - cr; vln <= cap {
-				strconv.AppendFloat(bf[:cr], float64(n), 'g', -1, 64)
-				cr += vln
+				cr = len(strconv.AppendFloat(bf[:cr], float64(n), 'g', -1, 64))
 			} else {
 				w.Storage = append(w.Storage, bf[:cr])
-				cr, ln = vln-cap, vln-cap+CHUNK_SIZE
+				ln = vln - cap + CHUNK_SIZE
 				bf = make([]byte, ln)
-				strconv.AppendFloat(bf, float64(n), 'g', -1, 64)
+				cr = len(strconv.AppendFloat(bf[:0], float64(n), 'g', -1, 64))
 			}
 
 			if ln != cr {

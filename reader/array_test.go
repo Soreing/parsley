@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_OpenArray(t *testing.T) {
+func TestOpenArray(t *testing.T) {
 	tests := []struct {
 		Name string
 		In   []byte

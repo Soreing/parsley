@@ -1,5 +1,6 @@
 package writer
 
+// ui64dc returns the number of digits of an uint64
 func ui64dc(n uint64) (bytes int) {
 	if n < 1000000000 {
 		if n < 100000 {
@@ -64,6 +65,7 @@ func ui64dc(n uint64) (bytes int) {
 	}
 }
 
+// ui32dc returns the number of digits of an uint32
 func ui32dc(n uint32) (bytes int) {
 	if n < 100000 {
 		if n < 100 {
@@ -98,6 +100,7 @@ func ui32dc(n uint32) (bytes int) {
 	}
 }
 
+// ui16dc returns the number of digits of an uint16
 func ui16dc(n uint16) (bytes int) {
 	if n < 100 {
 		if n < 10 {
@@ -116,6 +119,7 @@ func ui16dc(n uint16) (bytes int) {
 	}
 }
 
+// ui8dc returns the number of digits of an uint8
 func ui8dc(n uint8) (bytes int) {
 	if n < 10 {
 		return 1

@@ -112,9 +112,9 @@ func (w *Writer) Int8s(ns []int8) {
 				cr += vln
 			} else {
 				w.Storage = append(w.Storage, bf[:cr])
-				cr, ln = vln-cap, vln-cap+CHUNK_SIZE
+				cr, ln = vln, vln-cap+CHUNK_SIZE
 				bf = make([]byte, ln)
-				strconv.AppendInt(bf, int64(n), 10)
+				strconv.AppendInt(bf[:0], int64(n), 10)
 			}
 
 			if ln != cr {
@@ -242,9 +242,9 @@ func (w *Writer) Int16s(ns []int16) {
 				cr += vln
 			} else {
 				w.Storage = append(w.Storage, bf[:cr])
-				cr, ln = vln-cap, vln-cap+CHUNK_SIZE
+				cr, ln = vln, vln-cap+CHUNK_SIZE
 				bf = make([]byte, ln)
-				strconv.AppendInt(bf, int64(n), 10)
+				strconv.AppendInt(bf[:0], int64(n), 10)
 			}
 
 			if ln != cr {
@@ -372,9 +372,9 @@ func (w *Writer) Int32s(ns []int32) {
 				cr += vln
 			} else {
 				w.Storage = append(w.Storage, bf[:cr])
-				cr, ln = vln-cap, vln-cap+CHUNK_SIZE
+				cr, ln = vln, vln-cap+CHUNK_SIZE
 				bf = make([]byte, ln)
-				strconv.AppendInt(bf, int64(n), 10)
+				strconv.AppendInt(bf[:0], int64(n), 10)
 			}
 
 			if ln != cr {
@@ -502,9 +502,9 @@ func (w *Writer) Int64s(ns []int64) {
 				cr += vln
 			} else {
 				w.Storage = append(w.Storage, bf[:cr])
-				cr, ln = vln-cap, vln-cap+CHUNK_SIZE
+				cr, ln = vln, vln-cap+CHUNK_SIZE
 				bf = make([]byte, ln)
-				strconv.AppendInt(bf, int64(n), 10)
+				strconv.AppendInt(bf[:0], int64(n), 10)
 			}
 
 			if ln != cr {
@@ -632,9 +632,9 @@ func (w *Writer) Ints(ns []int) {
 				cr += vln
 			} else {
 				w.Storage = append(w.Storage, bf[:cr])
-				cr, ln = vln-cap, vln-cap+CHUNK_SIZE
+				cr, ln = vln, vln-cap+CHUNK_SIZE
 				bf = make([]byte, ln)
-				strconv.AppendInt(bf, int64(n), 10)
+				strconv.AppendInt(bf[:0], int64(n), 10)
 			}
 
 			if ln != cr {
